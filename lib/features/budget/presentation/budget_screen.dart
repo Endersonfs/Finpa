@@ -149,7 +149,7 @@ class _BudgetContent extends StatelessWidget {
                   child: Stack(
                     children: [
                       Container(
-                        height: 5,
+                        height: 8,
                         color: Colors.white.withValues(alpha: 0.2),
                       ),
                       FractionallySizedBox(
@@ -322,7 +322,7 @@ class _BudgetRow extends StatelessWidget {
                       Text(
                         '${_currencyFmt.format(budget.spent)} gastado',
                         style: GoogleFonts.inter(
-                          fontSize: 9,
+                          fontSize: 11,
                           color: c.muted,
                         ),
                       ),
@@ -330,7 +330,7 @@ class _BudgetRow extends StatelessWidget {
                       Text(
                         'de ${_currencyFmt.format(budget.limitAmount)}',
                         style: GoogleFonts.inter(
-                          fontSize: 9,
+                          fontSize: 11,
                           color: c.muted,
                         ),
                       ),

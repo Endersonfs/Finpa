@@ -75,6 +75,50 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
 
   Future<void> _save() async {
     final amount = double.parse(_amountText.replaceAll(',', '.'));
+
+    if (_type == TransactionType.expense) {
+      final accounts =
+          ref.read(accountsStreamProvider).valueOrNull ?? const [];
+      final spendable = accounts.where((a) => a.type.isSpendable).toList();
+
+      final accountId = _selectedAccountId ??
+          (spendable.isNotEmpty
+              ? spendable
+                  .firstWhere((a) => a.isDefault,
+                      orElse: () => spendable.first)
+                  .id
+              : null);
+
+      if (accountId != null) {
+        final account = spendable.firstWhere(
+          (a) => a.id == accountId,
+          orElse: () => spendable.first,
+        );
+        if (amount > account.balance) {
+          if (!mounted) return;
+          await showDialog<void>(
+            context: context,
+            builder: (dialogContext) => AlertDialog(
+              title: const Text('Saldo insuficiente'),
+              content: Text(
+                'Tu cuenta "${account.name}" solo tiene '
+                'RD\$${account.balance.toStringAsFixed(0)} disponibles. '
+                'No puedes realizar un gasto de '
+                'RD\$${amount.toStringAsFixed(0)}.',
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  child: const Text('Entendido'),
+                ),
+              ],
+            ),
+          );
+          return;
+        }
+      }
+    }
+
     final userId = Supabase.instance.client.auth.currentUser!.id;
     final transaction = Transaction(
       id: '',

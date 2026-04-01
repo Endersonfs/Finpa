@@ -69,7 +69,7 @@ class AccountMiniCard extends StatelessWidget {
                         child: Text(
                           account.name,
                           style: GoogleFonts.inter(
-                            fontSize: 9,
+                            fontSize: 11,
                             fontWeight: FontWeight.w500,
                             color: c.muted,
                           ),
@@ -145,7 +145,7 @@ class _ProgressBar extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return SizedBox(
-      height: 2,
+      height: 4,
       child: LayoutBuilder(
         builder: (context, constraints) {
           final totalWidth = constraints.maxWidth;
@@ -156,7 +156,7 @@ class _ProgressBar extends StatelessWidget {
               // Track
               Container(
                 width: totalWidth,
-                height: 2,
+                height: 4,
                 color: isDark
                     ? const Color(0xFF7C3AED).withOpacity(0.2)
                     : const Color(0xFF7C3AED).withOpacity(0.12),
@@ -164,7 +164,7 @@ class _ProgressBar extends StatelessWidget {
               // Fill
               Container(
                 width: filledWidth,
-                height: 2,
+                height: 4,
                 color: const Color(0xFF7C3AED),
               ),
             ],

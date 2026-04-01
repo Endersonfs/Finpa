@@ -127,7 +127,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     const Text(
                       'En línea',
                       style: TextStyle(
-                        fontSize: 10,
+                        fontSize: 11,
                         color: Color(0xFF059669),
                       ),
                     ),
@@ -291,7 +291,7 @@ class _MessageBubble extends StatelessWidget {
           Text(
             timeFmt.format(message.timestamp),
             style: TextStyle(
-              fontSize: 9,
+              fontSize: 11,
               color: isDark
                   ? const Color(0xFF4A5580)
                   : const Color(0xFF9CA3AF),

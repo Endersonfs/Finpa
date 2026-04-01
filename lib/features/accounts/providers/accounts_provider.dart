@@ -24,12 +24,26 @@ final defaultAccountProvider = FutureProvider<AccountModel?>((ref) {
   return repo.getDefault();
 });
 
-// ── Resumen financiero ────────────────────────────────────────────────────────
+// ── Resumen financiero — reactivo al stream de cuentas ────────────────────────
+// Se recalcula automáticamente cada vez que Supabase Realtime emite un cambio
+// en la tabla accounts (transacción, transferencia, depósito a meta, etc.)
 
-final financialSummaryProvider =
-    FutureProvider.autoDispose<FinancialSummary>((ref) {
-  final repo = ref.watch(accountsRepositoryProvider);
-  return repo.getSummary();
+final financialSummaryProvider = Provider.autoDispose<FinancialSummary?>((ref) {
+  final accountsAsync = ref.watch(accountsStreamProvider);
+  return accountsAsync.maybeWhen(
+    data: (accounts) => FinancialSummary(
+      available: accounts
+          .where((a) => a.type.isSpendable)
+          .fold(0.0, (sum, a) => sum + a.balance),
+      saved: accounts
+          .where((a) => a.type == AccountType.savings)
+          .fold(0.0, (sum, a) => sum + a.balance),
+      owed: accounts
+          .where((a) => a.type == AccountType.credit)
+          .fold(0.0, (sum, a) => sum + a.balance),
+    ),
+    orElse: () => null, // null = cargando → muestra skeleton en la UI
+  );
 });
 
 // ── AccountNotifier ───────────────────────────────────────────────────────────
@@ -60,7 +74,7 @@ class AccountNotifier extends StateNotifier<AsyncValue<void>> {
         sortOrder: 0,
         createdAt: DateTime.now(),
       ));
-      _ref.invalidate(financialSummaryProvider);
+      _ref.invalidate(accountsStreamProvider);
       state = const AsyncData(null);
     } catch (e, st) {
       state = AsyncError(e, st);
@@ -84,7 +98,7 @@ class AccountNotifier extends StateNotifier<AsyncValue<void>> {
         sortOrder: 0,
         createdAt: DateTime.now(),
       ));
-      _ref.invalidate(financialSummaryProvider);
+      _ref.invalidate(accountsStreamProvider);
       state = const AsyncData(null);
     } catch (e, st) {
       state = AsyncError(e, st);
@@ -95,7 +109,7 @@ class AccountNotifier extends StateNotifier<AsyncValue<void>> {
     state = const AsyncLoading();
     try {
       await _repo.softDelete(id);
-      _ref.invalidate(financialSummaryProvider);
+      _ref.invalidate(accountsStreamProvider);
       state = const AsyncData(null);
     } catch (e, st) {
       state = AsyncError(e, st);
@@ -137,7 +151,7 @@ class TransferNotifier extends StateNotifier<AsyncValue<void>> {
         description: description,
         date: date,
       );
-      _ref.invalidate(financialSummaryProvider);
+      _ref.invalidate(accountsStreamProvider);
       state = const AsyncData(null);
       return true;
     } catch (e, st) {

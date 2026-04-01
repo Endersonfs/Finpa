@@ -10,29 +10,38 @@ final transactionRepositoryProvider = Provider<TransactionRepository>(
   (ref) => TransactionRepository(Supabase.instance.client),
 );
 
-// ── Transacciones del mes actual ─────────────────────────────────────────────
+// ── Transacciones del mes actual — Realtime ──────────────────────────────────
+// StreamProvider: la UI se actualiza sola cada vez que Supabase emite un cambio.
 
 final transactionsProvider =
-    FutureProvider.autoDispose<List<Transaction>>((ref) {
-  final repo = ref.watch(transactionRepositoryProvider);
-  final now = DateTime.now();
-  return repo.fetchAll(month: now.month, year: now.year);
+    StreamProvider.autoDispose<List<Transaction>>((ref) {
+  return ref.watch(transactionRepositoryProvider).watchAll();
 });
 
-// ── Resumen mensual: { 'income': x, 'expense': x } ──────────────────────────
+// ── Resumen mensual — derivado del stream ────────────────────────────────────
+// Provider<AsyncValue<T>> preserva los estados loading/error/data para la UI.
 
 final monthlySummaryProvider =
-    FutureProvider.autoDispose<Map<String, double>>((ref) {
-  final repo = ref.watch(transactionRepositoryProvider);
-  final now = DateTime.now();
-  return repo.monthlySummary(month: now.month, year: now.year);
+    Provider.autoDispose<AsyncValue<Map<String, double>>>((ref) {
+  return ref.watch(transactionsProvider).whenData((txs) {
+    double income = 0, expense = 0;
+    for (final t in txs) {
+      if (t.isIncome) income += t.amount;
+      else expense += t.amount;
+    }
+    return {'income': income, 'expense': expense};
+  });
 });
 
-// ── Gastos por categoría del mes actual ──────────────────────────────────────
+// ── Gastos por categoría del mes actual — derivado del stream ────────────────
 
 final categoryExpensesProvider =
-    FutureProvider.autoDispose<Map<String, double>>((ref) {
-  final repo = ref.watch(transactionRepositoryProvider);
-  final now = DateTime.now();
-  return repo.categoryExpenses(month: now.month, year: now.year);
+    Provider.autoDispose<AsyncValue<Map<String, double>>>((ref) {
+  return ref.watch(transactionsProvider).whenData((txs) {
+    final result = <String, double>{};
+    for (final t in txs.where((t) => t.isExpense)) {
+      result[t.category] = (result[t.category] ?? 0) + t.amount;
+    }
+    return result;
+  });
 });

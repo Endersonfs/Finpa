@@ -499,7 +499,7 @@ class _ReportsContent extends StatelessWidget {
                           Text(
                             'Total',
                             style: GoogleFonts.inter(
-                              fontSize: 9,
+                              fontSize: 11,
                               color: muted,
                             ),
                           ),
@@ -625,7 +625,7 @@ class _ReportsContent extends StatelessWidget {
                           child: Text(
                             _months[m - 1],
                             style: GoogleFonts.inter(
-                              fontSize: 9,
+                              fontSize: 11,
                               color: muted,
                             ),
                           ),

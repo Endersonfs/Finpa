@@ -184,7 +184,7 @@ class _AddBudgetScreenState extends ConsumerState<AddBudgetScreen> {
                 Text(
                   'LÍMITE MENSUAL',
                   style: GoogleFonts.inter(
-                    fontSize: 9,
+                    fontSize: 11,
                     fontWeight: FontWeight.w600,
                     color: c.muted,
                     letterSpacing: 1.2,

@@ -129,15 +129,30 @@ class AccountsRepository {
 
   // ── Resumen financiero ────────────────────────────────────────────────────
 
-  /// Lee el resumen desde la VIEW financial_summary de Supabase.
+  /// Calcula el resumen financiero directamente desde la tabla accounts.
   Future<FinancialSummary> getSummary() async {
     final data = await _client
-        .from('financial_summary')
-        .select()
+        .from('accounts')
+        .select('type, balance')
         .eq('user_id', _userId)
-        .maybeSingle();
-    if (data == null) return const FinancialSummary.zeros();
-    return FinancialSummary.fromJson(data);
+        .eq('is_active', true);
+
+    double available = 0;
+    double saved = 0;
+    double owed = 0;
+
+    for (final row in data as List) {
+      final balance = (row['balance'] as num).toDouble();
+      final type = AccountType.values.firstWhere(
+        (e) => e.name == (row['type'] as String? ?? 'general'),
+        orElse: () => AccountType.general,
+      );
+      if (type.isSpendable) available += balance;
+      if (type == AccountType.savings) saved += balance;
+      if (type == AccountType.credit) owed += balance;
+    }
+
+    return FinancialSummary(available: available, saved: saved, owed: owed);
   }
 
   // ── Transferencias ────────────────────────────────────────────────────────

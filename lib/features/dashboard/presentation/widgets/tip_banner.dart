@@ -65,7 +65,7 @@ class _TipContent extends StatelessWidget {
               child: Text(
                 tip,
                 style: TextStyle(
-                  fontSize: 11,
+                  fontSize: 13,
                   color: textColor,
                   height: 1.5,
                 ),

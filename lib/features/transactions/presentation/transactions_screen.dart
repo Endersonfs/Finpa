@@ -103,7 +103,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
   }
 
   List<Transaction> _applyFilters(List<Transaction> all) {
-    var list = all;
+    var list = all.toList();
     if (_filter != null) {
       list = list.where((t) => t.type == _filter).toList();
     }
@@ -115,6 +115,13 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
               t.category.toLowerCase().contains(q))
           .toList();
     }
+    // Orden pila: primero por fecha de transacción desc,
+    // luego por cuándo se registró desc (última ingresada arriba).
+    list.sort((a, b) {
+      final byDate = b.date.compareTo(a.date);
+      if (byDate != 0) return byDate;
+      return b.createdAt.compareTo(a.createdAt);
+    });
     return list;
   }
 

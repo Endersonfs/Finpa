@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../providers/auth_provider.dart';
+import '../providers/biometric_provider.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -41,6 +42,26 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       _showError(e.message);
     } catch (_) {
       _showError('Error inesperado. Intenta nuevamente.');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _signInWithBiometrics() async {
+    setState(() => _isLoading = true);
+    try {
+      final success =
+          await ref.read(biometricProvider.notifier).authenticate();
+      if (!mounted) return;
+      if (success) {
+        final user = Supabase.instance.client.auth.currentUser;
+        if (user != null) {
+          context.go('/dashboard');
+        } else {
+          _showError(
+              'Tu sesión expiró. Ingresa con tu correo y contraseña.');
+        }
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -93,6 +114,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final biometric = ref.watch(biometricProvider);
     return Scaffold(
       backgroundColor: const Color(0xFFF5F6FA),
       body: SafeArea(
@@ -191,6 +213,41 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                 ),
                 const SizedBox(height: 22),
+
+                // Botón biométrico (solo si está habilitado)
+                if (biometric.isEnabled && biometric.isAvailable) ...[
+                  SizedBox(
+                    width: double.infinity,
+                    height: 52,
+                    child: ElevatedButton.icon(
+                      onPressed: _isLoading ? null : _signInWithBiometrics,
+                      icon: Icon(
+                        biometric.hasFaceId
+                            ? Icons.face_rounded
+                            : Icons.fingerprint_rounded,
+                        size: 22,
+                      ),
+                      label: Text(
+                        biometric.hasFaceId
+                            ? 'Entrar con Face ID'
+                            : 'Entrar con huella',
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF3B5BDB),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 0,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
 
                 // Botón iniciar sesión
                 SizedBox(

@@ -20,6 +20,17 @@ class GoalRepository {
     return (data as List).map((e) => SavingGoal.fromJson(e)).toList();
   }
 
+  /// Stream Realtime de metas — se actualiza solo al depositar, crear o borrar.
+  Stream<List<SavingGoal>> watchAll() {
+    return _client
+        .from('saving_goals')
+        .stream(primaryKey: ['id'])
+        .eq('user_id', _userId)
+        .order('created_at', ascending: false)
+        .map((rows) =>
+            rows.map((e) => SavingGoal.fromJson(e)).toList());
+  }
+
   Future<void> add(SavingGoal g) async {
     await _client.from('saving_goals').insert({
       'user_id': _userId,

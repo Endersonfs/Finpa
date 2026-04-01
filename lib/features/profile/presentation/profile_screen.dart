@@ -6,6 +6,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../core/providers/theme_provider.dart';
+import '../../auth/providers/biometric_provider.dart';
+import '../../auth/providers/session_provider.dart';
 import '../../transactions/providers/transaction_provider.dart';
 import '../../goals/providers/goals_provider.dart';
 import '../../education/providers/education_provider.dart';
@@ -206,6 +208,16 @@ class ProfileScreen extends ConsumerWidget {
                 ),
               ),
               _ProfileTile(
+                icon: Icons.account_balance_wallet_outlined,
+                label: 'Mis cuentas',
+                iconBg: const Color(0xFF059669),
+                surface: surface,
+                border: c.border,
+                textPrimary: textPrimary,
+                muted: c.muted,
+                onTap: () => context.push('/accounts'),
+              ),
+              _ProfileTile(
                 icon: Icons.language_rounded,
                 label: 'Moneda y región',
                 iconBg: const Color(0xFF059669),
@@ -287,9 +299,7 @@ class ProfileScreen extends ConsumerWidget {
                 border: c.border,
                 textPrimary: textPrimary,
                 muted: c.muted,
-                onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Próximamente')),
-                ),
+                onTap: () => context.push('/security'),
               ),
               _ProfileTile(
                 icon: Icons.share_outlined,
@@ -366,6 +376,15 @@ class ProfileScreen extends ConsumerWidget {
   }
 
   Future<void> _confirmSignOut(BuildContext context, WidgetRef ref) async {
+    final biometric = ref.read(biometricProvider);
+
+    // Si la biometría está activa, bloquear la sesión en lugar de desconectar.
+    // El usuario podrá desconectarse completamente desde la pantalla de bloqueo.
+    if (biometric.isEnabled) {
+      ref.read(sessionProvider.notifier).lock();
+      return;
+    }
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
@@ -436,7 +455,7 @@ class _StatCard extends StatelessWidget {
             Text(
               label,
               style: GoogleFonts.inter(
-                fontSize: 9,
+                fontSize: 11,
                 color: muted,
               ),
               textAlign: TextAlign.center,

@@ -41,8 +41,7 @@ class TransactionRepository {
   }
 
   /// Inserta una nueva transacción en Supabase.
-  /// El campo `id` del objeto se ignora — Supabase genera un UUID.
-  /// [accountId] opcional: id de la cuenta desde la que se registra el movimiento.
+  /// El trigger de la BD actualiza el saldo de la cuenta automáticamente.
   Future<void> add(Transaction t, {String? accountId}) async {
     await _client.from('transactions').insert({
       'user_id': _userId,
@@ -63,6 +62,32 @@ class TransactionRepository {
         .delete()
         .eq('id', id)
         .eq('user_id', _userId);
+  }
+
+  /// Stream Realtime del mes actual — se actualiza solo cuando cambia la tabla.
+  /// El filtro de mes se aplica en Dart para compatibilidad con Supabase Flutter.
+  Stream<List<Transaction>> watchAll() {
+    final now = DateTime.now();
+    final firstDay = DateTime(now.year, now.month, 1);
+    final lastDay  = DateTime(now.year, now.month + 1, 0, 23, 59, 59);
+
+    return _client
+        .from('transactions')
+        .stream(primaryKey: ['id'])
+        .eq('user_id', _userId)
+        .order('date', ascending: false)
+        .map((rows) {
+          final list = rows
+              .map((e) => Transaction.fromJson(e))
+              .where((t) =>
+                  !t.date.isBefore(firstDay) && !t.date.isAfter(lastDay))
+              .toList();
+          list.sort((a, b) {
+            final d = b.date.compareTo(a.date);
+            return d != 0 ? d : b.createdAt.compareTo(a.createdAt);
+          });
+          return list;
+        });
   }
 
   /// Devuelve un mapa con las claves `'income'` y `'expense'` sumadas

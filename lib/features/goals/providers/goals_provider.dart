@@ -10,8 +10,9 @@ final goalRepositoryProvider = Provider<GoalRepository>(
   (ref) => GoalRepository(Supabase.instance.client),
 );
 
-final goalsProvider = FutureProvider.autoDispose<List<SavingGoal>>((ref) {
-  return ref.watch(goalRepositoryProvider).fetchAll();
+// StreamProvider: actualiza la lista de metas en tiempo real.
+final goalsProvider = StreamProvider.autoDispose<List<SavingGoal>>((ref) {
+  return ref.watch(goalRepositoryProvider).watchAll();
 });
 
 class GoalNotifier extends StateNotifier<AsyncValue<void>> {

@@ -304,7 +304,7 @@ class _ModuleCard extends StatelessWidget {
                           const SizedBox(width: 4),
                           Text(
                             'Bloqueado',
-                            style: TextStyle(fontSize: 10, color: c.muted),
+                            style: TextStyle(fontSize: 11, color: c.muted),
                           ),
                         ],
                       ),
@@ -313,7 +313,7 @@ class _ModuleCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   '${module.completedCount}/${module.totalCount} lecciones',
-                  style: TextStyle(fontSize: 10, color: c.muted),
+                  style: TextStyle(fontSize: 11, color: c.muted),
                 ),
                 if (module.progress > 0 && !module.isCompleted) ...[
                   const SizedBox(height: 8),
@@ -382,7 +382,7 @@ class _Badge extends StatelessWidget {
       child: Text(
         label,
         style: TextStyle(
-          fontSize: 10,
+          fontSize: 11,
           fontWeight: FontWeight.w600,
           color: color,
         ),

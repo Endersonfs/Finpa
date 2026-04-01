@@ -36,7 +36,7 @@ class BalanceCard extends StatelessWidget {
           Text(
             'PUEDES GASTAR',
             style: TextStyle(
-              fontSize: 9,
+              fontSize: 11,
               fontWeight: FontWeight.w600,
               color: Colors.white.withOpacity(0.65),
               letterSpacing: 1.2,
@@ -124,7 +124,7 @@ class _Chip extends StatelessWidget {
                   Text(
                     label,
                     style: TextStyle(
-                      fontSize: 9,
+                      fontSize: 11,
                       color: Colors.white.withOpacity(0.65),
                       fontWeight: FontWeight.w500,
                     ),

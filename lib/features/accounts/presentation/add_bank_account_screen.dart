@@ -327,7 +327,7 @@ class _BankGrid extends StatelessWidget {
                 Text(
                   name,
                   style: GoogleFonts.inter(
-                    fontSize: 10,
+                    fontSize: 11,
                     fontWeight: isSelected
                         ? FontWeight.w700
                         : FontWeight.w500,

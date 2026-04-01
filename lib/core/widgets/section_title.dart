@@ -31,7 +31,7 @@ class SectionTitle extends StatelessWidget {
           Text(
             title.toUpperCase(),
             style: GoogleFonts.inter(
-              fontSize: 9,
+              fontSize: 11,
               fontWeight: FontWeight.w700,
               color: c.muted,
               letterSpacing: 1.2,

@@ -142,7 +142,7 @@ class GoalsScreen extends ConsumerWidget {
                       Text(
                         'TOTAL AHORRADO',
                         style: GoogleFonts.inter(
-                          fontSize: 9,
+                          fontSize: 11,
                           fontWeight: FontWeight.w600,
                           letterSpacing: 1.2,
                           color: const Color(0xFF6366F1)
@@ -366,11 +366,11 @@ class _GoalCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(4),
               child: Stack(
                 children: [
-                  Container(height: 6, color: c.cardBg),
+                  Container(height: 8, color: c.cardBg),
                   FractionallySizedBox(
                     widthFactor: goal.progress.clamp(0.0, 1.0),
                     child: Container(
-                      height: 6,
+                      height: 8,
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [

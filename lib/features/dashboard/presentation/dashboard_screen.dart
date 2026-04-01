@@ -23,7 +23,7 @@ class DashboardScreen extends ConsumerWidget {
     final summaryAsync          = ref.watch(monthlySummaryProvider);
     final transactionsAsync     = ref.watch(recentTransactionsProvider);
     final categoriesAsync       = ref.watch(categoryExpensesProvider);
-    final financialSummaryAsync = ref.watch(financialSummaryProvider);
+    final financialSummary = ref.watch(financialSummaryProvider);
 
     final user      = Supabase.instance.client.auth.currentUser;
     final fullName  = (user?.userMetadata?['full_name'] as String?) ?? 'Usuario';
@@ -87,8 +87,8 @@ class DashboardScreen extends ConsumerWidget {
                 BalanceCard(
                   income:    summaryAsync.valueOrNull?['income'],
                   expense:   summaryAsync.valueOrNull?['expense'],
-                  available: financialSummaryAsync.valueOrNull?.available,
-                  saved:     financialSummaryAsync.valueOrNull?.saved,
+                  available: financialSummary?.available,
+                  saved:     financialSummary?.saved,
                 ),
                 const SizedBox(height: 12),
 

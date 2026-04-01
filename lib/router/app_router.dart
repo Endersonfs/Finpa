@@ -35,6 +35,9 @@ import '../features/profile/presentation/profile_screen.dart';
 import '../features/settings/presentation/settings_screen.dart';
 import '../features/settings/presentation/appearance_screen.dart';
 import '../features/settings/presentation/notifications_screen.dart';
+import '../features/settings/presentation/security_screen.dart';
+import '../features/auth/presentation/lock_screen.dart';
+import '../features/auth/providers/session_provider.dart';
 
 import '../core/providers/theme_provider.dart';
 import 'main_shell.dart';
@@ -95,6 +98,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       final isSplash     = location == '/splash';
       final isOnboarding = location == '/onboarding';
       final isAuth       = location.startsWith('/auth');
+      final isLockRoute  = location == '/lock';
 
       // Splash y onboarding siempre se muestran tal cual
       if (isSplash || isOnboarding) return null;
@@ -107,6 +111,16 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       // Con sesión en pantallas de auth → dashboard
       if (user != null && isAuth) return '/dashboard';
+
+      // ── Lógica de lock de sesión ───────────────
+      if (user != null) {
+        // Leer el estado de sesión del container de Riverpod
+        final container = ProviderScope.containerOf(context, listen: false);
+        final sessionState = container.read(sessionProvider);
+
+        if (sessionState.isLocked && !isLockRoute) return '/lock';
+        if (!sessionState.isLocked && isLockRoute) return '/dashboard';
+      }
 
       return null;
     },
@@ -218,29 +232,24 @@ final routerProvider = Provider<GoRouter>((ref) {
             ],
           ),
 
-          // Tab 5 — Cuentas
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: '/accounts',
-                builder: (_, __) => const AccountsScreen(),
-                routes: [
-                  GoRoute(
-                    path: 'add-bank',
-                    builder: (_, __) => const AddBankAccountScreen(),
-                  ),
-                  GoRoute(
-                    path: 'transfer',
-                    builder: (_, __) => const TransferScreen(),
-                  ),
-                ],
-              ),
-            ],
-          ),
         ],
       ),
 
       // ── Rutas sin shell — secundarias ─────────
+      GoRoute(
+        path: '/accounts',
+        builder: (_, __) => const AccountsScreen(),
+        routes: [
+          GoRoute(
+            path: 'add-bank',
+            builder: (_, __) => const AddBankAccountScreen(),
+          ),
+          GoRoute(
+            path: 'transfer',
+            builder: (_, __) => const TransferScreen(),
+          ),
+        ],
+      ),
       GoRoute(
         path: '/reports',
         builder: (_, __) => const ReportsScreen(),
@@ -274,6 +283,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/notifications',
         builder: (_, __) => const NotificationsScreen(),
+      ),
+      GoRoute(
+        path: '/security',
+        builder: (_, __) => const SecurityScreen(),
+      ),
+      GoRoute(
+        path: '/lock',
+        builder: (_, __) => const LockScreen(),
       ),
     ],
 

@@ -224,7 +224,7 @@ class _AddGoalScreenState extends ConsumerState<AddGoalScreen> {
                   Text(
                     'META DE AHORRO',
                     style: GoogleFonts.inter(
-                      fontSize: 9,
+                      fontSize: 11,
                       fontWeight: FontWeight.w600,
                       letterSpacing: 1.2,
                       color: c.muted,

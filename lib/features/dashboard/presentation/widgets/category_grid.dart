@@ -121,7 +121,7 @@ class _CategoryCard extends StatelessWidget {
                         child: Text(
                           label,
                           style: TextStyle(
-                            fontSize: 10,
+                            fontSize: 11,
                             color: textSecondary,
                             fontWeight: FontWeight.w500,
                           ),
@@ -146,10 +146,10 @@ class _CategoryCard extends StatelessWidget {
           // Barra de progreso (2px al fondo)
           Stack(
             children: [
-              Container(height: 2, color: border),
+              Container(height: 6, color: border),
               FractionallySizedBox(
                 widthFactor: progress.clamp(0.0, 1.0),
-                child: Container(height: 2, color: color),
+                child: Container(height: 6, color: color),
               ),
             ],
           ),

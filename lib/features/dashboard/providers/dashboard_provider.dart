@@ -10,12 +10,13 @@ import '../../transactions/providers/transaction_provider.dart';
 export '../../transactions/providers/transaction_provider.dart'
     show monthlySummaryProvider, categoryExpensesProvider;
 
-// ── Últimas 5 transacciones del mes actual ────────────────────────────────────
-//  Toma todas las transacciones del mes y devuelve solo las primeras 5.
+// ── Últimas 5 transacciones del mes actual — derivado del stream ──────────────
+//  Se actualiza automáticamente cuando transactionsProvider emite nuevos datos.
 final recentTransactionsProvider =
-    FutureProvider.autoDispose<List<Transaction>>((ref) async {
-  final all = await ref.watch(transactionsProvider.future);
-  return all.take(5).toList();
+    Provider.autoDispose<AsyncValue<List<Transaction>>>((ref) {
+  return ref.watch(transactionsProvider).whenData(
+        (all) => all.take(5).toList(),
+      );
 });
 
 // ── Consejo IA del día ────────────────────────────────────────────────────────

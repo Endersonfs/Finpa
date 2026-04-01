@@ -244,7 +244,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                               Text(
                                 _timeAgo(notif.time),
                                 style: GoogleFonts.inter(
-                                  fontSize: 10,
+                                  fontSize: 11,
                                   color: c.muted,
                                 ),
                               ),

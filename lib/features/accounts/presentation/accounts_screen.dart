@@ -39,6 +39,11 @@ class AccountsScreen extends ConsumerWidget {
         ),
         actions: [
           IconButton(
+            icon: const Icon(Icons.swap_horiz_rounded),
+            onPressed: () => context.push('/accounts/transfer'),
+            tooltip: 'Mover dinero',
+          ),
+          IconButton(
             icon: const Icon(Icons.add_rounded),
             onPressed: () => context.push('/accounts/add-bank'),
             tooltip: 'Añadir cuenta',
@@ -130,26 +135,14 @@ class _SummaryCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final summaryAsync = ref.watch(financialSummaryProvider);
-
-    return summaryAsync.when(
-      loading: () => _SummaryCardShell(
-        available: null,
-        saved: null,
-        owed: null,
-        c: c,
-        cs: cs,
-        isDark: isDark,
-      ),
-      error: (_, __) => const SizedBox.shrink(),
-      data: (s) => _SummaryCardShell(
-        available: s.available,
-        saved: s.saved,
-        owed: s.owed,
-        c: c,
-        cs: cs,
-        isDark: isDark,
-      ),
+    final summary = ref.watch(financialSummaryProvider);
+    return _SummaryCardShell(
+      available: summary?.available,
+      saved:     summary?.saved,
+      owed:      summary?.owed,
+      c:         c,
+      cs:        cs,
+      isDark:    isDark,
     );
   }
 }
@@ -415,7 +408,7 @@ class _SavingsProgressBar extends StatelessWidget {
               value: hasBalance ? 0.45 : 0.0, // porcentaje hacia la meta
               backgroundColor: c.cardBg,
               valueColor: const AlwaysStoppedAnimation(Color(0xFF3B5BDB)),
-              minHeight: 5,
+              minHeight: 8,
             ),
           ),
         ),

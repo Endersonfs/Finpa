@@ -55,6 +55,47 @@ class _TransferScreenState extends ConsumerState<TransferScreen> {
   Future<void> _submit() async {
     if (!_canSubmit) return;
 
+    if (_from!.id == _to!.id) {
+      await showDialog<void>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: const Text('Cuentas iguales'),
+          content: const Text(
+            'La cuenta de origen y destino son la misma. '
+            'Elige cuentas diferentes para realizar la transferencia.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Entendido'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    if (_amount > _from!.balance) {
+      await showDialog<void>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: const Text('Saldo insuficiente'),
+          content: Text(
+            'Tu cuenta "${_from!.name}" solo tiene '
+            '${_f(_from!.balance)} disponibles. '
+            'No puedes mover ${_f(_amount)}.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Entendido'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
     final ok = await ref.read(transferNotifierProvider.notifier).transfer(
           fromAccountId: _from!.id,
           toAccountId: _to!.id,
@@ -579,7 +620,7 @@ class _SavingsGoalPreview extends StatelessWidget {
               backgroundColor: const Color(0xFF3B5BDB).withOpacity(0.15),
               valueColor:
                   const AlwaysStoppedAnimation(Color(0xFF3B5BDB)),
-              minHeight: 6,
+              minHeight: 8,
             ),
           ),
           const SizedBox(height: 6),
