@@ -12,81 +12,88 @@ Domain → Data → Presentation
 ```
 
 1. **Domain** (núcleo, sin dependencias externas)
-   - `entities/` — Objetos de negocio puros (extienden `Equatable`)
-   - `value_objects/` — Tipos con validación (ej: `Email`, `Amount`)
+   - `entities/` — Objetos de negocio puros (igualdad manual por `id`)
    - `repositories/` — Interfaces (contratos) que define el dominio
-   - `usecases/` — Casos de uso, heredan de `UseCase<Type, Params>`
 
 2. **Data** (implementaciones)
-   - `models/` — DTOs que extienden las entidades del dominio
-   - `datasources/` — Remote (Dio/API) y Local (SharedPrefs/SecureStorage)
+   - `models/` — DTOs con `fromJson`/`toJson` + `toEntity()`
+   - `datasources/` — Remote (Supabase) y Local (SharedPrefs/SecureStorage)
    - `repositories/` — Implementaciones de las interfaces del dominio
 
 3. **Presentation** (UI)
-   - `bloc/` — BLoC: `event.dart`, `state.dart`, `bloc.dart`
-   - `pages/` — Pantallas completas
+   - `providers/` — Riverpod: `FutureProvider`, `NotifierProvider`, etc.
+   - `screens/` — Pantallas completas (sufijo `Screen`)
    - `widgets/` — Componentes reutilizables
 
 ### Estructura de Carpetas
 ```
 lib/
   core/
-    errors/           # Failure, AppException
-    network/          # DioClient, interceptors
-    usecase/          # UseCase base class
-    utils/
-    theme/
-    constants/
-    di/               # injection_container.dart
+    theme/            # AppTheme, FinPaColors
+    providers/        # theme_provider, shared_prefs
+    widgets/          # Widgets compartidos
   features/
     {feature}/        # Bounded Context DDD
       data/
+        models/
+        datasources/
+        repositories/
       domain/
+        entities/
+        repositories/  # interfaces
       presentation/
-  app.dart
+        providers/
+        screens/
+        widgets/
+  router/
+    app_router.dart
+    main_shell.dart
   main.dart
-  injection_container.dart
 ```
 
 ## Reglas de Arquitectura (OBLIGATORIAS)
 
 1. **Domain nunca importa de Data ni Presentation**
 2. **Repositories en Domain son interfaces**, las implementaciones van en Data
-3. **Errores con Either<Failure, T>** de `dartz` — nunca lanzar excepciones en repositorios
-4. **Entities usan Equatable** para comparación por valor
-5. **Value Objects validan en constructor** — retornan `Either<Failure, ValueObject>`
-6. **BLoC maneja TODO el estado** — no lógica en widgets
-7. **Inyección con GetIt + Injectable** — no instanciar clases directamente en widgets
-8. **Modelos tienen `fromJson`/`toJson`** y método `toEntity()`
+3. **Entities usan `==` y `hashCode` manual por `id`** — no usar equatable
+4. **Providers Riverpod manejan TODO el estado** — no lógica en widgets
+5. **No instanciar clases directamente en widgets** — usar providers
+6. **Modelos tienen `fromJson`/`toJson`** y método `toEntity()`
+7. **Supabase solo accesible desde la capa DataSource**
 
 ## Convenciones de Nombres
 
-- Entidades: `User`, `Transaction`, `Account`
-- Modelos: `UserModel`, `TransactionModel`
-- Repositorios (interfaz): `UserRepository`
-- Repositorios (impl): `UserRepositoryImpl`
-- DataSources: `UserRemoteDataSource`, `UserLocalDataSource`
-- UseCases: `GetUserUseCase`, `CreateTransactionUseCase`
-- BLoC: `AuthBloc`, `AuthEvent`, `AuthState`
-- Value Objects: `Email`, `Password`, `MoneyAmount`
-
-## Estado del Proyecto
-- Inicio: Clean Architecture + DDD setup
-- Siguiente: Definir bounded contexts (features) con el usuario
+- Entidades: `Transaction`, `Budget`, `Goal`
+- Modelos: `TransactionModel`, `BudgetModel`
+- Repositorios (interfaz): `TransactionRepository`
+- Repositorios (impl): `TransactionRepositoryImpl`
+- DataSources: `TransactionRemoteDataSource`
+- Providers: `transactionsProvider`, `budgetProvider`
 
 ## Stack Técnico
-- Flutter 3.38.1 / Dart 3.10
-- State: flutter_bloc 8.x
-- DI: get_it + injectable
-- FP: dartz (Either/Option)
-- HTTP: dio
-- Routing: go_router
+- Flutter 3.x / Dart 3.10
+- State: **flutter_riverpod ^2.5.1** (Riverpod — NO BLoC)
+- Backend: supabase_flutter ^2.5.3
+- Routing: go_router ^13.x
 - Local: shared_preferences + flutter_secure_storage
-- Code gen: freezed + json_serializable + build_runner
-- Tests: bloc_test + mocktail
+- Fonts: google_fonts (Inter)
+- Biometría: local_auth
+- Tests: mocktail
+
+## Patrones de UI
+
+- Padding horizontal: **16px** siempre
+- BorderRadius: 12px cards, 16px cards grandes
+- Fuente: Inter via `google_fonts`
+- Montos: `NumberFormat.currency(locale: 'es', symbol: 'Bs.', decimalDigits: 0)`
+- **NO usar `withOpacity()`** — usar `withValues(alpha: x)` o `withAlpha(x)`
+- Colores custom: `Theme.of(context).extension<FinPaColors>()!`
+- Tema default: `ThemeMode.light`
 
 ## Sub-agentes disponibles
 - `flutter-architect` — decisiones de arquitectura, estructura de features
-- `domain-modeler` — entidades DDD, value objects, aggregates
-- `flutter-ui` — widgets, páginas, BLoC
+- `domain-modeler` — entidades DDD, value objects, repositorios (interfaces)
+- `flutter-ui` — widgets, pantallas, providers Riverpod
 - `test-writer` — tests unitarios, de widgets, integración
+- `dart-expert` — código Dart idiomático, Dart 3 features
+- `qa-engineer` — auditoría de calidad, validación de flujos, reportes QA
