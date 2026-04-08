@@ -532,19 +532,30 @@ class _ReportsContent extends StatelessWidget {
     );
   }
 
-  // ─── Card 3: Línea — Ingreso vs Gasto ─────────────────────────────────────
+  // ─── Card 3: Barras agrupadas — Ingreso vs Gasto ─────────────────────────
 
   Widget _buildLineCard(BuildContext context) {
+    const incomeColor = Color(0xFF059669);
+    const expenseColor = Color(0xFFDC2626);
+
+    final totalIncome =
+        data.last6Months.fold(0.0, (sum, e) => sum + e.income);
+    final totalExpense =
+        data.last6Months.fold(0.0, (sum, e) => sum + e.expense);
+    final balance = totalIncome - totalExpense;
+    final balancePositive = balance >= 0;
+
     final allValues = data.last6Months
         .expand((e) => [e.income, e.expense])
         .toList();
-    final maxValue =
-        allValues.fold(0.0, (a, b) => a > b ? a : b);
+    final maxValue = allValues.fold(0.0, (a, b) => a > b ? a : b);
 
     final gridLineColor =
         isDark ? const Color(0xFF1E2840) : const Color(0xFFE2E6F0);
     final tooltipBg =
         isDark ? const Color(0xFF141928) : Colors.white;
+
+    final compact = NumberFormat.compact(locale: 'es');
 
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
@@ -557,6 +568,7 @@ class _ReportsContent extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // ── Título ──────────────────────────────────────────────────────
           Text(
             'Ingreso vs Gasto',
             style: GoogleFonts.inter(
@@ -565,56 +577,189 @@ class _ReportsContent extends StatelessWidget {
               color: textPrimary,
             ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 2),
+          Text(
+            'Últimos 6 meses',
+            style: GoogleFonts.inter(fontSize: 10, color: muted),
+          ),
+          const SizedBox(height: 14),
+
+          // ── Resumen (badges) ─────────────────────────────────────────────
           Row(
             children: [
-              _LegendDot(color: const Color(0xFF059669)),
-              const SizedBox(width: 4),
-              Text(
-                'Ingresos',
-                style: GoogleFonts.inter(fontSize: 11, color: muted),
+              // Badge ingresos
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: incomeColor.withValues(alpha: 0x15),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: incomeColor.withValues(alpha: 0x40),
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Ingresos',
+                        style: GoogleFonts.inter(
+                          fontSize: 10,
+                          color: textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        _fmtAmount(totalIncome),
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: incomeColor,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
               ),
-              const SizedBox(width: 16),
-              _LegendDot(color: const Color(0xFFDC2626)),
-              const SizedBox(width: 4),
-              Text(
-                'Gastos',
-                style: GoogleFonts.inter(fontSize: 11, color: muted),
+              const SizedBox(width: 8),
+              // Badge gastos
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: expenseColor.withValues(alpha: 0x15),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: expenseColor.withValues(alpha: 0x40),
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Gastos',
+                        style: GoogleFonts.inter(
+                          fontSize: 10,
+                          color: textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        _fmtAmount(totalExpense),
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: expenseColor,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              // Badge balance
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: (balancePositive ? incomeColor : expenseColor)
+                        .withValues(alpha: 0x15),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: (balancePositive ? incomeColor : expenseColor)
+                          .withValues(alpha: 0x40),
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Balance',
+                        style: GoogleFonts.inter(
+                          fontSize: 10,
+                          color: textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        '${balancePositive ? '+' : ''}${_fmtAmount(balance)}',
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: balancePositive ? incomeColor : expenseColor,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
+
+          // ── Gráfico de barras agrupadas ──────────────────────────────────
           SizedBox(
-            height: 160,
-            child: LineChart(
-              LineChartData(
-                minY: 0,
-                maxY: maxValue > 0 ? maxValue * 1.2 : 100,
-                lineTouchData: LineTouchData(
-                  touchTooltipData: LineTouchTooltipData(
+            height: 200,
+            child: BarChart(
+              BarChartData(
+                alignment: BarChartAlignment.spaceAround,
+                maxY: maxValue > 0 ? maxValue * 1.25 : 100,
+                groupsSpace: 12,
+                barTouchData: BarTouchData(
+                  touchCallback: (event, response) {
+                    onBarTouch(
+                      response?.spot?.touchedBarGroupIndex ?? -1,
+                    );
+                  },
+                  touchTooltipData: BarTouchTooltipData(
                     getTooltipColor: (_) => tooltipBg,
-                    getTooltipItems: (spots) => spots.map((spot) {
-                      final isIncome = spot.barIndex == 0;
-                      return LineTooltipItem(
-                        _fmtAmount(spot.y),
+                    tooltipBorder: BorderSide(color: border),
+                    getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                      final monthData = data.last6Months[groupIndex];
+                      final monthName = _months[monthData.month - 1];
+                      final isIncome = rodIndex == 0;
+                      return BarTooltipItem(
+                        '$monthName\n',
                         GoogleFonts.inter(
-                          color: isIncome
-                              ? const Color(0xFF059669)
-                              : const Color(0xFFDC2626),
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
+                          fontSize: 10,
+                          color: muted,
+                          fontWeight: FontWeight.w500,
                         ),
+                        children: [
+                          TextSpan(
+                            text: isIncome
+                                ? _fmtAmount(monthData.income)
+                                : _fmtAmount(monthData.expense),
+                            style: GoogleFonts.inter(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: isIncome ? incomeColor : expenseColor,
+                            ),
+                          ),
+                        ],
                       );
-                    }).toList(),
+                    },
                   ),
                 ),
                 titlesData: FlTitlesData(
+                  show: true,
                   bottomTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
-                      reservedSize: 20,
-                      interval: 1,
-                      getTitlesWidget: (value, _) {
+                      reservedSize: 22,
+                      getTitlesWidget: (value, meta) {
                         final idx = value.toInt();
                         if (idx < 0 || idx >= data.last6Months.length) {
                           return const SizedBox.shrink();
@@ -625,7 +770,7 @@ class _ReportsContent extends StatelessWidget {
                           child: Text(
                             _months[m - 1],
                             style: GoogleFonts.inter(
-                              fontSize: 11,
+                              fontSize: 10,
                               color: muted,
                             ),
                           ),
@@ -633,8 +778,24 @@ class _ReportsContent extends StatelessWidget {
                       },
                     ),
                   ),
-                  leftTitles: const AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
+                  leftTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 42,
+                      getTitlesWidget: (value, meta) {
+                        if (value == 0) return const SizedBox.shrink();
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 4),
+                          child: Text(
+                            compact.format(value),
+                            style: GoogleFonts.inter(
+                              fontSize: 10,
+                              color: muted,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
                   ),
                   topTitles: const AxisTitles(
                     sideTitles: SideTitles(showTitles: false),
@@ -644,6 +805,7 @@ class _ReportsContent extends StatelessWidget {
                   ),
                 ),
                 gridData: FlGridData(
+                  show: true,
                   drawVerticalLine: false,
                   getDrawingHorizontalLine: (_) => FlLine(
                     color: gridLineColor,
@@ -652,60 +814,32 @@ class _ReportsContent extends StatelessWidget {
                   ),
                 ),
                 borderData: FlBorderData(show: false),
-                lineBarsData: [
-                  // Línea verde (income)
-                  LineChartBarData(
-                    spots: data.last6Months
-                        .asMap()
-                        .entries
-                        .map((e) =>
-                            FlSpot(e.key.toDouble(), e.value.income))
-                        .toList(),
-                    isCurved: true,
-                    color: const Color(0xFF059669),
-                    barWidth: 2,
-                    dotData: FlDotData(
-                      show: true,
-                      getDotPainter: (spot, pct, bar, idx) =>
-                          FlDotCirclePainter(
-                        radius: 3,
-                        color: const Color(0xFF059669),
-                        strokeWidth: 0,
-                        strokeColor: Colors.transparent,
+                barGroups: data.last6Months.asMap().entries.map((entry) {
+                  return BarChartGroupData(
+                    x: entry.key,
+                    barsSpace: 4,
+                    barRods: [
+                      // Barra verde — ingresos
+                      BarChartRodData(
+                        toY: entry.value.income,
+                        color: incomeColor,
+                        width: 10,
+                        borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(4),
+                        ),
                       ),
-                    ),
-                    belowBarData: BarAreaData(
-                      show: true,
-                      color: const Color(0xFF059669).withValues(alpha: 20),
-                    ),
-                  ),
-                  // Línea roja (expense)
-                  LineChartBarData(
-                    spots: data.last6Months
-                        .asMap()
-                        .entries
-                        .map((e) =>
-                            FlSpot(e.key.toDouble(), e.value.expense))
-                        .toList(),
-                    isCurved: true,
-                    color: const Color(0xFFDC2626),
-                    barWidth: 2,
-                    dotData: FlDotData(
-                      show: true,
-                      getDotPainter: (spot, pct, bar, idx) =>
-                          FlDotCirclePainter(
-                        radius: 3,
-                        color: const Color(0xFFDC2626),
-                        strokeWidth: 0,
-                        strokeColor: Colors.transparent,
+                      // Barra roja — gastos
+                      BarChartRodData(
+                        toY: entry.value.expense,
+                        color: expenseColor,
+                        width: 10,
+                        borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(4),
+                        ),
                       ),
-                    ),
-                    belowBarData: BarAreaData(
-                      show: true,
-                      color: const Color(0xFFDC2626).withValues(alpha: 20),
-                    ),
-                  ),
-                ],
+                    ],
+                  );
+                }).toList(),
               ),
             ),
           ),
@@ -931,26 +1065,6 @@ class _TopCategoryRow extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-// ─── _LegendDot ────────────────────────────────────────────────────────────
-
-class _LegendDot extends StatelessWidget {
-  const _LegendDot({required this.color});
-
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 8,
-      height: 8,
-      decoration: BoxDecoration(
-        color: color,
-        shape: BoxShape.circle,
       ),
     );
   }
