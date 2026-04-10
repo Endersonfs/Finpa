@@ -40,3 +40,4 @@ abstract final class CurrencyFormatter {
     return amount >= 0 ? '+$formatted' : '-$formatted';
   }
 }
+

@@ -206,7 +206,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       '¿Olvidaste tu contraseña?',
                       style: TextStyle(
                         fontSize: 13,
-                        color: const Color(0xFF3B5BDB),
+                        color: const Color(0xFF2F7155),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -237,7 +237,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         ),
                       ),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF3B5BDB),
+                        backgroundColor: const Color(0xFF2F7155),
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -256,7 +256,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   child: ElevatedButton(
                     onPressed: _isLoading ? null : _signIn,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF3B5BDB),
+                      backgroundColor: const Color(0xFF2F7155),
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -350,7 +350,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         'Regístrate',
                         style: TextStyle(
                           fontSize: 13,
-                          color: const Color(0xFF3B5BDB),
+                          color: const Color(0xFF2F7155),
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -381,20 +381,21 @@ class _FinPaLogo extends StatelessWidget {
       height: size,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(size * 0.26),
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF3B5BDB), Color(0xFF7950F2)],
-        ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF3B5BDB).withOpacity(0.28),
+            color: const Color(0xFF2F7155).withOpacity(0.28),
             blurRadius: 16,
             offset: const Offset(0, 6),
           ),
         ],
       ),
-      child: Icon(Icons.layers_rounded, color: Colors.white, size: size * 0.52),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(size * 0.26),
+        child: Image.asset(
+          'assets/images/logo.png',
+          fit: BoxFit.cover,
+        ),
+      ),
     );
   }
 }
@@ -428,3 +429,4 @@ class _GoogleIcon extends StatelessWidget {
     );
   }
 }
+

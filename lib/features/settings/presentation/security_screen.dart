@@ -84,7 +84,7 @@ class SecurityScreen extends ConsumerWidget {
                     height: 36,
                     decoration: BoxDecoration(
                       color: biometric.isAvailable
-                          ? const Color(0xFF3B5BDB)
+                          ? const Color(0xFF2F7155)
                           : c.muted,
                       borderRadius: BorderRadius.circular(10),
                     ),
@@ -96,7 +96,7 @@ class SecurityScreen extends ConsumerWidget {
                       color: Colors.white,
                     ),
                   ),
-                  activeThumbColor: const Color(0xFF3B5BDB),
+                  activeThumbColor: const Color(0xFF2F7155),
                   contentPadding:
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                 ),
@@ -151,7 +151,7 @@ class SecurityScreen extends ConsumerWidget {
                       color: Colors.white,
                     ),
                   ),
-                  activeThumbColor: const Color(0xFF3B5BDB),
+                  activeThumbColor: const Color(0xFF2F7155),
                   contentPadding:
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                 ),
@@ -385,3 +385,4 @@ class _TimeoutTile extends StatelessWidget {
     );
   }
 }
+

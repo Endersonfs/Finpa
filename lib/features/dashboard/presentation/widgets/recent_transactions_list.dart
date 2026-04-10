@@ -94,7 +94,7 @@ class RecentTransactionsList extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: const Color(0xFF3B5BDB),
+                  color: const Color(0xFF2F7155),
                 ),
               ),
             ),
@@ -287,3 +287,4 @@ class _TransactionSkeletonState extends State<_TransactionSkeleton>
     );
   }
 }
+

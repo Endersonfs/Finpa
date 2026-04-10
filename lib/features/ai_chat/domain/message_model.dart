@@ -29,3 +29,4 @@ class MessageModel {
         timestamp: DateTime.now(),
       );
 }
+

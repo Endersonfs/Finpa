@@ -168,3 +168,4 @@ final transferNotifierProvider =
     ref,
   ),
 );
+

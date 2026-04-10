@@ -115,7 +115,7 @@ class _BudgetContent extends StatelessWidget {
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
-                colors: [Color(0xFF3B5BDB), Color(0xFF7950F2)],
+                colors: [Color(0xFF2F7155), Color(0xFF6BC99D)],
               ),
               borderRadius: BorderRadius.circular(18),
             ),
@@ -506,3 +506,4 @@ class _ErrorState extends StatelessWidget {
     );
   }
 }
+

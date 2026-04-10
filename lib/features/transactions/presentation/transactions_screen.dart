@@ -168,7 +168,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push('/transactions/add'),
-        backgroundColor: const Color(0xFF3B5BDB),
+        backgroundColor: const Color(0xFF2F7155),
         foregroundColor: Colors.white,
         icon: const Icon(Icons.add),
         label: Text(
@@ -351,7 +351,7 @@ class _Chip extends StatelessWidget {
         height: 32,
         padding: const EdgeInsets.symmetric(horizontal: 12),
         decoration: BoxDecoration(
-          color: active ? const Color(0xFF3B5BDB) : cs.surface,
+          color: active ? const Color(0xFF2F7155) : cs.surface,
           borderRadius: BorderRadius.circular(20),
           border: active
               ? null
@@ -903,3 +903,4 @@ class _EmptyState extends StatelessWidget {
     );
   }
 }
+

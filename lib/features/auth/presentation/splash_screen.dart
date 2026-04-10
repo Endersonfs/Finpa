@@ -24,15 +24,15 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
     _ctrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 900),
+      duration: const Duration(milliseconds: 200),
     );
-    _scale = Tween<double>(begin: 0.75, end: 1.0).animate(
-      CurvedAnimation(parent: _ctrl, curve: Curves.easeOutBack),
+    _scale = Tween<double>(begin: 0.5, end: 1.0).animate(
+      CurvedAnimation(parent: _ctrl, curve: Curves.easeOutCubic),
     );
     _fade = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
         parent: _ctrl,
-        curve: const Interval(0.0, 0.65, curve: Curves.easeIn),
+        curve: const Interval(0.0, 1.0, curve: Curves.easeIn),
       ),
     );
 
@@ -47,7 +47,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   }
 
   Future<void> _init() async {
-    await Future.delayed(const Duration(milliseconds: 2400));
+    await Future.delayed(const Duration(milliseconds: 200));
     if (!mounted) return;
 
     Session? session;
@@ -71,7 +71,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F6FA),
+      backgroundColor: Colors.white,
       body: Center(
         child: FadeTransition(
           opacity: _fade,
@@ -80,23 +80,15 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const _FinPaLogo(size: 88),
-                const SizedBox(height: 22),
+                const _FinPaLogo(size: 100),
+                const SizedBox(height: 24),
                 Text(
                   'FinPa',
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        fontSize: 28,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF1A1F36),
+                        fontSize: 32,
+                        fontWeight: FontWeight.w800,
+                        color: const Color(0xFF2F7155),
                         letterSpacing: -0.5,
-                      ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  'Tu dinero, bajo control',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontSize: 14,
-                        color: const Color(0xFF9CA3AF),
                       ),
                 ),
               ],
@@ -109,7 +101,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 }
 
 // ─────────────────────────────────────────────
-//  Logo FinPa: rect redondeado degradado + layers
+//  Logo FinPa
 // ─────────────────────────────────────────────
 class _FinPaLogo extends StatelessWidget {
   final double size;
@@ -122,25 +114,23 @@ class _FinPaLogo extends StatelessWidget {
       width: size,
       height: size,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(size * 0.26),
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF3B5BDB), Color(0xFF7950F2)],
-        ),
+        borderRadius: BorderRadius.circular(size * 0.22),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF3B5BDB).withOpacity(0.32),
-            blurRadius: 24,
-            offset: const Offset(0, 10),
+            color: const Color(0xFF2F7155).withOpacity(0.12),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
-      child: Icon(
-        Icons.layers_rounded,
-        color: Colors.white,
-        size: size * 0.52,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(size * 0.22),
+        child: Image.asset(
+          'assets/images/logo.png',
+          fit: BoxFit.cover,
+        ),
       ),
     );
   }
 }
+

@@ -113,7 +113,7 @@ abstract final class FinPaCategories {
     id: 'freelance',
     name: 'Freelance',
     emoji: '💻',
-    color: Color(0xFF3B5BDB),
+    color: Color(0xFF2F7155),
     type: TransactionType.income,
   );
 
@@ -175,3 +175,4 @@ abstract final class FinPaCategories {
   static Color  colorFor(String id) =>
       findById(id)?.color ?? const Color(0xFF8892B0);
 }
+

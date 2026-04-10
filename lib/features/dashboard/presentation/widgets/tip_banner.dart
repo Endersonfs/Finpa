@@ -55,7 +55,7 @@ class _TipContent extends StatelessWidget {
               width: 7,
               height: 7,
               decoration: const BoxDecoration(
-                color: Color(0xFF3B5BDB),
+                color: Color(0xFF2F7155),
                 shape: BoxShape.circle,
               ),
             ),
@@ -144,3 +144,4 @@ class _TipShimmerState extends State<_TipShimmer>
     );
   }
 }
+

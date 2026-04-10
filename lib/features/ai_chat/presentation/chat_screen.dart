@@ -98,7 +98,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               child: const Icon(
                 Icons.psychology_rounded,
                 size: 20,
-                color: Color(0xFF3B5BDB),
+                color: Color(0xFF2F7155),
               ),
             ),
             const SizedBox(width: 10),
@@ -254,7 +254,7 @@ class _MessageBubble extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
               color: isUser
-                  ? const Color(0xFF3B5BDB)
+                  ? const Color(0xFF2F7155)
                   : (isDark
                       ? const Color(0xFF0F1320)
                       : const Color(0xFFEEF2FF)),
@@ -378,7 +378,7 @@ class _TypingIndicatorState extends State<_TypingIndicator>
                     height: 6,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: const Color(0xFF3B5BDB).withValues(alpha: 0.7),
+                      color: const Color(0xFF2F7155).withValues(alpha: 0.7),
                     ),
                   ),
                 ),
@@ -523,7 +523,7 @@ class _InputArea extends StatelessWidget {
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(20),
                   borderSide: const BorderSide(
-                    color: Color(0xFF3B5BDB),
+                    color: Color(0xFF2F7155),
                     width: 1.5,
                   ),
                 ),
@@ -543,7 +543,7 @@ class _InputArea extends StatelessWidget {
                     ? (isDark
                         ? const Color(0xFF1E2840)
                         : const Color(0xFFE2E6F0))
-                    : const Color(0xFF3B5BDB),
+                    : const Color(0xFF2F7155),
               ),
               child: isLoading
                   ? const Center(
@@ -552,7 +552,7 @@ class _InputArea extends StatelessWidget {
                         height: 18,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: Color(0xFF3B5BDB),
+                          color: Color(0xFF2F7155),
                         ),
                       ),
                     )
@@ -568,3 +568,4 @@ class _InputArea extends StatelessWidget {
     );
   }
 }
+

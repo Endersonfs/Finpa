@@ -46,7 +46,7 @@ class GoalsScreen extends ConsumerWidget {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push('/goals/add'),
-        backgroundColor: const Color(0xFF3B5BDB),
+        backgroundColor: const Color(0xFF2F7155),
         foregroundColor: Colors.white,
         icon: const Icon(Icons.add),
         label: Text(
@@ -222,7 +222,7 @@ class GoalsScreen extends ConsumerWidget {
                         children: [
                           const Icon(
                             Icons.add_circle_outline_rounded,
-                            color: Color(0xFF3B5BDB),
+                            color: Color(0xFF2F7155),
                             size: 18,
                           ),
                           const SizedBox(width: 8),
@@ -231,7 +231,7 @@ class GoalsScreen extends ConsumerWidget {
                             style: GoogleFonts.inter(
                               fontSize: 13,
                               fontWeight: FontWeight.w700,
-                              color: const Color(0xFF3B5BDB),
+                              color: const Color(0xFF2F7155),
                             ),
                           ),
                         ],
@@ -566,3 +566,4 @@ class _SkeletonCard extends StatelessWidget {
     );
   }
 }
+

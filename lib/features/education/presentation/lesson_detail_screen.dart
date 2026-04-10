@@ -197,7 +197,7 @@ class _LessonDetailScreenState extends ConsumerState<LessonDetailScreen> {
                                         module.totalCount)
                                     .clamp(0.0, 1.0),
                                 child: Container(
-                                  color: const Color(0xFF3B5BDB),
+                                  color: const Color(0xFF2F7155),
                                 ),
                               ),
                             ],
@@ -433,3 +433,4 @@ class _LessonDetailScreenState extends ConsumerState<LessonDetailScreen> {
     );
   }
 }
+

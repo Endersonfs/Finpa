@@ -4,9 +4,9 @@ class AppColors {
   AppColors._();
 
   // Primary palette
-  static const Color primary = Color(0xFF2563EB);
-  static const Color primaryLight = Color(0xFF3B82F6);
-  static const Color primaryDark = Color(0xFF1D4ED8);
+  static const Color primary = Color(0xFF2F7155);
+  static const Color primaryLight = Color(0xFF6BC99D);
+  static const Color primaryDark = Color(0xFF1E4937);
 
   // Secondary palette
   static const Color secondary = Color(0xFF10B981);
@@ -29,3 +29,4 @@ class AppColors {
   static const Color border = Color(0xFFE5E7EB);
   static const Color borderDark = Color(0xFF374151);
 }
+

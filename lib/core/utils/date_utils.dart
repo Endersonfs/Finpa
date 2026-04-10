@@ -53,3 +53,4 @@ abstract final class FinPaDateUtils {
     return DateTime(now.year, now.month + 1, 0, 23, 59, 59);
   }
 }
+

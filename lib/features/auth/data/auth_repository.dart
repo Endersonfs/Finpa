@@ -36,3 +36,4 @@ class AuthRepository {
 
   User? getCurrentUser() => _client.auth.currentUser;
 }
+

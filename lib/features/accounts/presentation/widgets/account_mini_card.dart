@@ -118,7 +118,7 @@ class AccountMiniCard extends StatelessWidget {
       case AccountType.savings:
         return const Color(0xFF7C3AED);
       default:
-        return const Color(0xFF3B5BDB); // primary — isSpendable
+        return const Color(0xFF2F7155); // primary — isSpendable
     }
   }
 
@@ -174,3 +174,4 @@ class _ProgressBar extends StatelessWidget {
     );
   }
 }
+

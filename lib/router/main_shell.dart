@@ -118,13 +118,13 @@ class _MainShellState extends ConsumerState<MainShell>
       }
     });
 
-    const selectedColor   = Color(0xFF3B5BDB);
+    const selectedColor   = Color(0xFF2F7155);
     final unselectedColor = isDark ? const Color(0xFF4A5580) : const Color(0xFF9CA3AF);
     final bgColor         = isDark ? const Color(0xFF060810) : const Color(0xFFFFFFFF);
     final borderColor     = isDark ? const Color(0xFF1E2535) : const Color(0xFFE2E6F0);
     final indicatorColor  = isDark
-        ? const Color(0xFF3B5BDB).withValues(alpha: 0.20)
-        : const Color(0xFF3B5BDB).withValues(alpha: 0.12);
+        ? const Color(0xFF2F7155).withValues(alpha: 0.20)
+        : const Color(0xFF2F7155).withValues(alpha: 0.12);
 
     return GestureDetector(
       behavior: HitTestBehavior.translucent,
@@ -191,3 +191,4 @@ class _TabItem {
     required this.label,
   });
 }
+

@@ -45,3 +45,4 @@ final educationNotifierProvider =
     StateNotifierProvider<EducationNotifier, AsyncValue<void>>(
   (ref) => EducationNotifier(ref.watch(educationRepositoryProvider), ref),
 );
+

@@ -59,3 +59,4 @@ final goalNotifierProvider =
     StateNotifierProvider<GoalNotifier, AsyncValue<void>>(
   (ref) => GoalNotifier(ref.watch(goalRepositoryProvider), ref),
 );
+

@@ -54,3 +54,4 @@ final budgetNotifierProvider =
     StateNotifierProvider<BudgetNotifier, AsyncValue<void>>(
   (ref) => BudgetNotifier(ref.watch(budgetRepositoryProvider), ref),
 );
+

@@ -93,7 +93,7 @@ class ProfileScreen extends ConsumerWidget {
                         decoration: const BoxDecoration(
                           shape: BoxShape.circle,
                           gradient: LinearGradient(
-                            colors: [Color(0xFF3B5BDB), Color(0xFF7950F2)],
+                            colors: [Color(0xFF2F7155), Color(0xFF6BC99D)],
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                           ),
@@ -198,7 +198,7 @@ class ProfileScreen extends ConsumerWidget {
               _ProfileTile(
                 icon: Icons.person_outline_rounded,
                 label: 'Información personal',
-                iconBg: const Color(0xFF3B5BDB),
+                iconBg: const Color(0xFF2F7155),
                 surface: surface,
                 border: c.border,
                 textPrimary: textPrimary,
@@ -553,3 +553,4 @@ class _ProfileTile extends StatelessWidget {
     );
   }
 }
+

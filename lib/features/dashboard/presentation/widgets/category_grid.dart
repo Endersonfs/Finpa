@@ -215,3 +215,4 @@ class _CategorySkeletonState extends State<_CategorySkeleton>
     );
   }
 }
+

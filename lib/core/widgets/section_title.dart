@@ -43,3 +43,4 @@ class SectionTitle extends StatelessWidget {
     );
   }
 }
+

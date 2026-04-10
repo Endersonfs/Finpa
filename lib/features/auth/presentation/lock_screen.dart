@@ -135,23 +135,20 @@ class _LockScreenState extends ConsumerState<LockScreen> {
                 height: 72,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(18),
-                  gradient: const LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [Color(0xFF3B5BDB), Color(0xFF7950F2)],
-                  ),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF3B5BDB).withValues(alpha: 0.30),
+                      color: const Color(0xFF2F7155).withValues(alpha: 0.30),
                       blurRadius: 20,
                       offset: const Offset(0, 8),
                     ),
                   ],
                 ),
-                child: const Icon(
-                  Icons.layers_rounded,
-                  color: Colors.white,
-                  size: 36,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(18),
+                  child: Image.asset(
+                    'assets/images/logo.png',
+                    fit: BoxFit.cover,
+                  ),
                 ),
               ),
               const SizedBox(height: 20),
@@ -296,7 +293,7 @@ class _LockScreenState extends ConsumerState<LockScreen> {
                     onPressed:
                         _isLoading ? null : _authenticateWithPassword,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF3B5BDB),
+                      backgroundColor: const Color(0xFF2F7155),
                       foregroundColor: Colors.white,
                       elevation: 0,
                       shape: RoundedRectangleBorder(
@@ -342,7 +339,7 @@ class _LockScreenState extends ConsumerState<LockScreen> {
                       ),
                     ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF3B5BDB),
+                      backgroundColor: const Color(0xFF2F7155),
                       foregroundColor: Colors.white,
                       elevation: 0,
                       shape: RoundedRectangleBorder(
@@ -373,7 +370,7 @@ class _LockScreenState extends ConsumerState<LockScreen> {
                       size: 20,
                       color: isDark
                           ? const Color(0xFFE8EEFF)
-                          : const Color(0xFF3B5BDB),
+                          : const Color(0xFF2F7155),
                     ),
                     label: Text(
                       'Ingresar con contraseña',
@@ -382,7 +379,7 @@ class _LockScreenState extends ConsumerState<LockScreen> {
                         fontWeight: FontWeight.w500,
                         color: isDark
                             ? const Color(0xFFE8EEFF)
-                            : const Color(0xFF3B5BDB),
+                            : const Color(0xFF2F7155),
                       ),
                     ),
                     style: OutlinedButton.styleFrom(
@@ -416,3 +413,4 @@ class _LockScreenState extends ConsumerState<LockScreen> {
     );
   }
 }
+

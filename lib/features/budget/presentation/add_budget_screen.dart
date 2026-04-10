@@ -231,7 +231,7 @@ class _AddBudgetScreenState extends ConsumerState<AddBudgetScreen> {
                           border: InputBorder.none,
                           enabledBorder: InputBorder.none,
                           focusedBorder: const UnderlineInputBorder(
-                            borderSide: BorderSide(color: Color(0xFF3B5BDB)),
+                            borderSide: BorderSide(color: Color(0xFF2F7155)),
                           ),
                           filled: false,
                           contentPadding: EdgeInsets.zero,
@@ -262,11 +262,11 @@ class _AddBudgetScreenState extends ConsumerState<AddBudgetScreen> {
                         height: 40,
                         decoration: BoxDecoration(
                           color: isActive
-                              ? const Color(0xFF3B5BDB)
+                              ? const Color(0xFF2F7155)
                               : cs.surface,
                           border: Border.all(
                             color: isActive
-                                ? const Color(0xFF3B5BDB)
+                                ? const Color(0xFF2F7155)
                                 : c.border,
                           ),
                           borderRadius: BorderRadius.circular(10),
@@ -315,7 +315,7 @@ class _AddBudgetScreenState extends ConsumerState<AddBudgetScreen> {
                       const Icon(
                         Icons.lightbulb_outline_rounded,
                         size: 16,
-                        color: Color(0xFF3B5BDB),
+                        color: Color(0xFF2F7155),
                       ),
                       const SizedBox(width: 10),
                       Expanded(
@@ -343,7 +343,7 @@ class _AddBudgetScreenState extends ConsumerState<AddBudgetScreen> {
                 Icon(
                   Icons.notifications_outlined,
                   size: 18,
-                  color: const Color(0xFF3B5BDB),
+                  color: const Color(0xFF2F7155),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
@@ -357,7 +357,7 @@ class _AddBudgetScreenState extends ConsumerState<AddBudgetScreen> {
                 ),
                 Switch(
                   value: _alertAt80,
-                  activeColor: const Color(0xFF3B5BDB),
+                  activeColor: const Color(0xFF2F7155),
                   onChanged: (v) => setState(() => _alertAt80 = v),
                 ),
               ],
@@ -372,7 +372,7 @@ class _AddBudgetScreenState extends ConsumerState<AddBudgetScreen> {
               child: ElevatedButton(
                 onPressed: _canSave && !_isSaving ? _save : null,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF3B5BDB),
+                  backgroundColor: const Color(0xFF2F7155),
                   foregroundColor: Colors.white,
                   disabledBackgroundColor: c.border,
                   disabledForegroundColor: c.muted,
@@ -460,3 +460,4 @@ class _AiBannerSkeletonState extends State<_AiBannerSkeleton>
     );
   }
 }
+

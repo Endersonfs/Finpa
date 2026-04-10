@@ -128,7 +128,7 @@ class DashboardScreen extends ConsumerWidget {
       // ── FAB ─────────────────────────────────
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push('/transactions/add'),
-        backgroundColor: const Color(0xFF3B5BDB),
+        backgroundColor: const Color(0xFF2F7155),
         foregroundColor: Colors.white,
         elevation: 2,
         icon: const Icon(Icons.add, size: 20),
@@ -183,7 +183,7 @@ class _UserAvatar extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFF3B5BDB), Color(0xFF7950F2)],
+          colors: [Color(0xFF2F7155), Color(0xFF6BC99D)],
         ),
       ),
       child: Center(
@@ -335,7 +335,7 @@ class _SectionHeader extends StatelessWidget {
                 style: const TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: Color(0xFF3B5BDB),
+                  color: Color(0xFF2F7155),
                 ),
               ),
             ),
@@ -344,3 +344,4 @@ class _SectionHeader extends StatelessWidget {
     );
   }
 }
+

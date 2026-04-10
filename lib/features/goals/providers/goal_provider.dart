@@ -15,3 +15,4 @@ final goalsProvider = FutureProvider.autoDispose<List<SavingGoal>>((ref) {
   final repo = ref.watch(goalRepositoryProvider);
   return repo.fetchAll();
 });
+

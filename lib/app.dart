@@ -23,3 +23,4 @@ class FinPaApp extends ConsumerWidget {
     );
   }
 }
+

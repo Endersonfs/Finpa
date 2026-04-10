@@ -45,3 +45,4 @@ final categoryExpensesProvider =
     return result;
   });
 });
+

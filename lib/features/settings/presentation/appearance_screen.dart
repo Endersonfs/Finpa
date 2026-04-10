@@ -69,7 +69,7 @@ class _AppearanceScreenState extends ConsumerState<AppearanceScreen> {
             title: 'Oscuro',
             subtitle: 'Fondo negro, texto claro',
             icon: Icons.dark_mode_rounded,
-            iconColor: const Color(0xFF3B5BDB),
+            iconColor: const Color(0xFF2F7155),
             isSelected: themeMode == ThemeMode.dark,
             isDark: isDark,
             surface: surface,
@@ -121,7 +121,7 @@ class _AppearanceScreenState extends ConsumerState<AppearanceScreen> {
                 style: GoogleFonts.inter(fontSize: 11, color: c.muted),
               ),
               value: _budget,
-              activeThumbColor: const Color(0xFF3B5BDB),
+              activeThumbColor: const Color(0xFF2F7155),
               onChanged: (v) {
                 setState(() => _budget = v);
                 prefs.setBool('finpa_notif_budget', v);
@@ -145,7 +145,7 @@ class _AppearanceScreenState extends ConsumerState<AppearanceScreen> {
                 style: GoogleFonts.inter(fontSize: 11, color: c.muted),
               ),
               value: _tips,
-              activeThumbColor: const Color(0xFF3B5BDB),
+              activeThumbColor: const Color(0xFF2F7155),
               onChanged: (v) {
                 setState(() => _tips = v);
                 prefs.setBool('finpa_notif_tips', v);
@@ -169,7 +169,7 @@ class _AppearanceScreenState extends ConsumerState<AppearanceScreen> {
                 style: GoogleFonts.inter(fontSize: 11, color: c.muted),
               ),
               value: _reminder,
-              activeThumbColor: const Color(0xFF3B5BDB),
+              activeThumbColor: const Color(0xFF2F7155),
               onChanged: (v) {
                 setState(() => _reminder = v);
                 prefs.setBool('finpa_notif_reminder', v);
@@ -224,7 +224,7 @@ class _ThemeOptionCard extends StatelessWidget {
               ? (isDark ? const Color(0xFF0D1227) : const Color(0xFFEEF2FF))
               : surface,
           border: Border.all(
-            color: isSelected ? const Color(0xFF3B5BDB) : border,
+            color: isSelected ? const Color(0xFF2F7155) : border,
             width: isSelected ? 1.5 : 0.5,
           ),
           borderRadius: BorderRadius.circular(14),
@@ -266,7 +266,7 @@ class _ThemeOptionCard extends StatelessWidget {
             if (isSelected)
               const Icon(
                 Icons.check_circle_rounded,
-                color: Color(0xFF3B5BDB),
+                color: Color(0xFF2F7155),
                 size: 20,
               )
             else
@@ -277,3 +277,4 @@ class _ThemeOptionCard extends StatelessWidget {
     );
   }
 }
+

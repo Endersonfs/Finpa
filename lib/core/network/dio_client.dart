@@ -31,3 +31,4 @@ class ApiClient {
 
   void dispose() => _client.close();
 }
+

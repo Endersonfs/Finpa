@@ -316,3 +316,4 @@ final routerProvider = Provider<GoRouter>((ref) {
 // Mantener compatibilidad con código anterior que use appRouterProvider
 @Deprecated('Usar routerProvider')
 final appRouterProvider = routerProvider;
+

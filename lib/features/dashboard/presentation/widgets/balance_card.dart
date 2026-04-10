@@ -26,7 +26,7 @@ class BalanceCard extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFF3B5BDB),
+        color: const Color(0xFF2F7155),
         borderRadius: BorderRadius.circular(18),
       ),
       child: Column(
@@ -190,3 +190,4 @@ class _SkeletonState extends State<_Skeleton>
     );
   }
 }
+

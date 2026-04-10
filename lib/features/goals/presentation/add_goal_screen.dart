@@ -174,7 +174,7 @@ class _AddGoalScreenState extends ConsumerState<AddGoalScreen> {
                           : c.cardBg,
                       border: Border.all(
                         color: selected
-                            ? const Color(0xFF3B5BDB)
+                            ? const Color(0xFF2F7155)
                             : c.border,
                         width: selected ? 2 : 1,
                       ),
@@ -302,7 +302,7 @@ class _AddGoalScreenState extends ConsumerState<AddGoalScreen> {
                 children: [
                   Icon(Icons.event_rounded,
                       size: 18,
-                      color: const Color(0xFF3B5BDB)),
+                      color: const Color(0xFF2F7155)),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
@@ -333,7 +333,7 @@ class _AddGoalScreenState extends ConsumerState<AddGoalScreen> {
                       style: GoogleFonts.inter(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
-                        color: const Color(0xFF3B5BDB),
+                        color: const Color(0xFF2F7155),
                       ),
                     ),
                   ),
@@ -353,7 +353,7 @@ class _AddGoalScreenState extends ConsumerState<AddGoalScreen> {
                         style: GoogleFonts.inter(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
-                          color: const Color(0xFF3B5BDB),
+                          color: const Color(0xFF2F7155),
                         ),
                       ),
                     ),
@@ -432,9 +432,9 @@ class _AddGoalScreenState extends ConsumerState<AddGoalScreen> {
             ElevatedButton(
               onPressed: (_isValid && !_isSaving) ? _save : null,
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF3B5BDB),
+                backgroundColor: const Color(0xFF2F7155),
                 disabledBackgroundColor:
-                    const Color(0xFF3B5BDB).withValues(alpha: 0.4),
+                    const Color(0xFF2F7155).withValues(alpha: 0.4),
                 foregroundColor: Colors.white,
                 minimumSize: const Size(double.infinity, 52),
                 shape: RoundedRectangleBorder(
@@ -466,3 +466,4 @@ class _AddGoalScreenState extends ConsumerState<AddGoalScreen> {
     );
   }
 }
+

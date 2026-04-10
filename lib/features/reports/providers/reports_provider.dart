@@ -46,3 +46,4 @@ final reportsProvider = FutureProvider.autoDispose
     last6Months: last6,
   );
 });
+

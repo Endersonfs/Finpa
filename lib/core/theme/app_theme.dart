@@ -10,7 +10,7 @@ abstract final class _Light {
   static const surface     = Color(0xFFFFFFFF);
   static const cardBg      = Color(0xFFF0F2F8);
   static const border      = Color(0xFFE2E6F0);
-  static const primary     = Color(0xFF3B5BDB);
+  static const primary     = Color(0xFF2F7155);
   static const onPrimary   = Color(0xFFFFFFFF);
   static const textPrimary = Color(0xFF1A1F36);
   static const textSecond  = Color(0xFF6B7280);
@@ -25,7 +25,7 @@ abstract final class _Dark {
   static const surface     = Color(0xFF0F1320);
   static const cardBg      = Color(0xFF141928);
   static const border      = Color(0xFF1E2840);
-  static const primary     = Color(0xFF3B5BDB);
+  static const primary     = Color(0xFF2F7155);
   static const onPrimary   = Color(0xFFFFFFFF);
   static const textPrimary = Color(0xFFE8EEFF);
   static const textSecond  = Color(0xFF8892B0);
@@ -128,12 +128,12 @@ abstract final class AppTheme {
           brightness: Brightness.light,
           primary:              _Light.primary,
           onPrimary:            _Light.onPrimary,
-          primaryContainer:     Color(0xFFDEE5FF),
-          onPrimaryContainer:   Color(0xFF001258),
-          secondary:            Color(0xFF4361EE),
+          primaryContainer:     Color(0xFFDCF2E9),
+          onPrimaryContainer:   Color(0xFF0D2E1F),
+          secondary:            Color(0xFF2F7155),
           onSecondary:          Color(0xFFFFFFFF),
-          secondaryContainer:   Color(0xFFE0E7FF),
-          onSecondaryContainer: Color(0xFF001258),
+          secondaryContainer:   Color(0xFFE6F4ED),
+          onSecondaryContainer: Color(0xFF0D2E1F),
           tertiary:             _Light.income,
           onTertiary:           Color(0xFFFFFFFF),
           tertiaryContainer:    Color(0xFFD1FAE5),
@@ -299,12 +299,12 @@ abstract final class AppTheme {
           brightness: Brightness.dark,
           primary:              _Dark.primary,
           onPrimary:            _Dark.onPrimary,
-          primaryContainer:     Color(0xFF1E2D78),
-          onPrimaryContainer:   Color(0xFFDEE5FF),
-          secondary:            Color(0xFF7B8FF5),
-          onSecondary:          Color(0xFF001258),
-          secondaryContainer:   Color(0xFF1E2D78),
-          onSecondaryContainer: Color(0xFFDEE5FF),
+          primaryContainer:     Color(0xFF1E3A2F),
+          onPrimaryContainer:   Color(0xFFDCF2E9),
+          secondary:            Color(0xFF6BC99D),
+          onSecondary:          Color(0xFF0D2E1F),
+          secondaryContainer:   Color(0xFF1E3A2F),
+          onSecondaryContainer: Color(0xFFDCF2E9),
           tertiary:             _Dark.income,
           onTertiary:           Color(0xFF003822),
           tertiaryContainer:    Color(0xFF00522F),
@@ -323,7 +323,7 @@ abstract final class AppTheme {
           scrim:                Color(0xFF000000),
           inverseSurface:       _Dark.textPrimary,
           onInverseSurface:     _Dark.scaffoldBg,
-          inversePrimary:       Color(0xFF3B5BDB),
+          inversePrimary:       Color(0xFF2F7155),
         ),
 
         scaffoldBackgroundColor: _Dark.scaffoldBg,
@@ -459,3 +459,4 @@ abstract final class AppTheme {
         ),
       );
 }
+

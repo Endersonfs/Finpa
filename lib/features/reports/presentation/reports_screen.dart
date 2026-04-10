@@ -121,7 +121,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                     style: ButtonStyle(
                       backgroundColor: WidgetStateProperty.resolveWith(
                         (states) => states.contains(WidgetState.selected)
-                            ? const Color(0xFF3B5BDB)
+                            ? const Color(0xFF2F7155)
                             : Colors.transparent,
                       ),
                       foregroundColor: WidgetStateProperty.resolveWith(
@@ -155,12 +155,12 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                             ),
                             decoration: BoxDecoration(
                               color: isSelected
-                                  ? const Color(0xFF3B5BDB)
+                                  ? const Color(0xFF2F7155)
                                   : surface,
                               borderRadius: BorderRadius.circular(20),
                               border: Border.all(
                                 color: isSelected
-                                    ? const Color(0xFF3B5BDB)
+                                    ? const Color(0xFF2F7155)
                                     : c.border,
                               ),
                             ),
@@ -185,7 +185,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                     padding: EdgeInsets.only(top: 80),
                     child: Center(
                       child: CircularProgressIndicator(
-                        color: Color(0xFF3B5BDB),
+                        color: Color(0xFF2F7155),
                       ),
                     ),
                   ),
@@ -324,7 +324,7 @@ class _ReportsContent extends StatelessWidget {
                     );
                   },
                   touchTooltipData: BarTouchTooltipData(
-                    getTooltipColor: (_) => const Color(0xFF3B5BDB),
+                    getTooltipColor: (_) => const Color(0xFF2F7155),
                     getTooltipItem: (group, groupIndex, rod, rodIndex) =>
                         BarTooltipItem(
                       'RD\$${NumberFormat.compactCurrency(locale: 'es', symbol: '', decimalDigits: 0).format(rod.toY)}',
@@ -391,7 +391,7 @@ class _ReportsContent extends StatelessWidget {
                       BarChartRodData(
                         toY: entry.value.expense,
                         color: isSelected
-                            ? const Color(0xFF3B5BDB)
+                            ? const Color(0xFF2F7155)
                             : (isDark
                                 ? const Color(0xFF1E2840)
                                 : const Color(0xFFE2E6F0)),
@@ -1069,3 +1069,4 @@ class _TopCategoryRow extends StatelessWidget {
     );
   }
 }
+

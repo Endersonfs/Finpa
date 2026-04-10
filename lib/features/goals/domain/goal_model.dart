@@ -75,3 +75,4 @@ class SavingGoal {
   @override
   int get hashCode => id.hashCode;
 }
+

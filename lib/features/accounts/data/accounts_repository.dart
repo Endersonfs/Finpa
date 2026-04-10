@@ -97,7 +97,7 @@ class AccountsRepository {
       case AccountType.cash:
         return '#059669';
       default:
-        return '#3B5BDB';
+        return '#2F7155';
     }
   }
 
@@ -188,3 +188,4 @@ class AccountsRepository {
     return (data as List).map((e) => TransferModel.fromJson(e)).toList();
   }
 }
+

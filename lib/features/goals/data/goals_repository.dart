@@ -67,3 +67,4 @@ class GoalRepository {
         .eq('user_id', _userId);
   }
 }
+

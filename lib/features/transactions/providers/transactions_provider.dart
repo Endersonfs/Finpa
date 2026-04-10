@@ -47,3 +47,4 @@ final transactionNotifierProvider =
     ref,
   ),
 );
+

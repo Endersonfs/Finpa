@@ -264,7 +264,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       height: 24,
                       child: Checkbox(
                         value: _acceptedTerms,
-                        activeColor: const Color(0xFF3B5BDB),
+                        activeColor: const Color(0xFF2F7155),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(4),
                         ),
@@ -286,7 +286,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             TextSpan(
                               text: 'Términos y Condiciones',
                               style: const TextStyle(
-                                color: Color(0xFF3B5BDB),
+                                color: Color(0xFF2F7155),
                                 fontWeight: FontWeight.w600,
                               ),
                               recognizer: TapGestureRecognizer()
@@ -310,7 +310,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   child: ElevatedButton(
                     onPressed: _isLoading ? null : _register,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF3B5BDB),
+                      backgroundColor: const Color(0xFF2F7155),
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -353,7 +353,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           'Inicia sesión',
                           style: TextStyle(
                             fontSize: 13,
-                            color: const Color(0xFF3B5BDB),
+                            color: const Color(0xFF2F7155),
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -426,3 +426,4 @@ class _StrengthBar extends StatelessWidget {
     );
   }
 }
+

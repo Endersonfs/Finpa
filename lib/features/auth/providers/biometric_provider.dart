@@ -141,3 +141,4 @@ final biometricProvider =
     NotifierProvider<BiometricNotifier, BiometricState>(
   BiometricNotifier.new,
 );
+

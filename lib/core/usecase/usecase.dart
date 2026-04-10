@@ -8,3 +8,4 @@ abstract class UseCase<Type, Params> {
 class NoParams {
   const NoParams();
 }
+

@@ -403,7 +403,7 @@ class _TypeButton extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         height: 48,
         decoration: BoxDecoration(
-          color: active ? const Color(0xFF3B5BDB) : cs.surface,
+          color: active ? const Color(0xFF2F7155) : cs.surface,
           borderRadius: BorderRadius.circular(12),
           border: active ? null : Border.all(color: c.border),
         ),
@@ -474,7 +474,7 @@ class _AmountField extends StatelessWidget {
               border: InputBorder.none,
               enabledBorder: InputBorder.none,
               focusedBorder: const UnderlineInputBorder(
-                borderSide: BorderSide(color: Color(0xFF3B5BDB), width: 1.5),
+                borderSide: BorderSide(color: Color(0xFF2F7155), width: 1.5),
               ),
               filled: false,
               contentPadding: EdgeInsets.zero,
@@ -517,7 +517,7 @@ class _CategoryPicker extends StatelessWidget {
             duration: const Duration(milliseconds: 180),
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              color: isSelected ? const Color(0xFF3B5BDB) : cs.surface,
+              color: isSelected ? const Color(0xFF2F7155) : cs.surface,
               borderRadius: BorderRadius.circular(20),
               border: isSelected ? null : Border.all(color: c.border),
             ),
@@ -589,7 +589,7 @@ class _DateRow extends StatelessWidget {
               style: GoogleFonts.inter(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: const Color(0xFF3B5BDB),
+                color: const Color(0xFF2F7155),
               ),
             ),
           ),
@@ -619,3 +619,4 @@ class _SectionLabel extends StatelessWidget {
     );
   }
 }
+

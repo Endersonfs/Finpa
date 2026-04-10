@@ -213,7 +213,7 @@ class GoalDetailScreen extends ConsumerWidget {
                         const Icon(
                           Icons.schedule_rounded,
                           size: 16,
-                          color: Color(0xFF3B5BDB),
+                          color: Color(0xFF2F7155),
                         ),
                         const SizedBox(width: 10),
                         Text(
@@ -235,7 +235,7 @@ class GoalDetailScreen extends ConsumerWidget {
                     onPressed: () =>
                         _showDepositSheet(context, ref, goal),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF3B5BDB),
+                      backgroundColor: const Color(0xFF2F7155),
                       foregroundColor: Colors.white,
                       minimumSize: const Size(double.infinity, 52),
                       shape: RoundedRectangleBorder(
@@ -386,13 +386,13 @@ class _LinkAccountBanner extends StatelessWidget {
               : const Color(0xFFF0F4FF),
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
-            color: const Color(0xFF3B5BDB).withOpacity(0.25),
+            color: const Color(0xFF2F7155).withOpacity(0.25),
           ),
         ),
         child: Row(
           children: [
             const Icon(Icons.account_balance_wallet_rounded,
-                size: 16, color: Color(0xFF3B5BDB)),
+                size: 16, color: Color(0xFF2F7155)),
             const SizedBox(width: 10),
             Expanded(
               child: Text(
@@ -400,12 +400,12 @@ class _LinkAccountBanner extends StatelessWidget {
                 style: GoogleFonts.inter(
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
-                  color: const Color(0xFF3B5BDB),
+                  color: const Color(0xFF2F7155),
                 ),
               ),
             ),
             const Icon(Icons.arrow_forward_rounded,
-                size: 14, color: Color(0xFF3B5BDB)),
+                size: 14, color: Color(0xFF2F7155)),
           ],
         ),
       ),
@@ -525,9 +525,9 @@ class _DepositSheetState extends State<_DepositSheet> {
           ElevatedButton(
             onPressed: (_isValid && !_isSaving) ? _confirm : null,
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF3B5BDB),
+              backgroundColor: const Color(0xFF2F7155),
               disabledBackgroundColor:
-                  const Color(0xFF3B5BDB).withValues(alpha: 0.4),
+                  const Color(0xFF2F7155).withValues(alpha: 0.4),
               foregroundColor: Colors.white,
               minimumSize: const Size(double.infinity, 52),
               shape: RoundedRectangleBorder(
@@ -556,3 +556,4 @@ class _DepositSheetState extends State<_DepositSheet> {
     );
   }
 }
+

@@ -27,7 +27,7 @@ class _Notif {
 const _kNotifConfig = {
   'alerta_presupuesto': (
     Icons.warning_amber_rounded,
-    Color(0xFF3B5BDB),
+    Color(0xFF2F7155),
     Color(0xFFEEF2FF),
     Color(0xFF0D1227),
   ),
@@ -134,7 +134,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
               'Marcar todas',
               style: GoogleFonts.inter(
                 fontSize: 13,
-                color: const Color(0xFF3B5BDB),
+                color: const Color(0xFF2F7155),
               ),
             ),
           ),
@@ -225,7 +225,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                                       height: 6,
                                       decoration: const BoxDecoration(
                                         shape: BoxShape.circle,
-                                        color: Color(0xFF3B5BDB),
+                                        color: Color(0xFF2F7155),
                                       ),
                                     ),
                                 ],
@@ -260,3 +260,4 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     );
   }
 }
+

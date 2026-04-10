@@ -18,7 +18,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   static const _pages = [
     _OnboardingPage(
       icon: Icons.credit_card_rounded,
-      iconColor: Color(0xFF3B5BDB),
+      iconColor: Color(0xFF2F7155),
       iconBg: Color(0xFFEEF2FF),
       title: 'Controla tus finanzas',
       description:
@@ -34,7 +34,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     ),
     _OnboardingPage(
       icon: Icons.smart_toy_rounded,
-      iconColor: Color(0xFF7950F2),
+      iconColor: Color(0xFF6BC99D),
       iconBg: Color(0xFFF3F0FF),
       title: 'FinPa IA te orienta',
       description:
@@ -118,7 +118,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     child: ElevatedButton(
                       onPressed: _next,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF3B5BDB),
+                        backgroundColor: const Color(0xFF2F7155),
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(14),
@@ -230,8 +230,8 @@ class _DotsIndicator extends StatelessWidget {
           height: 7,
           decoration: BoxDecoration(
             color: active
-                ? const Color(0xFF3B5BDB)
-                : const Color(0xFF3B5BDB).withOpacity(0.22),
+                ? const Color(0xFF2F7155)
+                : const Color(0xFF2F7155).withOpacity(0.22),
             borderRadius: BorderRadius.circular(4),
           ),
         );
@@ -239,3 +239,4 @@ class _DotsIndicator extends StatelessWidget {
     );
   }
 }
+

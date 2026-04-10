@@ -64,3 +64,4 @@ class Budget {
   @override
   int get hashCode => id.hashCode;
 }
+

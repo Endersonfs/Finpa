@@ -198,7 +198,7 @@ class _AddBankAccountScreenState extends ConsumerState<AddBankAccountScreen> {
             FilledButton(
               onPressed: isLoading ? null : _submit,
               style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFF3B5BDB),
+                backgroundColor: const Color(0xFF2F7155),
                 foregroundColor: Colors.white,
                 minimumSize: const Size.fromHeight(52),
                 shape: RoundedRectangleBorder(
@@ -250,7 +250,7 @@ class _AddBankAccountScreenState extends ConsumerState<AddBankAccountScreen> {
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),
         borderSide:
-            const BorderSide(color: Color(0xFF3B5BDB), width: 1.5),
+            const BorderSide(color: Color(0xFF2F7155), width: 1.5),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),
@@ -308,12 +308,12 @@ class _BankGrid extends StatelessWidget {
             duration: const Duration(milliseconds: 150),
             decoration: BoxDecoration(
               color: isSelected
-                  ? const Color(0xFF3B5BDB).withOpacity(0.1)
+                  ? const Color(0xFF2F7155).withOpacity(0.1)
                   : cs.surface,
               borderRadius: BorderRadius.circular(10),
               border: Border.all(
                 color: isSelected
-                    ? const Color(0xFF3B5BDB)
+                    ? const Color(0xFF2F7155)
                     : c.border,
                 width: isSelected ? 1.5 : 1,
               ),
@@ -332,7 +332,7 @@ class _BankGrid extends StatelessWidget {
                         ? FontWeight.w700
                         : FontWeight.w500,
                     color: isSelected
-                        ? const Color(0xFF3B5BDB)
+                        ? const Color(0xFF2F7155)
                         : cs.onSurface,
                   ),
                   textAlign: TextAlign.center,
@@ -347,3 +347,4 @@ class _BankGrid extends StatelessWidget {
     );
   }
 }
+

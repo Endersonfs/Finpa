@@ -135,7 +135,7 @@ class _FormView extends StatelessWidget {
             ),
             child: const Icon(
               Icons.lock_reset_rounded,
-              color: Color(0xFF3B5BDB),
+              color: Color(0xFF2F7155),
               size: 44,
             ),
           ),
@@ -185,7 +185,7 @@ class _FormView extends StatelessWidget {
             child: ElevatedButton(
               onPressed: isLoading ? null : onSend,
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF3B5BDB),
+                backgroundColor: const Color(0xFF2F7155),
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -291,7 +291,7 @@ class _SuccessView extends StatelessWidget {
           child: ElevatedButton(
             onPressed: () => context.go('/auth/login'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF3B5BDB),
+              backgroundColor: const Color(0xFF2F7155),
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -308,3 +308,4 @@ class _SuccessView extends StatelessWidget {
     );
   }
 }
+

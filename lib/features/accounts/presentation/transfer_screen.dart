@@ -331,7 +331,7 @@ class _TransferBody extends StatelessWidget {
         FilledButton(
           onPressed: (canSubmit && !isLoading) ? onSubmit : null,
           style: FilledButton.styleFrom(
-            backgroundColor: const Color(0xFF3B5BDB),
+            backgroundColor: const Color(0xFF2F7155),
             foregroundColor: Colors.white,
             disabledBackgroundColor: c.cardBg,
             minimumSize: const Size.fromHeight(52),
@@ -580,10 +580,10 @@ class _SavingsGoalPreview extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFF3B5BDB).withOpacity(0.06),
+        color: const Color(0xFF2F7155).withOpacity(0.06),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-            color: const Color(0xFF3B5BDB).withOpacity(0.2)),
+            color: const Color(0xFF2F7155).withOpacity(0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -598,7 +598,7 @@ class _SavingsGoalPreview extends StatelessWidget {
                   style: GoogleFonts.inter(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: const Color(0xFF3B5BDB),
+                    color: const Color(0xFF2F7155),
                   ),
                 ),
               ),
@@ -607,7 +607,7 @@ class _SavingsGoalPreview extends StatelessWidget {
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
-                  color: const Color(0xFF3B5BDB),
+                  color: const Color(0xFF2F7155),
                 ),
               ),
             ],
@@ -617,9 +617,9 @@ class _SavingsGoalPreview extends StatelessWidget {
             borderRadius: BorderRadius.circular(4),
             child: LinearProgressIndicator(
               value: (newBalance / (newBalance * 2)).clamp(0.0, 1.0),
-              backgroundColor: const Color(0xFF3B5BDB).withOpacity(0.15),
+              backgroundColor: const Color(0xFF2F7155).withOpacity(0.15),
               valueColor:
-                  const AlwaysStoppedAnimation(Color(0xFF3B5BDB)),
+                  const AlwaysStoppedAnimation(Color(0xFF2F7155)),
               minHeight: 8,
             ),
           ),
@@ -628,7 +628,7 @@ class _SavingsGoalPreview extends StatelessWidget {
             'Quedaría con ${_f(newBalance)} apartado',
             style: GoogleFonts.inter(
               fontSize: 11,
-              color: const Color(0xFF3B5BDB).withOpacity(0.8),
+              color: const Color(0xFF2F7155).withOpacity(0.8),
             ),
           ),
         ],
@@ -636,3 +636,4 @@ class _SavingsGoalPreview extends StatelessWidget {
     );
   }
 }
+

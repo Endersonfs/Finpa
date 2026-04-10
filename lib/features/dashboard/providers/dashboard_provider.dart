@@ -23,3 +23,4 @@ final recentTransactionsProvider =
 final aiTipProvider = FutureProvider.autoDispose<String>(
   (ref) => const AiRepository().generateAutoTip(),
 );
+

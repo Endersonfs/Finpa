@@ -28,7 +28,8 @@ class ModuleModel {
 
   Color get progressColor {
     if (isCompleted) return const Color(0xFF059669);
-    if (progress > 0) return const Color(0xFF3B5BDB);
+    if (progress > 0) return const Color(0xFF2F7155);
     return const Color(0xFF9CA3AF);
   }
 }
+

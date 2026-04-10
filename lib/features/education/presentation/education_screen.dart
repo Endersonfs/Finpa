@@ -194,7 +194,7 @@ class _ProgressCard extends StatelessWidget {
                   ),
                   FractionallySizedBox(
                     widthFactor: globalProgress.clamp(0.0, 1.0),
-                    child: Container(color: const Color(0xFF3B5BDB)),
+                    child: Container(color: const Color(0xFF2F7155)),
                   ),
                 ],
               ),
@@ -240,7 +240,7 @@ class _ModuleCard extends StatelessWidget {
     final borderColor = module.isCompleted
         ? const Color(0xFF059669)
         : module.progress > 0
-            ? const Color(0xFF3B5BDB)
+            ? const Color(0xFF2F7155)
             : c.border;
 
     final borderWidth =
@@ -291,7 +291,7 @@ class _ModuleCard extends StatelessWidget {
                     if (module.isCompleted)
                       _Badge('Completado', const Color(0xFF059669))
                     else if (module.progress > 0)
-                      _Badge('En progreso', const Color(0xFF3B5BDB))
+                      _Badge('En progreso', const Color(0xFF2F7155))
                     else if (!module.isUnlocked)
                       Row(
                         mainAxisSize: MainAxisSize.min,
@@ -556,3 +556,4 @@ class _EducationSkeletonState extends State<_EducationSkeleton>
     );
   }
 }
+

@@ -86,3 +86,4 @@ final chatLoadingProvider = Provider<bool>((ref) {
   ref.watch(chatNotifierProvider); // Suscribirse a cambios de estado
   return ref.read(chatNotifierProvider.notifier).isLoading;
 });
+

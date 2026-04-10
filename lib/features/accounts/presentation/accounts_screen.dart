@@ -185,7 +185,7 @@ class _SummaryCardShell extends StatelessWidget {
           _SummaryItem(
             label: 'Apartado',
             value: saved,
-            color: const Color(0xFF3B5BDB),
+            color: const Color(0xFF2F7155),
             flex: 2,
           ),
           if ((owed ?? 0) > 0) ...[
@@ -326,7 +326,7 @@ class _AccountCard extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: isCredit
                       ? c.expense.withOpacity(0.1)
-                      : const Color(0xFF3B5BDB).withOpacity(0.1),
+                      : const Color(0xFF2F7155).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 alignment: Alignment.center,
@@ -407,7 +407,7 @@ class _SavingsProgressBar extends StatelessWidget {
             child: LinearProgressIndicator(
               value: hasBalance ? 0.45 : 0.0, // porcentaje hacia la meta
               backgroundColor: c.cardBg,
-              valueColor: const AlwaysStoppedAnimation(Color(0xFF3B5BDB)),
+              valueColor: const AlwaysStoppedAnimation(Color(0xFF2F7155)),
               minHeight: 8,
             ),
           ),
@@ -464,7 +464,7 @@ class _EmptyState extends StatelessWidget {
             FilledButton.icon(
               onPressed: () => context.push('/accounts/add-bank'),
               style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFF3B5BDB),
+                backgroundColor: const Color(0xFF2F7155),
                 foregroundColor: Colors.white,
                 padding:
                     const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
@@ -578,3 +578,4 @@ class _AccountsSkeleton extends StatelessWidget {
     );
   }
 }
+
