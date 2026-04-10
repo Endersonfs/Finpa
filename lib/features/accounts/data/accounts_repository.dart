@@ -1,164 +1,122 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:uuid/uuid.dart';
 
 import '../domain/account_model.dart';
-
-// ─────────────────────────────────────────────────────────────────────────────
-//  AccountsRepository
-// ─────────────────────────────────────────────────────────────────────────────
+import '../../../core/local_storage/hive_service.dart';
+import '../../../core/network/sync_service.dart';
 
 class AccountsRepository {
   final SupabaseClient _client;
+  final SyncService _syncService;
 
-  const AccountsRepository(this._client);
+  static const List<Map<String, String>> dominicanBanks = [
+    {'name': 'Banco Popular Dominicano', 'logo': 'assets/icons/banks/popular.png'},
+    {'name': 'Banco de Reservas', 'logo': 'assets/icons/banks/reservas.png'},
+    {'name': 'Banco BHD', 'logo': 'assets/icons/banks/bhd.png'},
+    {'name': 'Scotiabank', 'logo': 'assets/icons/banks/scotiabank.png'},
+    {'name': 'Asociación Popular (APAP)', 'logo': 'assets/icons/banks/apap.png'},
+    {'name': 'Banco Santa Cruz', 'logo': 'assets/icons/banks/santacruz.png'},
+    {'name': 'Promerica', 'logo': 'assets/icons/banks/promerica.png'},
+    {'name': 'Banesco', 'logo': 'assets/icons/banks/banesco.png'},
+    {'name': 'Qik Banco Digital', 'logo': 'assets/icons/banks/qik.png'},
+  ];
+
+  AccountsRepository(this._client) : _syncService = SyncService(_client);
 
   String get _userId => _client.auth.currentUser!.id;
 
-  // ── Bancos dominicanos ────────────────────────────────────────────────────
-
-  static const List<Map<String, String>> dominicanBanks = [
-    {'name': 'Banco Popular', 'emoji': '🏦'},
-    {'name': 'Banreservas', 'emoji': '🏛️'},
-    {'name': 'Scotiabank', 'emoji': '🏦'},
-    {'name': 'BHD León', 'emoji': '🏦'},
-    {'name': 'Banco Santa Cruz', 'emoji': '🏦'},
-    {'name': 'Banco del Progreso', 'emoji': '🏦'},
-    {'name': 'Citibank', 'emoji': '🏦'},
-    {'name': 'Banco Caribe', 'emoji': '🏦'},
-    {'name': 'Asociación Popular', 'emoji': '🏦'},
-  ];
-
-  // ── Lectura ───────────────────────────────────────────────────────────────
-
-  /// Devuelve todas las cuentas activas del usuario, ordenadas por sort_order.
   Future<List<AccountModel>> fetchAll() async {
-    final data = await _client
-        .from('accounts')
-        .select()
-        .eq('user_id', _userId)
-        .eq('is_active', true)
-        .order('sort_order', ascending: true);
-    return (data as List).map((e) => AccountModel.fromJson(e)).toList();
+    final local = HiveService.getAllAccounts()
+        .where((a) => a.userId == _userId && a.isActive)
+        .toList();
+    
+    local.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+    
+    _syncService.syncAll();
+    return local;
   }
 
-  /// Stream en tiempo real via Supabase Realtime.
-  Stream<List<AccountModel>> watchAll() {
-    return _client
-        .from('accounts')
-        .stream(primaryKey: ['id'])
-        .eq('user_id', _userId)
-        .order('sort_order', ascending: true)
-        .map((rows) => rows
-            .where((r) => r['is_active'] == true)
-            .map(AccountModel.fromJson)
-            .toList());
+  Stream<List<AccountModel>> watchAll() async* {
+    yield await fetchAll();
+    await for (final _ in HiveService.accountsBox.watch()) {
+      final local = HiveService.getAllAccounts()
+          .where((a) => a.userId == _userId && a.isActive)
+          .toList();
+      local.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+      yield local;
+    }
   }
 
-  /// Devuelve la cuenta marcada como predeterminada, o null si no hay ninguna.
   Future<AccountModel?> getDefault() async {
-    final data = await _client
-        .from('accounts')
-        .select()
-        .eq('user_id', _userId)
-        .eq('is_default', true)
-        .eq('is_active', true)
-        .maybeSingle();
-    if (data == null) return null;
-    return AccountModel.fromJson(data);
+    final accounts = await fetchAll();
+    try {
+      return accounts.firstWhere((a) => a.isDefault);
+    } catch (_) {
+      return accounts.isNotEmpty ? accounts.first : null;
+    }
   }
 
-  // ── Escritura ─────────────────────────────────────────────────────────────
-
-  /// Inserta una cuenta nueva y devuelve el registro con id generado.
   Future<AccountModel> insert(AccountModel account) async {
-    final data = await _client
-        .from('accounts')
-        .insert({
-          'user_id': _userId,
-          'name': account.name,
-          'type': account.type.name,
-          'balance': account.balance,
-          'bank_name': account.bankName,
-          'color': account.color ?? _defaultColor(account.type),
-          'is_default': account.isDefault,
-          'is_active': true,
-          'sort_order': account.sortOrder,
-        })
-        .select()
-        .single();
-    return AccountModel.fromJson(data);
+    final id = const Uuid().v4();
+    final newAccount = AccountModel(
+      id: id,
+      userId: _userId,
+      name: account.name,
+      type: account.type,
+      balance: account.balance,
+      bankName: account.bankName,
+      color: account.color ?? _defaultColor(account.type),
+      isDefault: account.isDefault,
+      isActive: true,
+      sortOrder: account.sortOrder,
+      createdAt: DateTime.now(),
+      isSynced: false,
+    );
+
+    await HiveService.saveAccount(newAccount);
+    _syncService.syncAll();
+    return newAccount;
   }
 
   static String _defaultColor(AccountType type) {
     switch (type) {
-      case AccountType.savings:
-        return '#7C3AED';
-      case AccountType.credit:
-        return '#DC2626';
-      case AccountType.cash:
-        return '#059669';
-      default:
-        return '#2F7155';
+      case AccountType.savings: return '#7C3AED';
+      case AccountType.credit: return '#DC2626';
+      case AccountType.cash: return '#059669';
+      default: return '#2F7155';
     }
   }
 
-  /// Actualiza los campos editables de una cuenta existente.
   Future<void> update(AccountModel account) async {
-    await _client
-        .from('accounts')
-        .update({
-          'name': account.name,
-          'type': account.type.name,
-          'balance': account.balance,
-          'bank_name': account.bankName,
-          'color': account.color,
-          'is_default': account.isDefault,
-          'sort_order': account.sortOrder,
-        })
-        .eq('id', account.id)
-        .eq('user_id', _userId);
+    final toUpdate = account.copyWith(isSynced: false);
+    await HiveService.saveAccount(toUpdate);
+    _syncService.syncAll();
   }
 
-  /// Soft-delete: marca is_active=false sin borrar el registro.
   Future<void> softDelete(String id) async {
-    await _client
-        .from('accounts')
-        .update({'is_active': false})
-        .eq('id', id)
-        .eq('user_id', _userId);
+    final account = HiveService.accountsBox.get(id);
+    if (account != null) {
+      final updated = account.copyWith(isActive: false, isSynced: false);
+      await HiveService.saveAccount(updated);
+    }
+    _syncService.syncAll();
   }
 
-  // ── Resumen financiero ────────────────────────────────────────────────────
-
-  /// Calcula el resumen financiero directamente desde la tabla accounts.
   Future<FinancialSummary> getSummary() async {
-    final data = await _client
-        .from('accounts')
-        .select('type, balance')
-        .eq('user_id', _userId)
-        .eq('is_active', true);
-
+    final accounts = await fetchAll();
     double available = 0;
     double saved = 0;
     double owed = 0;
 
-    for (final row in data as List) {
-      final balance = (row['balance'] as num).toDouble();
-      final type = AccountType.values.firstWhere(
-        (e) => e.name == (row['type'] as String? ?? 'general'),
-        orElse: () => AccountType.general,
-      );
-      if (type.isSpendable) available += balance;
-      if (type == AccountType.savings) saved += balance;
-      if (type == AccountType.credit) owed += balance;
+    for (final a in accounts) {
+      if (a.type.isSpendable) available += a.balance;
+      if (a.type == AccountType.savings) saved += a.balance;
+      if (a.type == AccountType.credit) owed += a.balance;
     }
-
     return FinancialSummary(available: available, saved: saved, owed: owed);
   }
 
-  // ── Transferencias ────────────────────────────────────────────────────────
-
-  /// Inserta un registro en la tabla transfers.
-  /// Los triggers de Supabase actualizan los saldos de las cuentas.
+  // --- Transferencias (Se manejan como transacciones especiales) ---
   Future<void> transfer({
     required String fromAccountId,
     required String toAccountId,
@@ -166,26 +124,23 @@ class AccountsRepository {
     String? description,
     DateTime? date,
   }) async {
-    await _client.from('transfers').insert({
-      'user_id': _userId,
-      'from_account_id': fromAccountId,
-      'to_account_id': toAccountId,
-      'amount': amount,
-      'description': description,
-      'date': (date ?? DateTime.now()).toIso8601String().split('T').first,
-    });
-  }
+    final fromAccount = HiveService.accountsBox.get(fromAccountId);
+    final toAccount = HiveService.accountsBox.get(toAccountId);
 
-  /// Devuelve las últimas [limit] transferencias del usuario.
-  Future<List<TransferModel>> fetchTransfers({int limit = 20}) async {
-    final data = await _client
-        .from('transfers')
-        .select()
-        .eq('user_id', _userId)
-        .order('date', ascending: false)
-        .order('created_at', ascending: false)
-        .limit(limit);
-    return (data as List).map((e) => TransferModel.fromJson(e)).toList();
+    if (fromAccount != null && toAccount != null) {
+      final newFrom = fromAccount.copyWith(
+        balance: fromAccount.balance - amount,
+        isSynced: false,
+      );
+      final newTo = toAccount.copyWith(
+        balance: toAccount.balance + amount,
+        isSynced: false,
+      );
+
+      await HiveService.saveAccount(newFrom);
+      await HiveService.saveAccount(newTo);
+      
+      _syncService.syncAll();
+    }
   }
 }
-

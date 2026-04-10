@@ -1,16 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
-class Budget {
-  final String id;
-  final String userId;
-  final String category;
-  final double limitAmount;
-  final double spent;
-  final int month;
-  final int year;
-  final bool alertAt80;
+part 'budget_model.g.dart';
 
-  const Budget({
+@HiveType(typeId: 4)
+class Budget extends HiveObject {
+  @HiveField(0) final String id;
+  @HiveField(1) final String userId;
+  @HiveField(2) final String category;
+  @HiveField(3) final double limitAmount;
+  @HiveField(4) final double spent;
+  @HiveField(5) final int month;
+  @HiveField(6) final int year;
+  @HiveField(7) final bool alertAt80;
+  @HiveField(8) final bool isSynced;
+  @HiveField(9) final bool isDeleted;
+
+  Budget({
     required this.id,
     required this.userId,
     required this.category,
@@ -19,24 +25,41 @@ class Budget {
     required this.month,
     required this.year,
     required this.alertAt80,
+    this.isSynced = true,
+    this.isDeleted = false,
   });
 
-  /// Porcentaje consumido (0.0 – puede superar 1.0)
+  Budget copyWith({
+    String? id,
+    String? userId,
+    String? category,
+    double? limitAmount,
+    double? spent,
+    int? month,
+    int? year,
+    bool? alertAt80,
+    bool? isSynced,
+    bool? isDeleted,
+  }) {
+    return Budget(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      category: category ?? this.category,
+      limitAmount: limitAmount ?? this.limitAmount,
+      spent: spent ?? this.spent,
+      month: month ?? this.month,
+      year: year ?? this.year,
+      alertAt80: alertAt80 ?? this.alertAt80,
+      isSynced: isSynced ?? this.isSynced,
+      isDeleted: isDeleted ?? this.isDeleted,
+    );
+  }
+
   double get percentage => limitAmount > 0 ? spent / limitAmount : 0;
-
-  /// true si superó el límite
   bool get isOverBudget => spent > limitAmount;
-
-  /// true si llegó al 80%
   bool get isNearLimit => percentage >= 0.8;
-
-  /// Monto restante (puede ser negativo si superó el límite)
   double get remaining => limitAmount - spent;
 
-  /// Color semántico según porcentaje:
-  /// >80% (o superado) → rojo #DC2626
-  /// >60% → amarillo #D97706
-  /// else → verde #059669
   Color get statusColor {
     if (percentage > 0.8) return const Color(0xFFDC2626);
     if (percentage > 0.6) return const Color(0xFFD97706);
@@ -56,12 +79,16 @@ class Budget {
     );
   }
 
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is Budget && runtimeType == other.runtimeType && id == other.id;
-
-  @override
-  int get hashCode => id.hashCode;
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'user_id': userId,
+      'category': category,
+      'limit_amount': limitAmount,
+      'spent': spent,
+      'month': month,
+      'year': year,
+      'alert_at_80': alertAt80,
+    };
+  }
 }
-

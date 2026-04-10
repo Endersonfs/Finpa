@@ -1,38 +1,20 @@
-// Para habilitar el TypeAdapter de Hive, agrega:
-//   part 'transaction_model.g.dart';
-// y ejecuta: flutter pub run build_runner build
 import 'package:hive_flutter/hive_flutter.dart';
-
 import 'transaction.dart';
+
+part 'transaction_model.g.dart';
 
 @HiveType(typeId: 0)
 class TransactionModel extends HiveObject {
-  @HiveField(0)
-  final String id;
-
-  @HiveField(1)
-  final String userId;
-
-  @HiveField(2)
-  final double amount;
-
-  /// 'income' o 'expense'
-  @HiveField(3)
-  final String type;
-
-  @HiveField(4)
-  final String category;
-
-  @HiveField(5)
-  final String? description;
-
-  /// Fecha en formato ISO 8601 (solo la parte de fecha: yyyy-MM-dd)
-  @HiveField(6)
-  final String date;
-
-  /// Fecha-hora de creación en ISO 8601
-  @HiveField(7)
-  final String createdAt;
+  @HiveField(0) final String id;
+  @HiveField(1) final String userId;
+  @HiveField(2) final double amount;
+  @HiveField(3) final String type;
+  @HiveField(4) final String category;
+  @HiveField(5) final String? description;
+  @HiveField(6) final String date;
+  @HiveField(7) final String createdAt;
+  @HiveField(8) bool isSynced;
+  @HiveField(9) bool isDeleted;
 
   TransactionModel({
     required this.id,
@@ -43,9 +25,62 @@ class TransactionModel extends HiveObject {
     this.description,
     required this.date,
     required this.createdAt,
+    this.isSynced = true,
+    this.isDeleted = false,
   });
 
-  /// Convierte este modelo al domain entity [Transaction].
+  TransactionModel copyWith({
+    String? id,
+    String? userId,
+    double? amount,
+    String? type,
+    String? category,
+    String? description,
+    String? date,
+    String? createdAt,
+    bool? isSynced,
+    bool? isDeleted,
+  }) {
+    return TransactionModel(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      amount: amount ?? this.amount,
+      type: type ?? this.type,
+      category: category ?? this.category,
+      description: description ?? this.description,
+      date: date ?? this.date,
+      createdAt: createdAt ?? this.createdAt,
+      isSynced: isSynced ?? this.isSynced,
+      isDeleted: isDeleted ?? this.isDeleted,
+    );
+  }
+
+  factory TransactionModel.fromJson(Map<String, dynamic> json) {
+    return TransactionModel(
+      id: json['id'] as String,
+      userId: json['user_id'] as String,
+      amount: (json['amount'] as num).toDouble(),
+      type: json['type'] as String,
+      category: json['category'] as String,
+      description: json['description'] as String?,
+      date: json['date'] as String,
+      createdAt: json['created_at'] as String,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'user_id': userId,
+      'amount': amount,
+      'type': type,
+      'category': category,
+      'description': description,
+      'date': date,
+      'created_at': createdAt,
+    };
+  }
+
   Transaction toTransaction() {
     return Transaction(
       id: id,
@@ -59,8 +94,7 @@ class TransactionModel extends HiveObject {
     );
   }
 
-  /// Crea un [TransactionModel] a partir del domain entity [Transaction].
-  factory TransactionModel.fromTransaction(Transaction t) {
+  factory TransactionModel.fromTransaction(Transaction t, {bool isSynced = true, bool isDeleted = false}) {
     return TransactionModel(
       id: t.id,
       userId: t.userId,
@@ -70,7 +104,8 @@ class TransactionModel extends HiveObject {
       description: t.description,
       date: t.date.toIso8601String().split('T').first,
       createdAt: t.createdAt.toIso8601String(),
+      isSynced: isSynced,
+      isDeleted: isDeleted,
     );
   }
 }
-

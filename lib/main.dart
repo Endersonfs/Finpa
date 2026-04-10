@@ -7,7 +7,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'app.dart';
+import 'core/local_storage/sync_metadata.dart';
 import 'core/providers/theme_provider.dart';
+import 'features/transactions/domain/transaction_model.dart';
+
+import 'core/local_storage/hive_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -25,8 +29,8 @@ void main() async {
     await Supabase.initialize(url: supabaseUrl, anonKey: supabaseKey);
   }
 
-  // 3. Hive
-  await Hive.initFlutter();
+  // 3. Hive (Offline-First)
+  await HiveService.init();
 
   // 4. SharedPreferences — antes de runApp para inyectarlo via override
   final prefs = await SharedPreferences.getInstance();

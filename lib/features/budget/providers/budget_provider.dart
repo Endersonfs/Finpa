@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../domain/budget_model.dart';
 import '../data/budget_repository.dart';
 
 export '../domain/budget_model.dart';

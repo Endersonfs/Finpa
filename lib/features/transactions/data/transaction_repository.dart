@@ -1,156 +1,124 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:uuid/uuid.dart';
 
 import '../domain/transaction.dart';
+import '../domain/transaction_model.dart';
+import '../../../core/local_storage/hive_service.dart';
+import '../../../core/network/sync_service.dart';
 
 class TransactionRepository {
   final SupabaseClient _client;
+  final SyncService _syncService;
 
-  const TransactionRepository(this._client);
+  TransactionRepository(this._client) : _syncService = SyncService(_client);
 
   String get _userId => _client.auth.currentUser!.id;
 
-  /// Trae todas las transacciones del usuario autenticado.
-  /// Si se pasan [month] y [year] filtra por ese mes/año usando el campo `date`.
+  /// Trae todas las transacciones — Prioridad Local (Hive)
+  /// Si hay red, intenta sincronizar en segundo plano.
   Future<List<Transaction>> fetchAll({int? month, int? year}) async {
-    var query = _client
-        .from('transactions')
-        .select()
-        .eq('user_id', _userId)
-        .order('date', ascending: false)
-        .order('created_at', ascending: false);
+    // 1. Obtener de Hive (Instantáneo)
+    final localModels = HiveService.getAllTransactions()
+        .where((t) => t.userId == _userId);
 
-    // Supabase Flutter no permite encadenar .gte/.lte después de .order
-    // directamente en la misma variable, pero sí podemos aplicar el filtro
-    // de rango usando la versión extendida de la query.
+    var transactions = localModels.map((m) => m.toTransaction()).toList();
+
+    // Filtro por mes/año en memoria
     if (month != null && year != null) {
-      final firstDay = '$year-${month.toString().padLeft(2, '0')}-01';
-      final lastDay = _lastDayOfMonth(year, month);
-      final data = await _client
-          .from('transactions')
-          .select()
-          .eq('user_id', _userId)
-          .gte('date', firstDay)
-          .lte('date', lastDay)
-          .order('date', ascending: false)
-          .order('created_at', ascending: false);
-      return (data as List).map((e) => Transaction.fromJson(e)).toList();
+      transactions = transactions.where((t) => 
+          t.date.month == month && t.date.year == year).toList();
     }
 
-    final data = await query;
-    return (data as List).map((e) => Transaction.fromJson(e)).toList();
-  }
-
-  /// Inserta una nueva transacción en Supabase.
-  /// El trigger de la BD actualiza el saldo de la cuenta automáticamente.
-  Future<void> add(Transaction t, {String? accountId}) async {
-    await _client.from('transactions').insert({
-      'user_id': _userId,
-      'amount': t.amount,
-      'type': t.type == TransactionType.income ? 'income' : 'expense',
-      'category': t.category,
-      'description': t.description,
-      'date': t.date.toIso8601String().split('T').first,
-      if (accountId != null) 'account_id': accountId,
+    // Ordenar (descendente por fecha y creación)
+    transactions.sort((a, b) {
+      final d = b.date.compareTo(a.date);
+      return d != 0 ? d : b.createdAt.compareTo(a.createdAt);
     });
+
+    // 2. Disparar sincronización en segundo plano (No espera)
+    _syncService.syncAll();
+
+    return transactions;
   }
 
-  /// Elimina la transacción con el [id] dado, validando que pertenezca
-  /// al usuario autenticado mediante la política RLS de Supabase.
+  Stream<List<Transaction>> watchAll({int? month, int? year}) async* {
+    yield await fetchAll(month: month, year: year);
+    await for (final _ in HiveService.transactionsBox.watch()) {
+      yield await fetchAll(month: month, year: year);
+    }
+  }
+
+  /// Inserta una nueva transacción — Local Primero
+  Future<void> add(Transaction t, {String? accountId}) async {
+    final uuid = const Uuid().v4();
+    final newTransaction = Transaction(
+      id: uuid,
+      userId: _userId,
+      amount: t.amount,
+      type: t.type,
+      category: t.category,
+      description: t.description,
+      date: t.date,
+      createdAt: DateTime.now(),
+    );
+
+    // Guardar en Hive inmediatamente
+    final model = TransactionModel.fromTransaction(
+      newTransaction, 
+      isSynced: false
+    );
+    await HiveService.saveTransaction(model);
+
+    // Intentar subir a Supabase sin bloquear UI
+    _syncService.syncAll();
+  }
+
+  /// Elimina una transacción — Local Primero
   Future<void> delete(String id) async {
-    await _client
-        .from('transactions')
-        .delete()
-        .eq('id', id)
-        .eq('user_id', _userId);
+    final model = HiveService.transactionsBox.get(id);
+    if (model != null) {
+      model.isDeleted = true;
+      model.isSynced = false;
+      await model.save();
+    }
+
+    // Intentar procesar borrado en la nube
+    _syncService.syncAll();
   }
 
-  /// Stream Realtime del mes actual — se actualiza solo cuando cambia la tabla.
-  /// El filtro de mes se aplica en Dart para compatibilidad con Supabase Flutter.
-  Stream<List<Transaction>> watchAll() {
-    final now = DateTime.now();
-    final firstDay = DateTime(now.year, now.month, 1);
-    final lastDay  = DateTime(now.year, now.month + 1, 0, 23, 59, 59);
-
-    return _client
-        .from('transactions')
-        .stream(primaryKey: ['id'])
-        .eq('user_id', _userId)
-        .order('date', ascending: false)
-        .map((rows) {
-          final list = rows
-              .map((e) => Transaction.fromJson(e))
-              .where((t) =>
-                  !t.date.isBefore(firstDay) && !t.date.isAfter(lastDay))
-              .toList();
-          list.sort((a, b) {
-            final d = b.date.compareTo(a.date);
-            return d != 0 ? d : b.createdAt.compareTo(a.createdAt);
-          });
-          return list;
-        });
-  }
-
-  /// Devuelve un mapa con las claves `'income'` y `'expense'` sumadas
-  /// para el [month]/[year] indicados.
+  /// Resumen mensual basado en datos locales (Siempre disponible)
   Future<Map<String, double>> monthlySummary({
     required int month,
     required int year,
   }) async {
-    final firstDay = '$year-${month.toString().padLeft(2, '0')}-01';
-    final lastDay = _lastDayOfMonth(year, month);
-
-    final data = await _client
-        .from('transactions')
-        .select('type, amount')
-        .eq('user_id', _userId)
-        .gte('date', firstDay)
-        .lte('date', lastDay);
+    final transactions = await fetchAll(month: month, year: year);
 
     double income = 0;
     double expense = 0;
 
-    for (final row in data as List) {
-      final amount = (row['amount'] as num).toDouble();
-      if (row['type'] == 'income') {
-        income += amount;
+    for (final t in transactions) {
+      if (t.type == TransactionType.income) {
+        income += t.amount;
       } else {
-        expense += amount;
+        expense += t.amount;
       }
     }
 
     return {'income': income, 'expense': expense};
   }
 
-  /// Devuelve los gastos agrupados por categoría para el [month]/[year] dado.
+  /// Gastos por categoría (Local)
   Future<Map<String, double>> categoryExpenses({
     required int month,
     required int year,
   }) async {
-    final firstDay = '$year-${month.toString().padLeft(2, '0')}-01';
-    final lastDay = _lastDayOfMonth(year, month);
-
-    final data = await _client
-        .from('transactions')
-        .select('category, amount')
-        .eq('user_id', _userId)
-        .eq('type', 'expense')
-        .gte('date', firstDay)
-        .lte('date', lastDay);
+    final transactions = await fetchAll(month: month, year: year);
+    final expenseTransactions = transactions.where((t) => t.isExpense);
 
     final Map<String, double> result = {};
-    for (final row in data as List) {
-      final cat = row['category'] as String;
-      final amount = (row['amount'] as num).toDouble();
-      result[cat] = (result[cat] ?? 0) + amount;
+    for (final t in expenseTransactions) {
+      result[t.category] = (result[t.category] ?? 0) + t.amount;
     }
     return result;
   }
-
-  // ── Helpers ──────────────────────────────────────────────────────────────
-
-  static String _lastDayOfMonth(int year, int month) {
-    final lastDay = DateTime(year, month + 1, 0);
-    return '${lastDay.year}-${lastDay.month.toString().padLeft(2, '0')}-${lastDay.day.toString().padLeft(2, '0')}';
-  }
 }
-
