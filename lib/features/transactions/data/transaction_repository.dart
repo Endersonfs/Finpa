@@ -54,6 +54,7 @@ class TransactionRepository {
     final newTransaction = Transaction(
       id: uuid,
       userId: _userId,
+      accountId: accountId,
       amount: t.amount,
       type: t.type,
       category: t.category,
@@ -69,6 +70,36 @@ class TransactionRepository {
     );
     await HiveService.saveTransaction(model);
 
+    // Actualizar saldo de la cuenta localmente si aplica
+    if (accountId != null) {
+      final account = HiveService.accountsBox.get(accountId);
+      if (account != null) {
+        final double newBalance = t.type == TransactionType.income
+            ? account.balance + t.amount
+            : account.balance - t.amount;
+        
+        await HiveService.saveAccount(account.copyWith(
+          balance: newBalance,
+          isSynced: false,
+        ));
+      }
+    }
+
+    // Actualizar presupuesto si es un gasto
+    if (t.type == TransactionType.expense) {
+      try {
+        final budget = HiveService.getAllBudgets().firstWhere(
+          (b) => b.category == t.category && b.month == t.date.month && b.year == t.date.year,
+        );
+        await HiveService.saveBudget(budget.copyWith(
+          spent: budget.spent + t.amount,
+          isSynced: false,
+        ));
+      } catch (_) {
+        // Si no hay presupuesto para esta categoría/mes, no hacemos nada
+      }
+    }
+
     // Intentar subir a Supabase sin bloquear UI
     _syncService.syncAll();
   }
@@ -80,6 +111,36 @@ class TransactionRepository {
       model.isDeleted = true;
       model.isSynced = false;
       await model.save();
+
+      // Revertir saldo de la cuenta localmente
+      if (model.accountId != null) {
+        final account = HiveService.accountsBox.get(model.accountId!);
+        if (account != null) {
+          final isIncome = model.type == 'income';
+          final double newBalance = isIncome
+              ? account.balance - model.amount
+              : account.balance + model.amount;
+          
+          await HiveService.saveAccount(account.copyWith(
+            balance: newBalance,
+            isSynced: false,
+          ));
+        }
+      }
+
+      // Revertir presupuesto si era un gasto
+      if (model.type == 'expense') {
+        try {
+          final date = DateTime.parse(model.date);
+          final budget = HiveService.getAllBudgets().firstWhere(
+            (b) => b.category == model.category && b.month == date.month && b.year == date.year,
+          );
+          await HiveService.saveBudget(budget.copyWith(
+            spent: (budget.spent - model.amount).clamp(0, double.infinity),
+            isSynced: false,
+          ));
+        } catch (_) {}
+      }
     }
 
     // Intentar procesar borrado en la nube

@@ -14,10 +14,10 @@ final budgetRepositoryProvider = Provider<BudgetRepository>(
 
 // ── Presupuestos del mes actual ───────────────────────────────────────────────
 
-final budgetsProvider = FutureProvider.autoDispose<List<Budget>>((ref) {
+final budgetsProvider = StreamProvider.autoDispose<List<Budget>>((ref) {
   final repo = ref.watch(budgetRepositoryProvider);
   final now = DateTime.now();
-  return repo.fetchAll(month: now.month, year: now.year);
+  return repo.watchAll(month: now.month, year: now.year);
 });
 
 // ── Notifier para mutaciones ─────────────────────────────────────────────────

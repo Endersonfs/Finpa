@@ -15,6 +15,7 @@ class TransactionModel extends HiveObject {
   @HiveField(7) final String createdAt;
   @HiveField(8) bool isSynced;
   @HiveField(9) bool isDeleted;
+  @HiveField(10) final String? accountId;
 
   TransactionModel({
     required this.id,
@@ -27,6 +28,7 @@ class TransactionModel extends HiveObject {
     required this.createdAt,
     this.isSynced = true,
     this.isDeleted = false,
+    this.accountId,
   });
 
   TransactionModel copyWith({
@@ -40,6 +42,7 @@ class TransactionModel extends HiveObject {
     String? createdAt,
     bool? isSynced,
     bool? isDeleted,
+    String? accountId,
   }) {
     return TransactionModel(
       id: id ?? this.id,
@@ -52,6 +55,7 @@ class TransactionModel extends HiveObject {
       createdAt: createdAt ?? this.createdAt,
       isSynced: isSynced ?? this.isSynced,
       isDeleted: isDeleted ?? this.isDeleted,
+      accountId: accountId ?? this.accountId,
     );
   }
 
@@ -65,6 +69,7 @@ class TransactionModel extends HiveObject {
       description: json['description'] as String?,
       date: json['date'] as String,
       createdAt: json['created_at'] as String,
+      accountId: json['account_id'] as String?,
     );
   }
 
@@ -78,6 +83,7 @@ class TransactionModel extends HiveObject {
       'description': description,
       'date': date,
       'created_at': createdAt,
+      'account_id': accountId,
     };
   }
 
@@ -85,6 +91,7 @@ class TransactionModel extends HiveObject {
     return Transaction(
       id: id,
       userId: userId,
+      accountId: accountId,
       amount: amount,
       type: type == 'income' ? TransactionType.income : TransactionType.expense,
       category: category,
@@ -98,6 +105,7 @@ class TransactionModel extends HiveObject {
     return TransactionModel(
       id: t.id,
       userId: t.userId,
+      accountId: t.accountId,
       amount: t.amount,
       type: t.type == TransactionType.income ? 'income' : 'expense',
       category: t.category,

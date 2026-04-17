@@ -4,8 +4,10 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:google_fonts/google_fonts.dart';
-import 'package:intl/intl.dart';
 
+import '../../../core/providers/language_provider.dart';
+import '../../../core/providers/currency_provider.dart';
+import '../../../core/utils/currency_formatter.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../accounts/domain/account_model.dart';
 import '../../accounts/providers/accounts_provider.dart';
@@ -24,9 +26,10 @@ class DashboardScreen extends ConsumerWidget {
     final transactionsAsync     = ref.watch(recentTransactionsProvider);
     final categoriesAsync       = ref.watch(categoryExpensesProvider);
     final financialSummary = ref.watch(financialSummaryProvider);
+    final currencyState = ref.watch(currencyNotifierProvider);
 
     final user      = Supabase.instance.client.auth.currentUser;
-    final fullName  = (user?.userMetadata?['full_name'] as String?) ?? 'Usuario';
+    final fullName  = (user?.userMetadata?['full_name'] as String?) ?? ref.tr('common.user');
     final firstName = fullName.split(RegExp(r'\s+')).first;
     final initials  = _initials(fullName);
 
@@ -46,14 +49,14 @@ class DashboardScreen extends ConsumerWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  '${_greeting()}, $firstName',
+                  '${_greeting(ref)}, $firstName',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w700,
                         fontSize: 16,
                       ),
                 ),
                 Text(
-                  _monthYear(),
+                  _monthYear(ref),
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         fontSize: 11,
                         color: Theme.of(context).brightness == Brightness.dark
@@ -89,6 +92,7 @@ class DashboardScreen extends ConsumerWidget {
                   expense:   summaryAsync.valueOrNull?['expense'],
                   available: financialSummary?.available,
                   saved:     financialSummary?.saved,
+                  currency:  currencyState.baseCurrency,
                 ),
                 const SizedBox(height: 12),
 
@@ -102,17 +106,20 @@ class DashboardScreen extends ConsumerWidget {
 
                 // Sección Categorías
                 _SectionHeader(
-                  title: 'Categorías',
-                  subtitle: 'Este mes',
+                  title: ref.tr('dashboard.categories'),
+                  subtitle: ref.tr('dashboard.this_month'),
                 ),
                 const SizedBox(height: 10),
-                CategoryGrid(expenses: categoriesAsync.valueOrNull),
+                CategoryGrid(
+                  expenses: categoriesAsync.valueOrNull,
+                  currency: currencyState.baseCurrency,
+                ),
                 const SizedBox(height: 22),
 
                 // Sección Recientes
                 _SectionHeader(
-                  title: 'Recientes',
-                  actionLabel: 'Ver todos',
+                  title: ref.tr('dashboard.recent'),
+                  actionLabel: ref.tr('dashboard.view_all'),
                   onAction: () => context.push('/transactions'),
                 ),
                 const SizedBox(height: 6),
@@ -132,9 +139,9 @@ class DashboardScreen extends ConsumerWidget {
         foregroundColor: Colors.white,
         elevation: 2,
         icon: const Icon(Icons.add, size: 20),
-        label: const Text(
-          'Agregar',
-          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+        label: Text(
+          ref.tr('dashboard.add'),
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
         ),
       ),
     );
@@ -142,20 +149,21 @@ class DashboardScreen extends ConsumerWidget {
 
   // ── Helpers ────────────────────────────────────
 
-  static String _greeting() {
+  static String _greeting(WidgetRef ref) {
     final h = DateTime.now().hour;
-    if (h < 12) return 'Buenos días';
-    if (h < 19) return 'Buenas tardes';
-    return 'Buenas noches';
+    if (h < 12) return ref.tr('dashboard.greeting_morning');
+    if (h < 19) return ref.tr('dashboard.greeting_afternoon');
+    return ref.tr('dashboard.greeting_night');
   }
 
-  static String _monthYear() {
+  static String _monthYear(WidgetRef ref) {
     final now = DateTime.now();
-    const months = [
-      'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-      'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
+    final monthKeys = [
+      'jan', 'feb', 'mar', 'apr', 'may', 'jun',
+      'jul', 'aug', 'sep', 'oct', 'nov', 'dec',
     ];
-    return '${months[now.month - 1]} ${now.year}';
+    final monthName = ref.tr('months.${monthKeys[now.month - 1]}');
+    return '$monthName ${now.year}';
   }
 
   static String _initials(String name) {
@@ -207,9 +215,6 @@ class _UserAvatar extends StatelessWidget {
 
 class _AccountMiniCardsRow extends ConsumerWidget {
   const _AccountMiniCardsRow();
-
-  static final _fmt =
-      NumberFormat.currency(locale: 'es', symbol: 'RD\$', decimalDigits: 0);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -265,7 +270,7 @@ class _AccountMiniCardsRow extends ConsumerWidget {
                       ),
                       const SizedBox(height: 5),
                       Text(
-                        _fmt.format(a.balance),
+                        CurrencyFormatter.format(a.balance, currency: a.currency),
                         style: GoogleFonts.inter(
                           fontSize: 13,
                           fontWeight: FontWeight.w700,

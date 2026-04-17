@@ -10,6 +10,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
   cupertino_icons: ^1.0.8
 
   # State Management
@@ -37,7 +39,7 @@ dependencies:
   flutter_secure_storage: ^9.2.2
 
   # Utils
-  intl: ^0.19.0
+  intl: ^0.20.2
   uuid: ^4.4.0
   flutter_dotenv: ^5.1.0
   google_fonts: ^6.2.1
@@ -58,3 +60,4 @@ flutter:
   assets:
     - .env
     - assets/images/logo.png
+    - assets/translations/

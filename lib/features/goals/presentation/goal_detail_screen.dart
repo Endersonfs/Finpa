@@ -6,16 +6,56 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/utils/currency_formatter.dart';
 import '../domain/goal_model.dart';
 import '../providers/goals_provider.dart';
+import '../../accounts/domain/account_model.dart';
+import '../../accounts/providers/accounts_provider.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  Formatter
+//  Helpers
 // ─────────────────────────────────────────────────────────────────────────────
-final _fmt =
-    NumberFormat.currency(locale: 'es', symbol: 'RD\$', decimalDigits: 0);
+String _f(double v) => CurrencyFormatter.formatCompact(v);
 
-String _f(double v) => _fmt.format(v);
+void _showAmountDetail(BuildContext context, String label, double amount) {
+  showDialog(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      title: Text(
+        label,
+        style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600),
+      ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            CurrencyFormatter.formatRD(amount),
+            style: GoogleFonts.inter(
+              fontSize: 24,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF2F7155),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Monto exacto',
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              color: Colors.grey[600],
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(ctx),
+          child: const Text('Cerrar'),
+        ),
+      ],
+    ),
+  );
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  GoalDetailScreen
@@ -216,11 +256,13 @@ class GoalDetailScreen extends ConsumerWidget {
                           color: Color(0xFF2F7155),
                         ),
                         const SizedBox(width: 10),
-                        Text(
-                          '${goal.monthsRemaining} ${goal.monthsRemaining == 1 ? 'mes restante' : 'meses restantes'} · Ahorrar ${_f(goal.requiredMonthlySaving)}/mes',
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            color: textSecondary,
+                        Expanded(
+                          child: Text(
+                            '${goal.monthsRemaining} ${goal.monthsRemaining == 1 ? 'mes restante' : 'meses restantes'} · Ahorrar ${_f(goal.requiredMonthlySaving)}/mes',
+                            style: GoogleFonts.inter(
+                              fontSize: 12,
+                              color: textSecondary,
+                            ),
                           ),
                         ),
                       ],
@@ -350,15 +392,20 @@ class _AmountColumn extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 4),
-        Text(
-          _f(amount),
-          style: GoogleFonts.inter(
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
-            color: color,
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: GestureDetector(
+            onTap: () => _showAmountDetail(context, label, amount),
+            child: Text(
+              _f(amount),
+              style: GoogleFonts.inter(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: color,
+              ),
+              textAlign: TextAlign.center,
+            ),
           ),
-          textAlign: TextAlign.center,
-          overflow: TextOverflow.ellipsis,
         ),
       ],
     );
@@ -429,6 +476,7 @@ class _DepositSheet extends StatefulWidget {
 class _DepositSheetState extends State<_DepositSheet> {
   final _controller = TextEditingController();
   String _amountText = '';
+  String? _selectedAccountId;
   bool _isSaving = false;
 
   @override
@@ -442,13 +490,14 @@ class _DepositSheetState extends State<_DepositSheet> {
       double.tryParse(_amountText.replaceAll(',', '.')) != null;
 
   Future<void> _confirm() async {
-    final amount =
-        double.parse(_amountText.replaceAll(',', '.'));
+    final amount = double.parse(_amountText.replaceAll(',', '.'));
     setState(() => _isSaving = true);
     try {
-      await widget.ref
-          .read(goalNotifierProvider.notifier)
-          .deposit(widget.goal.id, amount);
+      await widget.ref.read(goalNotifierProvider.notifier).deposit(
+            widget.goal.id,
+            amount,
+            accountId: _selectedAccountId,
+          );
       if (mounted) Navigator.pop(context);
     } catch (e) {
       if (mounted) {
@@ -468,8 +517,11 @@ class _DepositSheetState extends State<_DepositSheet> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final c = Theme.of(context).extension<FinPaColors>()!;
+    final cs = Theme.of(context).colorScheme;
     final textPrimary =
         isDark ? const Color(0xFFE8EEFF) : const Color(0xFF1A1F36);
+
+    final accountsAsync = widget.ref.watch(accountsStreamProvider);
 
     return Padding(
       padding: EdgeInsets.only(
@@ -483,7 +535,7 @@ class _DepositSheetState extends State<_DepositSheet> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Agregar depósito',
+            'Agregar ahorro',
             style: GoogleFonts.inter(
               fontSize: 16,
               fontWeight: FontWeight.w700,
@@ -494,8 +546,7 @@ class _DepositSheetState extends State<_DepositSheet> {
           TextField(
             controller: _controller,
             onChanged: (v) => setState(() => _amountText = v),
-            keyboardType:
-                const TextInputType.numberWithOptions(decimal: true),
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
             inputFormatters: [
               FilteringTextInputFormatter.allow(RegExp(r'[0-9,.]')),
             ],
@@ -521,7 +572,73 @@ class _DepositSheetState extends State<_DepositSheet> {
               ),
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 24),
+          
+          // Selector de cuenta
+          Text(
+            '¿De qué cuenta sale el dinero?',
+            style: GoogleFonts.inter(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: c.muted,
+            ),
+          ),
+          const SizedBox(height: 10),
+          accountsAsync.when(
+            data: (accounts) {
+              final spendable = accounts.where((a) => a.type.isSpendable).toList();
+              if (spendable.isEmpty) return const SizedBox.shrink();
+              
+              _selectedAccountId ??= spendable.firstWhere((a) => a.isDefault, orElse: () => spendable.first).id;
+
+              return Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF1A1F2E) : const Color(0xFFF9FAFB),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: c.border),
+                ),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    isExpanded: true,
+                    value: _selectedAccountId,
+                    dropdownColor: isDark ? const Color(0xFF1A1F2E) : Colors.white,
+                    onChanged: (v) => setState(() => _selectedAccountId = v),
+                    items: spendable.map((a) => DropdownMenuItem(
+                      value: a.id,
+                      child: Row(
+                        children: [
+                          Text(a.type.emoji, style: const TextStyle(fontSize: 16)),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              a.name,
+                              style: GoogleFonts.inter(
+                                fontSize: 14,
+                                color: textPrimary,
+                              ),
+                            ),
+                          ),
+                          Text(
+                            _f(a.balance),
+                            style: GoogleFonts.inter(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: c.income,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )).toList(),
+                  ),
+                ),
+              );
+            },
+            loading: () => const CircularProgressIndicator(),
+            error: (_, __) => const Text('Error al cargar cuentas'),
+          ),
+
+          const SizedBox(height: 32),
           ElevatedButton(
             onPressed: (_isValid && !_isSaving) ? _confirm : null,
             style: ElevatedButton.styleFrom(
@@ -544,7 +661,7 @@ class _DepositSheetState extends State<_DepositSheet> {
                     ),
                   )
                 : Text(
-                    'Confirmar depósito',
+                    'Confirmar ahorro',
                     style: GoogleFonts.inter(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,

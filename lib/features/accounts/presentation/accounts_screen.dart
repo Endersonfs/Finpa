@@ -2,20 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:intl/intl.dart';
 
+import '../../../../core/providers/language_provider.dart';
+import '../../../../core/providers/currency_provider.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../core/utils/currency_formatter.dart';
 import '../domain/account_model.dart';
 import '../providers/accounts_provider.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  Formatter
+//  Helpers
 // ─────────────────────────────────────────────────────────────────────────────
 
-final _fmt =
-    NumberFormat.currency(locale: 'es', symbol: 'RD\$', decimalDigits: 0);
-
-String _f(double v) => _fmt.format(v);
+String _f(double v, {AccountModel? account}) => 
+    CurrencyFormatter.format(v, currency: account?.currency);
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  AccountsScreen
@@ -34,19 +34,19 @@ class AccountsScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Mis cuentas',
+          ref.tr('accounts.title'),
           style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 17),
         ),
         actions: [
           IconButton(
             icon: const Icon(Icons.swap_horiz_rounded),
             onPressed: () => context.push('/accounts/transfer'),
-            tooltip: 'Mover dinero',
+            tooltip: ref.tr('accounts.transfer'),
           ),
           IconButton(
             icon: const Icon(Icons.add_rounded),
             onPressed: () => context.push('/accounts/add-bank'),
-            tooltip: 'Añadir cuenta',
+            tooltip: ref.tr('accounts.add_account'),
           ),
         ],
       ),
@@ -101,19 +101,28 @@ class _AccountsBody extends ConsumerWidget {
         _SummaryCard(c: c, cs: cs, isDark: isDark),
         const SizedBox(height: 24),
         if (spendable.isNotEmpty) ...[
-          _SectionHeader(title: 'Dinero disponible', c: c),
+          _SectionHeader(
+            title: ref.tr('accounts.spendable_money'),
+            c: c,
+          ),
           const SizedBox(height: 8),
           ...spendable.map((a) => _AccountCard(account: a, c: c, cs: cs)),
           const SizedBox(height: 20),
         ],
         if (savings.isNotEmpty) ...[
-          _SectionHeader(title: 'Guardado para mis metas', c: c),
+          _SectionHeader(
+            title: ref.tr('accounts.saved_for_goals'),
+            c: c,
+          ),
           const SizedBox(height: 8),
           ...savings.map((a) => _AccountCard(account: a, c: c, cs: cs)),
           const SizedBox(height: 20),
         ],
         if (credit.isNotEmpty) ...[
-          _SectionHeader(title: 'Lo que debo', c: c),
+          _SectionHeader(
+            title: ref.tr('accounts.owed'),
+            c: c,
+          ),
           const SizedBox(height: 8),
           ...credit.map((a) => _AccountCard(account: a, c: c, cs: cs)),
         ],
@@ -136,36 +145,7 @@ class _SummaryCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final summary = ref.watch(financialSummaryProvider);
-    return _SummaryCardShell(
-      available: summary?.available,
-      saved:     summary?.saved,
-      owed:      summary?.owed,
-      c:         c,
-      cs:        cs,
-      isDark:    isDark,
-    );
-  }
-}
-
-class _SummaryCardShell extends StatelessWidget {
-  final double? available;
-  final double? saved;
-  final double? owed;
-  final FinPaColors c;
-  final ColorScheme cs;
-  final bool isDark;
-
-  const _SummaryCardShell({
-    required this.available,
-    required this.saved,
-    required this.owed,
-    required this.c,
-    required this.cs,
-    required this.isDark,
-  });
-
-  @override
-  Widget build(BuildContext context) {
+    
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -176,23 +156,23 @@ class _SummaryCardShell extends StatelessWidget {
       child: Row(
         children: [
           _SummaryItem(
-            label: 'Disponible',
-            value: available,
+            label: ref.tr('accounts.available'),
+            value: summary?.available,
             color: c.income,
             flex: 2,
           ),
           Container(width: 1, height: 40, color: c.border),
           _SummaryItem(
-            label: 'Apartado',
-            value: saved,
+            label: ref.tr('accounts.saved'),
+            value: summary?.saved,
             color: const Color(0xFF2F7155),
             flex: 2,
           ),
-          if ((owed ?? 0) > 0) ...[
+          if ((summary?.owed ?? 0) > 0) ...[
             Container(width: 1, height: 40, color: c.border),
             _SummaryItem(
-              label: 'Lo que debo',
-              value: owed,
+              label: ref.tr('accounts.owed'),
+              value: summary?.owed,
               color: c.expense,
               flex: 2,
             ),
@@ -203,7 +183,7 @@ class _SummaryCardShell extends StatelessWidget {
   }
 }
 
-class _SummaryItem extends StatelessWidget {
+class _SummaryItem extends ConsumerWidget {
   final String label;
   final double? value;
   final Color color;
@@ -217,9 +197,10 @@ class _SummaryItem extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final cs = Theme.of(context).colorScheme;
     final c = Theme.of(context).extension<FinPaColors>()!;
+    final currencyState = ref.watch(currencyNotifierProvider);
 
     return Expanded(
       flex: flex,
@@ -245,7 +226,7 @@ class _SummaryItem extends StatelessWidget {
                   ),
                 )
               : Text(
-                  _f(value!),
+                  CurrencyFormatter.format(value!, currency: currencyState.baseCurrency),
                   style: GoogleFonts.inter(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
@@ -364,7 +345,7 @@ class _AccountCard extends StatelessWidget {
               ),
               // saldo
               Text(
-                _f(account.balance),
+                _f(account.balance, account: account),
                 style: GoogleFonts.inter(
                   fontSize: 15,
                   fontWeight: FontWeight.w700,
@@ -388,14 +369,14 @@ class _AccountCard extends StatelessWidget {
 //  Savings Progress Bar
 // ─────────────────────────────────────────────────────────────────────────────
 
-class _SavingsProgressBar extends StatelessWidget {
+class _SavingsProgressBar extends ConsumerWidget {
   final double balance;
   final FinPaColors c;
 
   const _SavingsProgressBar({required this.balance, required this.c});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     // Progreso visual mínimo para mostrar que hay algo guardado
     final hasBalance = balance > 0;
 
@@ -414,7 +395,7 @@ class _SavingsProgressBar extends StatelessWidget {
         ),
         const SizedBox(width: 8),
         Text(
-          'Ahorrando',
+          ref.tr('accounts.saving'),
           style: GoogleFonts.inter(
             fontSize: 10,
             fontWeight: FontWeight.w500,
@@ -430,24 +411,24 @@ class _SavingsProgressBar extends StatelessWidget {
 //  Empty State
 // ─────────────────────────────────────────────────────────────────────────────
 
-class _EmptyState extends StatelessWidget {
+class _EmptyState extends ConsumerWidget {
   final FinPaColors c;
   final ColorScheme cs;
 
   const _EmptyState({required this.c, required this.cs});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('🏦', style: const TextStyle(fontSize: 48)),
+            const Text('🏦', style: TextStyle(fontSize: 48)),
             const SizedBox(height: 16),
             Text(
-              'Aún no tienes cuentas',
+              ref.tr('accounts.no_accounts'),
               style: GoogleFonts.inter(
                 fontSize: 17,
                 fontWeight: FontWeight.w700,
@@ -456,7 +437,7 @@ class _EmptyState extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Agrega tu banco o cartera\npara ver todo en un solo lugar.',
+              ref.tr('accounts.add_bank_desc'),
               textAlign: TextAlign.center,
               style: GoogleFonts.inter(fontSize: 14, color: c.muted),
             ),
@@ -473,7 +454,7 @@ class _EmptyState extends StatelessWidget {
               ),
               icon: const Icon(Icons.add_rounded),
               label: Text(
-                'Añadir cuenta',
+                ref.tr('accounts.add_account'),
                 style: GoogleFonts.inter(fontWeight: FontWeight.w600),
               ),
             ),
@@ -488,7 +469,7 @@ class _EmptyState extends StatelessWidget {
 //  Error State
 // ─────────────────────────────────────────────────────────────────────────────
 
-class _ErrorState extends StatelessWidget {
+class _ErrorState extends ConsumerWidget {
   final String error;
   final VoidCallback onRetry;
   final FinPaColors c;
@@ -500,7 +481,7 @@ class _ErrorState extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -508,12 +489,15 @@ class _ErrorState extends StatelessWidget {
           Icon(Icons.error_outline_rounded, size: 40, color: c.expense),
           const SizedBox(height: 12),
           Text(
-            'Error al cargar cuentas',
+            ref.tr('accounts.error_loading'),
             style: GoogleFonts.inter(
                 fontSize: 15, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 8),
-          TextButton(onPressed: onRetry, child: const Text('Reintentar')),
+          TextButton(
+            onPressed: onRetry, 
+            child: Text(ref.tr('common.retry')),
+          ),
         ],
       ),
     );
@@ -578,4 +562,3 @@ class _AccountsSkeleton extends StatelessWidget {
     );
   }
 }
-

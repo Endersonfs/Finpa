@@ -32,10 +32,10 @@ class GoalNotifier extends StateNotifier<AsyncValue<void>> {
     }
   }
 
-  Future<void> deposit(String id, double amount) async {
+  Future<void> deposit(String id, double amount, {String? accountId}) async {
     state = const AsyncLoading();
     try {
-      await _repo.addDeposit(id, amount);
+      await _repo.addDeposit(id, amount, accountId: accountId);
       _ref.invalidate(goalsProvider);
       state = const AsyncData(null);
     } catch (e, st) {

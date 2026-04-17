@@ -1,24 +1,29 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/providers/language_provider.dart';
+import '../../../../core/constants/currencies.dart';
+import '../../../../core/utils/currency_formatter.dart';
 
-class BalanceCard extends StatelessWidget {
+class BalanceCard extends ConsumerWidget {
   final double? income;
   final double? expense;
   final double? available;
   final double? saved;
+  final AppCurrency? currency;
 
-  const BalanceCard({super.key, this.income, this.expense, this.available, this.saved});
+  const BalanceCard({
+    super.key,
+    this.income,
+    this.expense,
+    this.available,
+    this.saved,
+    this.currency,
+  });
 
-  static final _fmt = NumberFormat.currency(
-    locale: 'es',
-    symbol: 'RD\$',
-    decimalDigits: 0,
-  );
-
-  String _format(double? v) => v == null ? '—' : _fmt.format(v);
+  String _format(double? v, AppCurrency? curr) => v == null ? '—' : CurrencyFormatter.format(v, currency: curr);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final balance = available ??
         ((income != null && expense != null) ? income! - expense! : null);
 
@@ -34,7 +39,7 @@ class BalanceCard extends StatelessWidget {
         children: [
           // ── Etiqueta ─────────────────────────
           Text(
-            'PUEDES GASTAR',
+            ref.tr('dashboard.you_can_spend'),
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w600,
@@ -48,7 +53,7 @@ class BalanceCard extends StatelessWidget {
           balance == null
               ? _Skeleton(width: 160, height: 32)
               : Text(
-                  _format(balance),
+                  _format(balance, currency),
                   style: const TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.w700,
@@ -59,7 +64,7 @@ class BalanceCard extends StatelessWidget {
           if (saved != null && saved! > 0) ...[
             const SizedBox(height: 4),
             Text(
-              '+ ${_format(saved!)} apartados en tus metas',
+              '+ ${_format(saved!, currency)} ${ref.tr('dashboard.saved_in_goals')}',
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w500,
@@ -73,15 +78,15 @@ class BalanceCard extends StatelessWidget {
           Row(
             children: [
               _Chip(
-                label: 'Ingresos',
-                value: _format(income),
+                label: ref.tr('dashboard.income'),
+                value: _format(income, currency),
                 valueColor: const Color(0xFF6EE7B7),
                 loading: income == null,
               ),
               const SizedBox(width: 10),
               _Chip(
-                label: 'Gastos',
-                value: _format(expense),
+                label: ref.tr('dashboard.expense'),
+                value: _format(expense, currency),
                 valueColor: const Color(0xFFFCA5A5),
                 loading: expense == null,
               ),

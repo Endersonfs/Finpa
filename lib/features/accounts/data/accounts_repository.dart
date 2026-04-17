@@ -10,24 +10,68 @@ class AccountsRepository {
   final SyncService _syncService;
 
   static const List<Map<String, String>> dominicanBanks = [
-    {'name': 'Banco Popular Dominicano', 'logo': 'assets/icons/banks/popular.png'},
-    {'name': 'Banco de Reservas', 'logo': 'assets/icons/banks/reservas.png'},
-    {'name': 'Banco BHD', 'logo': 'assets/icons/banks/bhd.png'},
-    {'name': 'Scotiabank', 'logo': 'assets/icons/banks/scotiabank.png'},
-    {'name': 'Asociación Popular (APAP)', 'logo': 'assets/icons/banks/apap.png'},
-    {'name': 'Banco Santa Cruz', 'logo': 'assets/icons/banks/santacruz.png'},
-    {'name': 'Promerica', 'logo': 'assets/icons/banks/promerica.png'},
-    {'name': 'Banesco', 'logo': 'assets/icons/banks/banesco.png'},
-    {'name': 'Qik Banco Digital', 'logo': 'assets/icons/banks/qik.png'},
+    {
+      'name': 'Efectivo',
+      'logo': '',
+      'emoji': '💵'
+    },
+    {
+      'name': 'Banco Popular Dominicano',
+      'logo': 'assets/icons/banks/popular.png',
+      'emoji': '🏦'
+    },
+    {
+      'name': 'Banco de Reservas',
+      'logo': 'assets/icons/banks/reservas.png',
+      'emoji': '🏛️'
+    },
+    {
+      'name': 'Banco BHD',
+      'logo': 'assets/icons/banks/bhd.png',
+      'emoji': '🏢'
+    },
+    {
+      'name': 'Scotiabank',
+      'logo': 'assets/icons/banks/scotiabank.png',
+      'emoji': '🇨🇦'
+    },
+    {
+      'name': 'Asociación Popular (APAP)',
+      'logo': 'assets/icons/banks/apap.png',
+      'emoji': '🏠'
+    },
+    {
+      'name': 'Banco Santa Cruz',
+      'logo': 'assets/icons/banks/santacruz.png',
+      'emoji': '⛪'
+    },
+    {
+      'name': 'Promerica',
+      'logo': 'assets/icons/banks/promerica.png',
+      'emoji': '🌍'
+    },
+    {
+      'name': 'Banesco',
+      'logo': 'assets/icons/banks/banesco.png',
+      'emoji': '🇻🇪'
+    },
+    {
+      'name': 'Qik Banco Digital',
+      'logo': 'assets/icons/banks/qik.png',
+      'emoji': '⚡'
+    },
   ];
 
   AccountsRepository(this._client) : _syncService = SyncService(_client);
 
-  String get _userId => _client.auth.currentUser!.id;
+  String get _userId => _client.auth.currentUser?.id ?? '';
 
   Future<List<AccountModel>> fetchAll() async {
+    final userId = _userId;
+    if (userId.isEmpty) return [];
+
     final local = HiveService.getAllAccounts()
-        .where((a) => a.userId == _userId && a.isActive)
+        .where((a) => a.userId == userId && a.isActive)
         .toList();
     
     local.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
@@ -39,8 +83,13 @@ class AccountsRepository {
   Stream<List<AccountModel>> watchAll() async* {
     yield await fetchAll();
     await for (final _ in HiveService.accountsBox.watch()) {
+      final userId = _userId;
+      if (userId.isEmpty) {
+        yield [];
+        continue;
+      }
       final local = HiveService.getAllAccounts()
-          .where((a) => a.userId == _userId && a.isActive)
+          .where((a) => a.userId == userId && a.isActive)
           .toList();
       local.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
       yield local;
@@ -57,10 +106,13 @@ class AccountsRepository {
   }
 
   Future<AccountModel> insert(AccountModel account) async {
+    final userId = _userId;
+    if (userId.isEmpty) throw Exception('Usuario no autenticado');
+
     final id = const Uuid().v4();
     final newAccount = AccountModel(
       id: id,
-      userId: _userId,
+      userId: userId,
       name: account.name,
       type: account.type,
       balance: account.balance,
@@ -71,6 +123,7 @@ class AccountsRepository {
       sortOrder: account.sortOrder,
       createdAt: DateTime.now(),
       isSynced: false,
+      currencyCode: account.currencyCode,
     );
 
     await HiveService.saveAccount(newAccount);
@@ -127,20 +180,22 @@ class AccountsRepository {
     final fromAccount = HiveService.accountsBox.get(fromAccountId);
     final toAccount = HiveService.accountsBox.get(toAccountId);
 
-    if (fromAccount != null && toAccount != null) {
-      final newFrom = fromAccount.copyWith(
-        balance: fromAccount.balance - amount,
-        isSynced: false,
-      );
-      final newTo = toAccount.copyWith(
-        balance: toAccount.balance + amount,
-        isSynced: false,
-      );
-
-      await HiveService.saveAccount(newFrom);
-      await HiveService.saveAccount(newTo);
-      
-      _syncService.syncAll();
+    if (fromAccount == null || toAccount == null) {
+      throw Exception('Una de las cuentas no existe localmente.');
     }
+
+    final newFrom = fromAccount.copyWith(
+      balance: fromAccount.balance - amount,
+      isSynced: false,
+    );
+    final newTo = toAccount.copyWith(
+      balance: toAccount.balance + amount,
+      isSynced: false,
+    );
+
+    await HiveService.saveAccount(newFrom);
+    await HiveService.saveAccount(newTo);
+    
+    _syncService.syncAll();
   }
 }

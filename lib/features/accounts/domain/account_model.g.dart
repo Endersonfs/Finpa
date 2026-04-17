@@ -30,13 +30,14 @@ class AccountModelAdapter extends TypeAdapter<AccountModel> {
       createdAt: fields[10] as DateTime,
       isSynced: fields[11] as bool,
       isDeleted: fields[12] as bool,
+      currencyCode: fields[13] as String,
     );
   }
 
   @override
   void write(BinaryWriter writer, AccountModel obj) {
     writer
-      ..writeByte(13)
+      ..writeByte(14)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -62,7 +63,9 @@ class AccountModelAdapter extends TypeAdapter<AccountModel> {
       ..writeByte(11)
       ..write(obj.isSynced)
       ..writeByte(12)
-      ..write(obj.isDeleted);
+      ..write(obj.isDeleted)
+      ..writeByte(13)
+      ..write(obj.currencyCode);
   }
 
   @override

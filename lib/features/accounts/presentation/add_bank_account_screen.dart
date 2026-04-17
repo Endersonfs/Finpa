@@ -3,8 +3,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../../core/constants/currencies.dart';
+import '../../../../core/providers/currency_provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../data/accounts_repository.dart';
+import '../domain/account_model.dart';
 import '../providers/accounts_provider.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -21,9 +24,20 @@ class AddBankAccountScreen extends ConsumerStatefulWidget {
 
 class _AddBankAccountScreenState extends ConsumerState<AddBankAccountScreen> {
   String? _selectedBank;
+  AppCurrency? _selectedCurrency;
   final _nameCtrl = TextEditingController();
   final _balanceCtrl = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+
+  @override
+  void initState() {
+    super.initState();
+    // Inicializar con la moneda base de la app
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final base = ref.read(currencyNotifierProvider).baseCurrency;
+      setState(() => _selectedCurrency = base);
+    });
+  }
 
   @override
   void dispose() {
@@ -51,11 +65,15 @@ class _AddBankAccountScreenState extends ConsumerState<AddBankAccountScreen> {
     final balance =
         double.tryParse(_balanceCtrl.text.replaceAll(',', '.')) ?? 0.0;
 
+    final isCash = _selectedBank == 'Efectivo';
+
     final notifier = ref.read(accountNotifierProvider.notifier);
     await notifier.addBankAccount(
       name: name,
       bankName: _selectedBank!,
       initialBalance: balance,
+      currencyCode: _selectedCurrency?.code ?? 'DOP',
+      type: isCash ? AccountType.cash : AccountType.bank,
     );
 
     final state = ref.read(accountNotifierProvider);
@@ -169,6 +187,28 @@ class _AddBankAccountScreenState extends ConsumerState<AddBankAccountScreen> {
               },
             ),
             const SizedBox(height: 20),
+            
+            // Selector de moneda
+            Text(
+              'Moneda de la cuenta',
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: cs.onSurface,
+              ),
+            ),
+            const SizedBox(height: 8),
+            DropdownButtonFormField<AppCurrency>(
+              value: _selectedCurrency,
+              decoration: _inputDecoration(hint: 'Selecciona moneda', c: c, cs: cs),
+              items: AppCurrency.values.map((curr) => DropdownMenuItem(
+                value: curr,
+                child: Text('${curr.flag} ${curr.label} (${curr.code})'),
+              )).toList(),
+              onChanged: (v) => setState(() => _selectedCurrency = v),
+            ),
+            const SizedBox(height: 20),
+
             Text(
               'Saldo actual',
               style: GoogleFonts.inter(
@@ -182,7 +222,7 @@ class _AddBankAccountScreenState extends ConsumerState<AddBankAccountScreen> {
               controller: _balanceCtrl,
               decoration: _inputDecoration(
                 hint: '0',
-                prefix: 'RD\$ ',
+                prefix: '${_selectedCurrency?.symbol ?? 'RD\$'} ',
                 helper: 'Puedes ajustarlo después',
                 c: c,
                 cs: cs,

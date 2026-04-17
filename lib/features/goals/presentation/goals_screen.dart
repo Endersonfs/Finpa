@@ -4,17 +4,56 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/providers/language_provider.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/utils/currency_formatter.dart';
 import '../domain/goal_model.dart';
 import '../providers/goals_provider.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  Formatter
+//  Helpers
 // ─────────────────────────────────────────────────────────────────────────────
-final _fmt =
-    NumberFormat.currency(locale: 'es', symbol: 'RD\$', decimalDigits: 0);
+String _f(double v) => CurrencyFormatter.formatCompact(v);
 
-String _f(double v) => _fmt.format(v);
+void _showAmountDetail(BuildContext context, WidgetRef ref, String label, double amount) {
+  showDialog(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      title: Text(
+        label,
+        style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600),
+      ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            CurrencyFormatter.formatRD(amount),
+            style: GoogleFonts.inter(
+              fontSize: 24,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF2F7155),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            ref.tr('goals.exact_amount'),
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              color: Colors.grey[600],
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(ctx),
+          child: Text(ref.tr('common.close')),
+        ),
+      ],
+    ),
+  );
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  GoalsScreen
@@ -36,7 +75,7 @@ class GoalsScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Metas de ahorro'),
+        title: Text(ref.tr('goals.title')),
         actions: [
           IconButton(
             icon: const Icon(Icons.add_rounded),
@@ -50,7 +89,7 @@ class GoalsScreen extends ConsumerWidget {
         foregroundColor: Colors.white,
         icon: const Icon(Icons.add),
         label: Text(
-          'Agregar',
+          ref.tr('common.add'),
           style: GoogleFonts.inter(
             fontSize: 14,
             fontWeight: FontWeight.w600,
@@ -67,14 +106,14 @@ class GoalsScreen extends ConsumerWidget {
                   size: 40, color: c.expense),
               const SizedBox(height: 12),
               Text(
-                'Error al cargar metas',
+                ref.tr('goals.error_loading'),
                 style: GoogleFonts.inter(
                     fontSize: 15, fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 8),
               TextButton(
                 onPressed: () => ref.invalidate(goalsProvider),
-                child: const Text('Reintentar'),
+                child: Text(ref.tr('common.retry')),
               ),
             ],
           ),
@@ -92,7 +131,7 @@ class GoalsScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Sin metas activas',
+                    ref.tr('goals.no_goals'),
                     style: GoogleFonts.inter(
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
@@ -101,7 +140,7 @@ class GoalsScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    'Crea tu primera meta de ahorro',
+                    ref.tr('goals.create_first'),
                     style: GoogleFonts.inter(
                       fontSize: 13,
                       color: c.muted,
@@ -115,6 +154,7 @@ class GoalsScreen extends ConsumerWidget {
           final totalSaved =
               goals.fold<double>(0, (s, g) => s + g.currentAmount);
           final activeCount = goals.where((g) => !g.isCompleted).length;
+          final goalsLabel = activeCount == 1 ? ref.tr('goals.active_goal') : ref.tr('goals.active_goals');
 
           return SingleChildScrollView(
             padding: const EdgeInsets.only(bottom: 32),
@@ -140,7 +180,7 @@ class GoalsScreen extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'TOTAL AHORRADO',
+                        ref.tr('goals.total_saved'),
                         style: GoogleFonts.inter(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
@@ -150,19 +190,23 @@ class GoalsScreen extends ConsumerWidget {
                         ),
                       ),
                       const SizedBox(height: 6),
-                      Text(
-                        _f(totalSaved),
-                        style: GoogleFonts.inter(
-                          fontSize: 28,
-                          fontWeight: FontWeight.w700,
-                          color: isDark
-                              ? const Color(0xFFC7D2FE)
-                              : const Color(0xFF1E1B4B),
+                      GestureDetector(
+                        onTap: () => _showAmountDetail(
+                            context, ref, ref.tr('goals.total_saved'), totalSaved),
+                        child: Text(
+                          _f(totalSaved),
+                          style: GoogleFonts.inter(
+                            fontSize: 28,
+                            fontWeight: FontWeight.w700,
+                            color: isDark
+                                ? const Color(0xFFC7D2FE)
+                                : const Color(0xFF1E1B4B),
+                          ),
                         ),
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'en $activeCount ${activeCount == 1 ? 'meta activa' : 'metas activas'}',
+                        '${ref.watch(languageNotifierProvider).locale.languageCode == 'es' ? 'en' : 'in'} $activeCount $goalsLabel',
                         style: GoogleFonts.inter(
                           fontSize: 12,
                           color: const Color(0xFF6366F1),
@@ -177,7 +221,7 @@ class GoalsScreen extends ConsumerWidget {
                   padding:
                       const EdgeInsets.fromLTRB(16, 22, 16, 0),
                   child: Text(
-                    'Mis metas',
+                    ref.tr('goals.my_goals'),
                     style: GoogleFonts.inter(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
@@ -227,7 +271,7 @@ class GoalsScreen extends ConsumerWidget {
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            'Nueva meta',
+                            ref.tr('goals.add_goal'),
                             style: GoogleFonts.inter(
                               fontSize: 13,
                               fontWeight: FontWeight.w700,
@@ -251,7 +295,7 @@ class GoalsScreen extends ConsumerWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 //  _GoalCard
 // ─────────────────────────────────────────────────────────────────────────────
-class _GoalCard extends StatelessWidget {
+class _GoalCard extends ConsumerWidget {
   final SavingGoal goal;
   final bool isDark;
   final FinPaColors c;
@@ -268,22 +312,22 @@ class _GoalCard extends StatelessWidget {
     required this.onRemove,
   });
 
-  Future<void> _confirmDelete(BuildContext context) async {
+  Future<void> _confirmDelete(BuildContext context, WidgetRef ref) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Eliminar meta'),
+        title: Text(ref.tr('goals.delete_goal')),
         content: Text(
-            '¿Deseas eliminar la meta "${goal.title}"? Esta acción no se puede deshacer.'),
+            ref.tr('goals.delete_confirm').replaceAll('{name}', goal.title)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancelar'),
+            child: Text(ref.tr('common.cancel')),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             child: Text(
-              'Eliminar',
+              ref.tr('common.delete'),
               style: TextStyle(color: c.expense),
             ),
           ),
@@ -294,14 +338,14 @@ class _GoalCard extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final dateLabel = goal.deadline != null
         ? DateFormat('dd/MM/yyyy').format(goal.deadline!)
         : null;
 
     return GestureDetector(
       onTap: () => context.push('/goals/${goal.id}'),
-      onLongPress: () => _confirmDelete(context),
+      onLongPress: () => _confirmDelete(context, ref),
       child: Container(
         margin:
             const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
@@ -333,7 +377,7 @@ class _GoalCard extends StatelessWidget {
                       ),
                       if (dateLabel != null)
                         Text(
-                          'Fecha límite: $dateLabel',
+                          '${ref.tr('goals.deadline')}: $dateLabel',
                           style: GoogleFonts.inter(
                             fontSize: 10,
                             color: c.muted,
@@ -388,31 +432,43 @@ class _GoalCard extends StatelessWidget {
             const SizedBox(height: 8),
             Row(
               children: [
-                Text(
-                  _f(goal.currentAmount),
-                  style: GoogleFonts.inter(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: textPrimary,
+                GestureDetector(
+                  onTap: () => _showAmountDetail(
+                      context, ref, ref.tr('goals.saved'), goal.currentAmount),
+                  child: Text(
+                    _f(goal.currentAmount),
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: textPrimary,
+                    ),
                   ),
                 ),
-                Text(
-                  ' / ${_f(goal.targetAmount)}',
-                  style: GoogleFonts.inter(
-                      fontSize: 11, color: c.muted),
+                GestureDetector(
+                  onTap: () => _showAmountDetail(
+                      context, ref, ref.tr('goals.goal_target'), goal.targetAmount),
+                  child: Text(
+                    ' / ${_f(goal.targetAmount)}',
+                    style: GoogleFonts.inter(
+                        fontSize: 11, color: c.muted),
+                  ),
                 ),
                 const Spacer(),
                 if (!goal.isCompleted)
-                  Text(
-                    'Faltan ${_f(goal.remaining)}',
-                    style: GoogleFonts.inter(
-                      fontSize: 10,
-                      color: goal.progressColor,
+                  GestureDetector(
+                    onTap: () => _showAmountDetail(
+                        context, ref, ref.tr('goals.remaining'), goal.remaining),
+                    child: Text(
+                      '${ref.tr('goals.remaining')} ${_f(goal.remaining)}',
+                      style: GoogleFonts.inter(
+                        fontSize: 10,
+                        color: goal.progressColor,
+                      ),
                     ),
                   ),
                 if (goal.isCompleted)
                   Text(
-                    '¡Meta alcanzada! 🎉',
+                    ref.tr('goals.goal_reached'),
                     style: GoogleFonts.inter(
                       fontSize: 10,
                       fontWeight: FontWeight.w700,
@@ -566,4 +622,3 @@ class _SkeletonCard extends StatelessWidget {
     );
   }
 }
-

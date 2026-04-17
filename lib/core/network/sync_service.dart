@@ -4,6 +4,7 @@ import '../local_storage/hive_service.dart';
 import '../../features/transactions/domain/transaction_model.dart';
 import '../../features/accounts/domain/account_model.dart';
 import '../../features/budget/domain/budget_model.dart';
+import '../../features/goals/domain/goal_model.dart';
 
 class SyncService {
   final SupabaseClient _client;
@@ -22,11 +23,13 @@ class SyncService {
       await _uploadPendingTransactions();
       await _uploadPendingAccounts();
       await _uploadPendingBudgets();
+      await _uploadPendingGoals();
 
       // 2. Descargar cambios remotos
       await _downloadNewTransactions();
       await _downloadNewAccounts();
       await _downloadNewBudgets();
+      await _downloadNewGoals();
 
       await HiveService.updateLastSync(_userId);
     } catch (e) {
@@ -117,6 +120,40 @@ class SyncService {
     for (final row in data as List) {
       final b = Budget.fromJson(row).copyWith(isSynced: true);
       await HiveService.saveBudget(b);
+    }
+  }
+
+  // --- Goals ---
+  Future<void> _uploadPendingGoals() async {
+    final pending = HiveService.getPendingGoals();
+    for (final g in pending) {
+      try {
+        if (g.isDeleted) {
+          await _client.from('saving_goals').delete().eq('id', g.id);
+          await g.delete();
+        } else {
+          await _client.from('saving_goals').upsert(g.toJson());
+          await HiveService.saveGoal(g.copyWith(isSynced: true));
+        }
+      } catch (_) {}
+    }
+  }
+
+  Future<void> _downloadNewGoals() async {
+    final lastSync = HiveService.getLastSync(_userId);
+    final localCount = HiveService.goalsBox.length;
+
+    var query = _client.from('saving_goals').select().eq('user_id', _userId);
+    
+    // Si la caja local está vacía, traer TODO ignorando lastSync
+    if (localCount > 0 && lastSync != null) {
+      query = query.gt('created_at', lastSync.toIso8601String());
+    }
+
+    final data = await query;
+    for (final row in data as List) {
+      final g = SavingGoal.fromJson(row).copyWith(isSynced: true);
+      await HiveService.saveGoal(g);
     }
   }
 }

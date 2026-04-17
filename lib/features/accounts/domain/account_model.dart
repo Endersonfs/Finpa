@@ -1,4 +1,5 @@
 import 'package:hive_flutter/hive_flutter.dart';
+import '../../../core/constants/currencies.dart';
 
 part 'account_model.g.dart';
 
@@ -55,6 +56,7 @@ class AccountModel extends HiveObject {
   @HiveField(10) final DateTime createdAt;
   @HiveField(11) final bool isSynced;
   @HiveField(12) final bool isDeleted;
+  @HiveField(13) final String currencyCode;
 
   AccountModel({
     required this.id,
@@ -70,7 +72,13 @@ class AccountModel extends HiveObject {
     required this.createdAt,
     this.isSynced = true,
     this.isDeleted = false,
+    this.currencyCode = 'DOP',
   });
+
+  AppCurrency get currency => AppCurrency.values.firstWhere(
+        (e) => e.code == currencyCode,
+        orElse: () => AppCurrency.dop,
+      );
 
   AccountModel copyWith({
     String? id,
@@ -86,6 +94,7 @@ class AccountModel extends HiveObject {
     DateTime? createdAt,
     bool? isSynced,
     bool? isDeleted,
+    String? currencyCode,
   }) {
     return AccountModel(
       id: id ?? this.id,
@@ -101,6 +110,7 @@ class AccountModel extends HiveObject {
       createdAt: createdAt ?? this.createdAt,
       isSynced: isSynced ?? this.isSynced,
       isDeleted: isDeleted ?? this.isDeleted,
+      currencyCode: currencyCode ?? this.currencyCode,
     );
   }
 
@@ -120,6 +130,7 @@ class AccountModel extends HiveObject {
       isActive: json['is_active'] as bool? ?? true,
       sortOrder: json['sort_order'] as int? ?? 0,
       createdAt: DateTime.parse(json['created_at'] as String),
+      currencyCode: json['currency_code'] as String? ?? 'DOP',
     );
   }
 
@@ -136,6 +147,7 @@ class AccountModel extends HiveObject {
       'is_active': isActive,
       'sort_order': sortOrder,
       'created_at': createdAt.toIso8601String(),
+      'currency_code': currencyCode,
     };
   }
 }

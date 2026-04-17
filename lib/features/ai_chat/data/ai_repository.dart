@@ -17,7 +17,11 @@ class AiRepository {
     double? balance,
     double? income,
     double? expenses,
+    String languageCode = 'es',
   }) {
+    final isEn = languageCode == 'en';
+    final langName = isEn ? 'English' : 'Spanish (Dominican style)';
+    
     return '''Eres FinPa IA, el asesor financiero personal de la app FinPa.
 Eres amigable, empático y experto en finanzas personales para la República Dominicana.
 
@@ -27,13 +31,13 @@ DATOS DEL USUARIO (mes actual):
 - Gastos: RD\$${expenses?.toStringAsFixed(0) ?? 'N/D'}
 
 INSTRUCCIONES:
-- Responde SIEMPRE en español dominicano (natural y cercano)
-- Máximo 120 palabras por respuesta
-- Da consejos concretos y accionables
-- Usa los datos del usuario cuando sea relevante
-- Si detectas mal hábito financiero, sé empático pero directo
-- Nunca recomiendes productos financieros específicos con nombre
-- Termina con una pregunta de seguimiento cuando sea apropiado''';
+- Responde SIEMPRE en $langName.
+- Máximo 120 palabras por respuesta.
+- Da consejos concretos y accionables.
+- Usa los datos del usuario cuando sea relevante.
+- Si detectas mal hábito financiero, sé empático pero directo.
+- Nunca recomiendes productos financieros específicos con nombre.
+- Termina con una pregunta de seguimiento cuando sea apropiado.''';
   }
 
   /// Envía un mensaje al API de Anthropic y devuelve la respuesta.
@@ -43,10 +47,11 @@ INSTRUCCIONES:
     double? balance,
     double? income,
     double? expenses,
+    String languageCode = 'es',
   }) async {
     if (_apiKey.isEmpty) {
       await Future.delayed(const Duration(milliseconds: 800));
-      return _localFallback(userMessage);
+      return _localFallback(userMessage, languageCode);
     }
 
     final messages = [
@@ -71,6 +76,7 @@ INSTRUCCIONES:
           balance: balance,
           income: income,
           expenses: expenses,
+          languageCode: languageCode,
         ),
         'messages': messages,
       }),
@@ -89,22 +95,25 @@ INSTRUCCIONES:
   }
 
   /// Genera un tip corto para el dashboard o banners.
-  /// Mantiene la misma firma pública que la versión anterior para compatibilidad
-  /// con TipBanner, AddBudgetScreen y dashboard_provider.
   Future<String> generateAutoTip({
     double? balance,
     double? income,
     double? expenses,
     List<String>? topCategories,
+    String languageCode = 'es',
   }) async {
     if (_apiKey.isEmpty) {
       await Future.delayed(const Duration(milliseconds: 700));
-      return _fallbackTips[DateTime.now().second % _fallbackTips.length];
+      final fallbacks = languageCode == 'en' ? _fallbackTipsEn : _fallbackTipsEs;
+      return fallbacks[DateTime.now().second % fallbacks.length];
     }
+
+    final isEn = languageCode == 'en';
+    final langName = isEn ? 'English' : 'Spanish (Dominican style)';
 
     final categoryText =
         topCategories != null && topCategories.isNotEmpty
-            ? 'Top categorías de gasto: ${topCategories.join(', ')}.'
+            ? 'Top categories: ${topCategories.join(', ')}.'
             : '';
 
     final response = await http.post(
@@ -118,18 +127,18 @@ INSTRUCCIONES:
         'model': _model,
         'max_tokens': 100,
         'system':
-            'Eres FinPa IA. Da UN consejo financiero personal en 1-2 oraciones en español dominicano. Sin saludos. Directo al punto. $categoryText',
+            'Eres FinPa IA. Da UN consejo financiero personal en 1-2 oraciones en $langName. Sin saludos. Directo al punto. $categoryText',
         'messages': [
           {
             'role': 'user',
             'content':
-                'Dame un consejo basado en: balance RD\$${balance?.toStringAsFixed(0) ?? "N/D"}, ingresos RD\$${income?.toStringAsFixed(0) ?? "N/D"}, gastos RD\$${expenses?.toStringAsFixed(0) ?? "N/D"}.',
+                'Give me a tip based on: balance RD\$${balance?.toStringAsFixed(0) ?? "N/A"}, income RD\$${income?.toStringAsFixed(0) ?? "N/A"}, expenses RD\$${expenses?.toStringAsFixed(0) ?? "N/A"}.',
           }
         ],
       }),
     );
 
-    if (response.statusCode != 200) return _fallbackTips[0];
+    if (response.statusCode != 200) return languageCode == 'en' ? _fallbackTipsEn[0] : _fallbackTipsEs[0];
 
     final data = jsonDecode(response.body) as Map<String, dynamic>;
     return (data['content'] as List<dynamic>)[0]['text'] as String;
@@ -137,7 +146,7 @@ INSTRUCCIONES:
 
   // ── Fallbacks locales (sin API key) ───────────────────────────────────────
 
-  static const _fallbackTips = [
+  static const _fallbackTipsEs = [
     'Registra todos tus gastos diariamente para tener control total de tus finanzas.',
     'Destina al menos el 20% de tus ingresos al ahorro antes de gastar.',
     'Revisa tus suscripciones activas — podrías estar pagando por servicios que no usas.',
@@ -145,25 +154,30 @@ INSTRUCCIONES:
     'Construye un fondo de emergencia de 3-6 meses de gastos básicos.',
   ];
 
-  static String _localFallback(String message) {
+  static const _fallbackTipsEn = [
+    'Track all your expenses daily to have total control of your finances.',
+    'Allocate at least 20% of your income to savings before spending.',
+    'Check your active subscriptions — you could be paying for services you don\'t use.',
+    'The 50/30/20 rule: 50% needs, 30% wants, 20% savings.',
+    'Build an emergency fund of 3-6 months of basic expenses.',
+  ];
+
+  static String _localFallback(String message, String languageCode) {
     final msg = message.toLowerCase();
-    if (msg.contains('presupuesto') || msg.contains('gastos')) {
-      return 'Llevar un registro de tus gastos es el primer paso para mejorar tus finanzas. '
-          'Te recomiendo revisar la sección de Presupuesto para ver cómo vas este mes. '
-          '¿Hay alguna categoría específica que te preocupe?';
+    final isEn = languageCode == 'en';
+    
+    if (msg.contains('presupuesto') || msg.contains('budget') || msg.contains('gastos') || msg.contains('expenses')) {
+      return isEn 
+        ? 'Tracking your expenses is the first step to improve your finances. I recommend checking the Budget section to see how you are doing this month. Is there a specific category that concerns you?'
+        : 'Llevar un registro de tus gastos es el primer paso para mejorar tus finanzas. Te recomiendo revisar la sección de Presupuesto para ver cómo vas este mes. ¿Hay alguna categoría específica que te preocupe?';
     }
-    if (msg.contains('ahorro') || msg.contains('meta')) {
-      return 'El ahorro es el hábito financiero más importante. '
-          'Incluso pequeñas cantidades como RD\$500 al mes pueden hacer una gran diferencia a largo plazo. '
-          '¿Tienes alguna meta de ahorro específica?';
+    if (msg.contains('ahorro') || msg.contains('savings') || msg.contains('meta') || msg.contains('goal')) {
+      return isEn
+        ? 'Saving is the most important financial habit. Even small amounts can make a big difference in the long run. Do you have a specific savings goal?'
+        : 'El ahorro es el hábito financiero más importante. Incluso pequeñas cantidades pueden hacer una gran diferencia a largo plazo. ¿Tienes alguna meta de ahorro específica?';
     }
-    if (msg.contains('deuda') || msg.contains('préstamo')) {
-      return 'Para salir de deudas, la estrategia de avalancha (pagar primero la de mayor interés) '
-          'te ahorra más dinero. ¿Quieres que analicemos tu situación específica?';
-    }
-    return 'Entiendo tu consulta. Para darte el mejor consejo, necesito que actives la integración '
-        'con FinPa IA configurando tu API key en el archivo .env. '
-        '¿Tienes alguna pregunta específica sobre tus finanzas?';
+    return isEn
+      ? 'I understand your query. To give you the best advice, I need you to activate the FinPa IA integration by configuring your API key in the .env file. Do you have any specific questions about your finances?'
+      : 'Entiendo tu consulta. Para darte el mejor consejo, necesito que actives la integración con FinPa IA configurando tu API key en el archivo .env. ¿Tienes alguna pregunta específica sobre tus finanzas?';
   }
 }
-

@@ -120,9 +120,23 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     }
 
     final userId = Supabase.instance.client.auth.currentUser!.id;
+
+    // Si es gasto y no hay cuenta seleccionada, intentar usar la predeterminada
+    String? finalAccountId = _selectedAccountId;
+    if (_type == TransactionType.expense && finalAccountId == null) {
+      final accounts = ref.read(accountsStreamProvider).valueOrNull ?? const [];
+      final spendable = accounts.where((a) => a.type.isSpendable).toList();
+      if (spendable.isNotEmpty) {
+        finalAccountId = spendable
+            .firstWhere((a) => a.isDefault, orElse: () => spendable.first)
+            .id;
+      }
+    }
+
     final transaction = Transaction(
       id: '',
       userId: userId,
+      accountId: finalAccountId,
       amount: amount,
       type: _type,
       category: _category,
@@ -135,7 +149,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     try {
       await ref.read(transactionNotifierProvider.notifier).add(
         transaction,
-        accountId: _selectedAccountId,
+        accountId: finalAccountId,
       );
       if (mounted) context.pop();
     } catch (e) {

@@ -24,9 +24,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
     _ctrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 200),
+      duration: const Duration(milliseconds: 100),
     );
-    _scale = Tween<double>(begin: 0.5, end: 1.0).animate(
+    _scale = Tween<double>(begin: 0.8, end: 1.0).animate(
       CurvedAnimation(parent: _ctrl, curve: Curves.easeOutCubic),
     );
     _fade = Tween<double>(begin: 0.0, end: 1.0).animate(
@@ -47,15 +47,19 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   }
 
   Future<void> _init() async {
-    await Future.delayed(const Duration(milliseconds: 200));
-    if (!mounted) return;
+    // Reducimos el delay al mínimo necesario para que Flutter registre el frame
+    await Future.delayed(const Duration(milliseconds: 50));
+    if (!mounted) {
+      return;
+    }
 
     Session? session;
     try {
       session = Supabase.instance.client.auth.currentSession;
-    } catch (_) {
+    } catch (e) {
       session = null;
     }
+
     final prefs = ref.read(sharedPrefsProvider);
     final onboardingDone = prefs.getBool('finpa_onboarding_done') ?? false;
 
@@ -133,4 +137,3 @@ class _FinPaLogo extends StatelessWidget {
     );
   }
 }
-

@@ -3,6 +3,7 @@ enum TransactionType { income, expense }
 class Transaction {
   final String id;
   final String userId;
+  final String? accountId;
   final String? description;
   final double amount; // siempre positivo
   final TransactionType type;
@@ -13,6 +14,7 @@ class Transaction {
   const Transaction({
     required this.id,
     required this.userId,
+    this.accountId,
     this.description,
     required this.amount,
     required this.type,
@@ -30,6 +32,7 @@ class Transaction {
     return Transaction(
       id: json['id'] as String,
       userId: json['user_id'] as String,
+      accountId: json['account_id'] as String?,
       description: json['description'] as String?,
       amount: (json['amount'] as num).toDouble(),
       type: json['type'] == 'income'
@@ -45,6 +48,7 @@ class Transaction {
     return {
       'id': id,
       'user_id': userId,
+      'account_id': accountId,
       'description': description,
       'amount': amount,
       'type': type == TransactionType.income ? 'income' : 'expense',

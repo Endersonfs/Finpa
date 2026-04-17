@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../ai_chat/data/ai_repository.dart';
 import '../../transactions/domain/transaction.dart';
 import '../../transactions/providers/transaction_provider.dart';
+import '../../../core/providers/language_provider.dart';
 
 // ── Resumen mensual: { 'income': x, 'expense': x } ───────────────────────────
 //  Re-expuesto desde transaction_provider para que los widgets del dashboard
@@ -21,6 +22,10 @@ final recentTransactionsProvider =
 
 // ── Consejo IA del día ────────────────────────────────────────────────────────
 final aiTipProvider = FutureProvider.autoDispose<String>(
-  (ref) => const AiRepository().generateAutoTip(),
+  (ref) {
+    final langState = ref.watch(languageNotifierProvider);
+    return const AiRepository().generateAutoTip(
+      languageCode: langState.locale.languageCode,
+    );
+  },
 );
-

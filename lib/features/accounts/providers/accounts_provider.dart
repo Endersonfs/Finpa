@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/providers/currency_provider.dart';
 import '../data/accounts_repository.dart';
 import '../domain/account_model.dart';
 
@@ -24,25 +25,43 @@ final defaultAccountProvider = FutureProvider<AccountModel?>((ref) {
   return repo.getDefault();
 });
 
-// ── Resumen financiero — reactivo al stream de cuentas ────────────────────────
-// Se recalcula automáticamente cada vez que Supabase Realtime emite un cambio
-// en la tabla accounts (transacción, transferencia, depósito a meta, etc.)
+// ── Resumen financiero — reactivo al stream de cuentas y moneda ───────────────
 
 final financialSummaryProvider = Provider.autoDispose<FinancialSummary?>((ref) {
   final accountsAsync = ref.watch(accountsStreamProvider);
+  final currencyState = ref.watch(currencyNotifierProvider);
+  final currencyNotifier = ref.read(currencyNotifierProvider.notifier);
+
   return accountsAsync.maybeWhen(
-    data: (accounts) => FinancialSummary(
-      available: accounts
-          .where((a) => a.type.isSpendable)
-          .fold(0.0, (sum, a) => sum + a.balance),
-      saved: accounts
-          .where((a) => a.type == AccountType.savings)
-          .fold(0.0, (sum, a) => sum + a.balance),
-      owed: accounts
-          .where((a) => a.type == AccountType.credit)
-          .fold(0.0, (sum, a) => sum + a.balance),
-    ),
-    orElse: () => null, // null = cargando → muestra skeleton en la UI
+    data: (accounts) {
+      double available = 0;
+      double saved = 0;
+      double owed = 0;
+
+      for (final account in accounts) {
+        // Convertimos el balance de la cuenta a la moneda base de la app
+        final convertedBalance = currencyNotifier.convert(
+          account.balance,
+          account.currency,
+          currencyState.baseCurrency,
+        );
+
+        if (account.type.isSpendable) {
+          available += convertedBalance;
+        } else if (account.type == AccountType.savings) {
+          saved += convertedBalance;
+        } else if (account.type == AccountType.credit) {
+          owed += convertedBalance;
+        }
+      }
+
+      return FinancialSummary(
+        available: available,
+        saved: saved,
+        owed: owed,
+      );
+    },
+    orElse: () => null,
   );
 });
 
@@ -59,6 +78,8 @@ class AccountNotifier extends StateNotifier<AsyncValue<void>> {
     required String name,
     required String bankName,
     required double initialBalance,
+    String currencyCode = 'DOP',
+    AccountType type = AccountType.bank,
   }) async {
     state = const AsyncLoading();
     try {
@@ -66,13 +87,14 @@ class AccountNotifier extends StateNotifier<AsyncValue<void>> {
         id: '',
         userId: '',
         name: name,
-        type: AccountType.bank,
+        type: type,
         balance: initialBalance,
         bankName: bankName,
         isDefault: false,
         isActive: true,
         sortOrder: 0,
         createdAt: DateTime.now(),
+        currencyCode: currencyCode,
       ));
       _ref.invalidate(accountsStreamProvider);
       state = const AsyncData(null);
@@ -84,6 +106,7 @@ class AccountNotifier extends StateNotifier<AsyncValue<void>> {
   Future<void> addSavingsAccount({
     required String name,
     required double initialBalance,
+    String currencyCode = 'DOP',
   }) async {
     state = const AsyncLoading();
     try {
@@ -97,6 +120,7 @@ class AccountNotifier extends StateNotifier<AsyncValue<void>> {
         isActive: true,
         sortOrder: 0,
         createdAt: DateTime.now(),
+        currencyCode: currencyCode,
       ));
       _ref.invalidate(accountsStreamProvider);
       state = const AsyncData(null);

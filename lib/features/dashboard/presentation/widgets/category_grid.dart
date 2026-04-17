@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import '../../../../core/constants/currencies.dart';
+import '../../../../core/utils/currency_formatter.dart';
 
 // Metadata de cada categoría del dashboard
 class _Cat {
@@ -20,14 +21,49 @@ const _kCategories = <String, _Cat>{
 class CategoryGrid extends StatelessWidget {
   /// null mientras carga — muestra skeleton
   final Map<String, double>? expenses;
+  final AppCurrency? currency;
 
-  const CategoryGrid({super.key, this.expenses});
+  const CategoryGrid({super.key, this.expenses, this.currency});
 
-  static final _fmt = NumberFormat.currency(
-    locale: 'es',
-    symbol: 'Bs.',
-    decimalDigits: 0,
-  );
+  void _showAmountDetail(BuildContext context, String label, double amount) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          label,
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              CurrencyFormatter.format(amount, currency: currency),
+              style: const TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF2F7155),
+              ),
+            ),
+            const SizedBox(height: 4),
+            const Text(
+              'Monto exacto',
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cerrar'),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -57,8 +93,9 @@ class CategoryGrid extends StatelessWidget {
         return _CategoryCard(
           label: meta.label,
           color: meta.color,
-          amount: _fmt.format(entry.value),
+          amount: CurrencyFormatter.formatCompact(entry.value, currency: currency),
           progress: (maxAmount > 0) ? entry.value / maxAmount : 0,
+          onTapAmount: () => _showAmountDetail(context, meta.label, entry.value),
         );
       },
     );
@@ -71,12 +108,14 @@ class _CategoryCard extends StatelessWidget {
   final Color color;
   final String amount;
   final double progress; // 0.0–1.0
+  final VoidCallback onTapAmount;
 
   const _CategoryCard({
     required this.label,
     required this.color,
     required this.amount,
     required this.progress,
+    required this.onTapAmount,
   });
 
   @override
@@ -131,12 +170,15 @@ class _CategoryCard extends StatelessWidget {
                     ],
                   ),
                   // Monto
-                  Text(
-                    amount,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: textPrimary,
+                  GestureDetector(
+                    onTap: onTapAmount,
+                    child: Text(
+                      amount,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: textPrimary,
+                      ),
                     ),
                   ),
                 ],

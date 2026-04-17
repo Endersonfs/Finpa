@@ -1,16 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
-class SavingGoal {
-  final String id;
-  final String userId;
-  final String title;
-  final String emoji;
-  final double targetAmount;
-  final double currentAmount;
-  final DateTime? deadline;
-  final DateTime createdAt;
+part 'goal_model.g.dart';
 
-  const SavingGoal({
+@HiveType(typeId: 5)
+class SavingGoal extends HiveObject {
+  @HiveField(0) final String id;
+  @HiveField(1) final String userId;
+  @HiveField(2) final String title;
+  @HiveField(3) final String emoji;
+  @HiveField(4) final double targetAmount;
+  @HiveField(5) final double currentAmount;
+  @HiveField(6) final DateTime? deadline;
+  @HiveField(7) final DateTime createdAt;
+  @HiveField(8) bool isSynced;
+  @HiveField(9) bool isDeleted;
+
+  SavingGoal({
     required this.id,
     required this.userId,
     required this.title,
@@ -19,7 +25,35 @@ class SavingGoal {
     required this.currentAmount,
     this.deadline,
     required this.createdAt,
+    this.isSynced = true,
+    this.isDeleted = false,
   });
+
+  SavingGoal copyWith({
+    String? id,
+    String? userId,
+    String? title,
+    String? emoji,
+    double? targetAmount,
+    double? currentAmount,
+    DateTime? deadline,
+    DateTime? createdAt,
+    bool? isSynced,
+    bool? isDeleted,
+  }) {
+    return SavingGoal(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      title: title ?? this.title,
+      emoji: emoji ?? this.emoji,
+      targetAmount: targetAmount ?? this.targetAmount,
+      currentAmount: currentAmount ?? this.currentAmount,
+      deadline: deadline ?? this.deadline,
+      createdAt: createdAt ?? this.createdAt,
+      isSynced: isSynced ?? this.isSynced,
+      isDeleted: isDeleted ?? this.isDeleted,
+    );
+  }
 
   double get progress =>
       targetAmount > 0 ? (currentAmount / targetAmount).clamp(0.0, 1.0) : 0;
@@ -46,7 +80,7 @@ class SavingGoal {
 
   Color get progressColor {
     if (progress > 0.66) return const Color(0xFF059669);
-    if (progress > 0.33) return const Color(0xFF2563EB);
+    if (progress > 0.33) return const Color(0xFF2F7155); // Adjusted to brand green
     return const Color(0xFFD97706);
   }
 
@@ -65,6 +99,19 @@ class SavingGoal {
     );
   }
 
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'user_id': userId,
+      'title': title,
+      'emoji': emoji,
+      'target_amount': targetAmount,
+      'current_amount': currentAmount,
+      'deadline': deadline?.toIso8601String().split('T').first,
+      'created_at': createdAt.toIso8601String(),
+    };
+  }
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -75,4 +122,3 @@ class SavingGoal {
   @override
   int get hashCode => id.hashCode;
 }
-

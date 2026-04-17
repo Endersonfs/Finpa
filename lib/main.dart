@@ -1,16 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'app.dart';
-import 'core/local_storage/sync_metadata.dart';
 import 'core/providers/theme_provider.dart';
-import 'features/transactions/domain/transaction_model.dart';
-
 import 'core/local_storage/hive_service.dart';
 
 void main() async {
@@ -20,7 +16,11 @@ void main() async {
   await initializeDateFormatting('es_ES');
 
   // 1. Variables de entorno
-  await dotenv.load(fileName: '.env');
+  try {
+    await dotenv.load(fileName: '.env');
+  } catch (e) {
+    // Silently fail if .env is missing or invalid
+  }
 
   // 2. Supabase (solo si las credenciales están configuradas)
   final supabaseUrl = dotenv.env['SUPABASE_URL'] ?? '';
@@ -44,4 +44,3 @@ void main() async {
     ),
   );
 }
-
