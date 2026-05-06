@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../core/providers/theme_provider.dart';
+import '../../../core/providers/language_provider.dart';
 
 class AppearanceScreen extends ConsumerStatefulWidget {
   const AppearanceScreen({super.key});
@@ -37,14 +38,14 @@ class _AppearanceScreenState extends ConsumerState<AppearanceScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Apariencia'),
+        title: Text(ref.tr('settings.appearance')),
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           // ── Sección "Tema de la app" ──────────────────────────────────
           Text(
-            'Tema de la app',
+            ref.tr('settings.appearance').toUpperCase(),
             style: GoogleFonts.inter(
               fontSize: 13,
               fontWeight: FontWeight.w700,
@@ -53,8 +54,8 @@ class _AppearanceScreenState extends ConsumerState<AppearanceScreen> {
           ),
           const SizedBox(height: 12),
           _ThemeOptionCard(
-            title: 'Claro',
-            subtitle: 'Fondo blanco, texto oscuro',
+            title: 'Light',
+            subtitle: 'White background, dark text',
             icon: Icons.wb_sunny_rounded,
             iconColor: const Color(0xFFD97706),
             isSelected: themeMode == ThemeMode.light,
@@ -66,8 +67,8 @@ class _AppearanceScreenState extends ConsumerState<AppearanceScreen> {
             onTap: () => ref.read(themeProvider.notifier).setLight(),
           ),
           _ThemeOptionCard(
-            title: 'Oscuro',
-            subtitle: 'Fondo negro, texto claro',
+            title: 'Dark',
+            subtitle: 'Black background, light text',
             icon: Icons.dark_mode_rounded,
             iconColor: const Color(0xFF2F7155),
             isSelected: themeMode == ThemeMode.dark,
@@ -79,8 +80,8 @@ class _AppearanceScreenState extends ConsumerState<AppearanceScreen> {
             onTap: () => ref.read(themeProvider.notifier).setDark(),
           ),
           _ThemeOptionCard(
-            title: 'Sistema',
-            subtitle: 'Sigue la configuración del móvil',
+            title: 'System',
+            subtitle: ref.tr('settings.follow_system'),
             icon: Icons.brightness_auto_rounded,
             iconColor: const Color(0xFF059669),
             isSelected: themeMode == ThemeMode.system,
@@ -96,7 +97,7 @@ class _AppearanceScreenState extends ConsumerState<AppearanceScreen> {
           Padding(
             padding: const EdgeInsets.only(top: 24, bottom: 12),
             child: Text(
-              'Notificaciones',
+              ref.tr('settings.notifications').toUpperCase(),
               style: GoogleFonts.inter(
                 fontSize: 13,
                 fontWeight: FontWeight.w700,
@@ -113,11 +114,11 @@ class _AppearanceScreenState extends ConsumerState<AppearanceScreen> {
             ),
             child: SwitchListTile(
               title: Text(
-                'Alertas de presupuesto',
+                'Budget alerts',
                 style: GoogleFonts.inter(fontSize: 13, color: textPrimary),
               ),
               subtitle: Text(
-                'Cuando llegues al 80% de un límite',
+                ref.tr('settings.limit_alert'),
                 style: GoogleFonts.inter(fontSize: 11, color: c.muted),
               ),
               value: _budget,
@@ -137,11 +138,11 @@ class _AppearanceScreenState extends ConsumerState<AppearanceScreen> {
             ),
             child: SwitchListTile(
               title: Text(
-                'Tips semanales de FinPa IA',
+                'Weekly AI tips',
                 style: GoogleFonts.inter(fontSize: 13, color: textPrimary),
               ),
               subtitle: Text(
-                'Consejos personalizados cada semana',
+                'Personalized tips every week',
                 style: GoogleFonts.inter(fontSize: 11, color: c.muted),
               ),
               value: _tips,
@@ -161,11 +162,11 @@ class _AppearanceScreenState extends ConsumerState<AppearanceScreen> {
             ),
             child: SwitchListTile(
               title: Text(
-                'Recordatorio diario',
+                'Daily reminder',
                 style: GoogleFonts.inter(fontSize: 13, color: textPrimary),
               ),
               subtitle: Text(
-                'Para registrar tus gastos del día',
+                ref.tr('settings.daily_reminder'),
                 style: GoogleFonts.inter(fontSize: 11, color: c.muted),
               ),
               value: _reminder,
@@ -277,4 +278,3 @@ class _ThemeOptionCard extends StatelessWidget {
     );
   }
 }
-

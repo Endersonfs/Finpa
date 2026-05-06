@@ -12,7 +12,10 @@
     "search": "Search",
     "retry": "Retry",
     "user": "User",
-    "version": "Version"
+    "version": "Version",
+    "soon": "Coming soon",
+    "next": "Next",
+    "back": "Back"
   },
   "dashboard": {
     "greeting_morning": "Good morning",
@@ -26,7 +29,8 @@
     "this_month": "This month",
     "recent": "Recent",
     "view_all": "View all",
-    "add": "Add"
+    "add": "Add",
+    "by_category": "By category"
   },
   "accounts": {
     "title": "Accounts",
@@ -51,7 +55,24 @@
     "saved_for_goals": "Saved for my goals",
     "error_loading": "Error loading accounts",
     "add_bank_desc": "Add your bank or wallet\nto see everything in one place.",
-    "saving": "Saving"
+    "saving": "Saving",
+    "helper_adjust": "You can adjust it later",
+    "assets": "Assets",
+    "liabilities": "Liabilities",
+    "choose_source": "Choose source account",
+    "choose_target": "Choose target account",
+    "how_much": "How much to move?",
+    "balances_after": "Balances after transfer",
+    "account_not_found": "Account not found",
+    "current_balance_in": "Current balance in",
+    "no_transactions_account": "No transactions in this account",
+    "types": {
+      "checking": "Checking",
+      "savings": "Savings",
+      "credit": "Credit card",
+      "cash": "Cash",
+      "investment": "Investment"
+    }
   },
   "goals": {
     "title": "Saving Goals",
@@ -76,7 +97,9 @@
     "active_goal": "active goal",
     "my_goals": "My goals",
     "deadline": "Deadline",
-    "goal_reached": "Goal reached! 🎉"
+    "goal_reached": "Goal reached! 🎉",
+    "choose_icon": "Choose an icon",
+    "no_deadline": "No deadline"
   },
   "settings": {
     "title": "Settings",
@@ -94,7 +117,178 @@
     "notifications_desc": "Alerts and reminders",
     "security_desc": "Biometrics and privacy",
     "select_language": "Select language",
-    "select_currency": "Select base currency"
+    "select_currency": "Select base currency",
+    "follow_system": "Follow system settings",
+    "limit_alert": "When you reach 80% of a limit",
+    "daily_reminder": "To record your daily expenses",
+    "biometric_access": "BIOMETRIC ACCESS",
+    "no_biometrics": "Your device does not support biometrics",
+    "auto_logout": "Auto logout",
+    "logout_confirm_title": "Logout?",
+    "logout_confirm_desc": "You will be logged out of this device.",
+    "logout": "Logout",
+    "free_plan": "Free Plan",
+    "share_finpa": "Share FinPa",
+    "nav_ai": "FinPa AI"
+  },
+  "notifications": {
+    "budget_alert_title": "Budget alert",
+    "budget_alert_desc": "You have spent 82% of your Food budget this month.",
+    "goal_reached_title": "Goal reached!",
+    "goal_reached_desc": "You completed your \"Emergency fund\" goal. Congratulations! 🎉",
+    "lesson_available_title": "New lesson available",
+    "lesson_available_desc": "Learn about compound interest in the Investment module.",
+    "empty": "No notifications yet"
+  },
+  "categories": {
+    "food": "Food",
+    "transport": "Transport",
+    "entertainment": "Entertainment",
+    "health": "Health",
+    "clothing": "Clothing",
+    "housing": "Housing",
+    "services": "Services",
+    "education": "Education",
+    "shopping": "Shopping",
+    "salary": "Salary",
+    "freelance": "Freelance",
+    "business": "Business",
+    "investment": "Investment",
+    "gift": "Gift",
+    "other": "Other",
+    "other_income": "Other"
+  },
+  "currencies": {
+    "dop": "Dominican Peso",
+    "usd": "US Dollar",
+    "eur": "Euro"
+  },
+  "transactions": {
+    "title": "Transactions",
+    "add": "Add transaction",
+    "details": "Transaction Details",
+    "description": "Description",
+    "category": "Category",
+    "date": "Date",
+    "account": "Account",
+    "from_account": "From which account?",
+    "amount": "Amount",
+    "type": "Type",
+    "income": "Income",
+    "expense": "Expense",
+    "transfer": "Transfer",
+    "no_transactions": "No transactions yet",
+    "recent": "Recent Transactions"
+  },
+  "reports": {
+    "title": "Reports",
+    "month": "Month",
+    "year": "Year",
+    "last_6_months": "Last 6 months",
+    "expense_distribution": "Expense distribution"
+  },
+  "auth": {
+    "login": "Login",
+    "register": "Register",
+    "email": "Email",
+    "password": "Password",
+    "forgot_password": "Forgot your password?",
+    "login_to_continue": "Login to continue",
+    "invalid_email": "Invalid email",
+    "password_required": "Password required",
+    "password_min_length": "Minimum 6 characters",
+    "dont_have_account": "Don't have an account?",
+    "already_have_account": "Already have an account?",
+    "session_expired": "Your session expired. Please login with your email and password.",
+    "reset_password_desc": "Enter your email and we'll send you a link to reset your password.",
+    "back_to_login": "Back to login",
+    "session_locked": "Session locked",
+    "enter_password": "Enter your password",
+    "login_with_password": "Login with password",
+    "onboarding_title": "Take control of your finances",
+    "onboarding_desc": "Record income and expenses.\nKnow exactly where your money goes.",
+    "onboarding_budget_desc": "Set category limits and get alerts before you overspend.",
+    "onboarding_ai_desc": "Your personal financial advisor with artificial intelligence, available 24/7."
+  },
+  "education": {
+    "title": "Financial Education",
+    "modules": "Modules",
+    "modules_list": {
+      "budget": "Budgeting",
+      "saving": "Saving",
+      "debt": "Debt",
+      "investment": "Investment"
+    },
+    "lesson": "Lesson",
+    "lesson_of": "of",
+    "quiz_title": "Test your knowledge",
+    "correct": "Correct! 🎉",
+    "correct_answer": "Correct answer",
+    "quizzes": {
+      "presupuesto": {
+        "question": "What percentage does the 50/30/20 rule suggest for needs?",
+        "options": {
+          "0": "30%",
+          "1": "50%",
+          "2": "20%",
+          "3": "70%"
+        },
+        "correct": "1"
+      },
+      "ahorro": {
+        "question": "How many months of expenses should an emergency fund cover?",
+        "options": {
+          "0": "1-2 months",
+          "1": "3-6 months",
+          "2": "12 months",
+          "3": "2 weeks"
+        },
+        "correct": "1"
+      },
+      "deuda": {
+        "question": "In the 'Avalanche' strategy, which debt do you pay first?",
+        "options": {
+          "0": "The smallest one",
+          "1": "The oldest one",
+          "2": "The one with highest interest",
+          "3": "The bank one"
+        },
+        "correct": "2"
+      },
+      "inversion": {
+        "question": "What is compound interest?",
+        "options": {
+          "0": "Interest on original capital",
+          "1": "Interest on accumulated interest",
+          "2": "A bank fee",
+          "3": "A type of debt"
+        },
+        "correct": "1"
+      }
+    },
+    "complete_module": "Complete module",
+    "next_lesson": "Next lesson",
+    "lesson_completed": "Lesson completed! 🎓",
+    "error_loading": "Error loading lesson",
+    "not_found": "Lesson not found",
+    "module_inversion": "Investment",
+    "lesson_interest_comp": "Compound interest"
+  },
+  "ai_chat": {
+    "greeting": "Hello! I am FinPa AI, your personal financial advisor. How can I help you today? 💙",
+    "online": "Online",
+    "delete_history": "Delete conversation history?",
+    "hint_budget": "How is my budget?",
+    "hint_goals": "How are my goals going?",
+    "input_placeholder": "Ask FinPa AI..."
+  },
+  "budget": {
+    "title": "Budget",
+    "add": "Add budget",
+    "limit": "Limit",
+    "monthly_limit": "MONTHLY LIMIT",
+    "category": "Category",
+    "delete_confirm": "Do you want to delete this budget? This action cannot be undone."
   },
   "months": {
     "jan": "January", "feb": "February", "mar": "March", "apr": "April",

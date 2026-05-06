@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../providers/auth_provider.dart';
+import '../../../core/providers/language_provider.dart';
 
 class ForgotPasswordScreen extends ConsumerStatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -38,7 +39,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     } on AuthException catch (e) {
       _showError(e.message);
     } catch (_) {
-      _showError('No se pudo enviar el enlace. Intenta nuevamente.');
+      _showError(ref.tr('common.error'));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -79,11 +80,12 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
             duration: const Duration(milliseconds: 400),
             switchInCurve: Curves.easeOutCubic,
             switchOutCurve: Curves.easeInCubic,
-            child: _emailSent ? _SuccessView(email: _emailCtrl.text.trim()) : _FormView(
+            child: _emailSent ? _SuccessView(email: _emailCtrl.text.trim(), ref: ref) : _FormView(
               formKey: _formKey,
               emailCtrl: _emailCtrl,
               isLoading: _isLoading,
               onSend: _sendLink,
+              ref: ref,
             ),
           ),
         ),
@@ -100,18 +102,20 @@ class _FormView extends StatelessWidget {
   final TextEditingController emailCtrl;
   final bool isLoading;
   final VoidCallback onSend;
+  final WidgetRef ref;
 
   const _FormView({
     required this.formKey,
     required this.emailCtrl,
     required this.isLoading,
     required this.onSend,
+    required this.ref,
   });
 
   String? _validateEmail(String? v) {
-    if (v == null || v.trim().isEmpty) return 'Ingresa tu email';
+    if (v == null || v.trim().isEmpty) return ref.tr('auth.email');
     if (!RegExp(r'^[^@]+@[^@]+\.[^@]+$').hasMatch(v.trim())) {
-      return 'Email inválido';
+      return ref.tr('auth.invalid_email');
     }
     return null;
   }
@@ -129,8 +133,8 @@ class _FormView extends StatelessWidget {
           Container(
             width: 88,
             height: 88,
-            decoration: BoxDecoration(
-              color: const Color(0xFFEEF2FF),
+            decoration: const BoxDecoration(
+              color: Color(0xFFEEF2FF),
               shape: BoxShape.circle,
             ),
             child: const Icon(
@@ -142,7 +146,7 @@ class _FormView extends StatelessWidget {
           const SizedBox(height: 28),
 
           Text(
-            '¿Olvidaste tu contraseña?',
+            ref.tr('auth.forgot_password'),
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.w700,
                   color: const Color(0xFF1A1F36),
@@ -152,7 +156,7 @@ class _FormView extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           Text(
-            'Ingresa tu email y te enviaremos un\nenlace para restablecer tu contraseña.',
+            'Enter your email and we\'ll send you a\nlink to reset your password.',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: const Color(0xFF6B7280),
                   fontSize: 14,
@@ -170,10 +174,10 @@ class _FormView extends StatelessWidget {
             autofillHints: const [AutofillHints.email],
             validator: _validateEmail,
             onFieldSubmitted: (_) => onSend(),
-            decoration: const InputDecoration(
-              labelText: 'Email',
+            decoration: InputDecoration(
+              labelText: ref.tr('auth.email'),
               hintText: 'tu@email.com',
-              prefixIcon: Icon(Icons.mail_outline_rounded, size: 20),
+              prefixIcon: const Icon(Icons.mail_outline_rounded, size: 20),
             ),
           ),
           const SizedBox(height: 24),
@@ -202,7 +206,7 @@ class _FormView extends StatelessWidget {
                       ),
                     )
                   : const Text(
-                      'Enviar enlace',
+                      'Send link',
                       style: TextStyle(
                           fontSize: 15, fontWeight: FontWeight.w600),
                     ),
@@ -219,8 +223,9 @@ class _FormView extends StatelessWidget {
 // ─────────────────────────────────────────────
 class _SuccessView extends StatelessWidget {
   final String email;
+  final WidgetRef ref;
 
-  const _SuccessView({required this.email});
+  const _SuccessView({required this.email, required this.ref});
 
   @override
   Widget build(BuildContext context) {
@@ -252,11 +257,11 @@ class _SuccessView extends StatelessWidget {
         ),
         const SizedBox(height: 28),
 
-        Text(
-          '¡Enlace enviado!',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+        const Text(
+          'Link sent!',
+          style: TextStyle(
                 fontWeight: FontWeight.w700,
-                color: const Color(0xFF1A1F36),
+                color: Color(0xFF1A1F36),
                 fontSize: 22,
               ),
         ),
@@ -270,7 +275,7 @@ class _SuccessView extends StatelessWidget {
               height: 1.6,
             ),
             children: [
-              const TextSpan(text: 'Revisa tu bandeja de entrada en\n'),
+              const TextSpan(text: 'Check your inbox at\n'),
               TextSpan(
                 text: email,
                 style: const TextStyle(
@@ -279,7 +284,7 @@ class _SuccessView extends StatelessWidget {
                 ),
               ),
               const TextSpan(
-                  text: '\npara restablecer tu contraseña.'),
+                  text: '\nto reset your password.'),
             ],
           ),
         ),
@@ -298,9 +303,9 @@ class _SuccessView extends StatelessWidget {
               ),
               elevation: 0,
             ),
-            child: const Text(
-              'Volver al inicio de sesión',
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+            child: Text(
+              ref.tr('auth.back_to_login'),
+              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
             ),
           ),
         ),
@@ -308,4 +313,3 @@ class _SuccessView extends StatelessWidget {
     );
   }
 }
-

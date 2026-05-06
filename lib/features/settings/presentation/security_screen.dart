@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../auth/providers/biometric_provider.dart' show biometricProvider, BiometricState, BiometricNotEnrolledException;
 import '../../auth/providers/session_provider.dart';
+import '../../../core/providers/language_provider.dart';
 
 class SecurityScreen extends ConsumerWidget {
   const SecurityScreen({super.key});
@@ -29,7 +30,7 @@ class SecurityScreen extends ConsumerWidget {
         elevation: 0,
         scrolledUnderElevation: 0,
         title: Text(
-          'Seguridad',
+          ref.tr('settings.security'),
           style: GoogleFonts.inter(
             fontSize: 17,
             fontWeight: FontWeight.w700,
@@ -45,7 +46,7 @@ class SecurityScreen extends ConsumerWidget {
 
           // ── Sección: Acceso biométrico ───────────────────────────────
           _SectionHeader(
-            title: 'ACCESO BIOMÉTRICO',
+            title: ref.tr('settings.biometric_access'),
             textSecondary: textSecondary,
           ),
           _Card(
@@ -61,7 +62,7 @@ class SecurityScreen extends ConsumerWidget {
                           context, ref, biometric, value)
                       : null,
                   title: Text(
-                    'Huella / Face ID',
+                    'Biometric / Face ID',
                     style: GoogleFonts.inter(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -71,9 +72,9 @@ class SecurityScreen extends ConsumerWidget {
                   subtitle: Text(
                     biometric.isAvailable
                         ? biometric.hasFaceId
-                            ? 'Desbloquea con Face ID'
-                            : 'Desbloquea con tu huella dactilar'
-                        : 'Tu dispositivo no soporta biometría',
+                            ? 'Unlock with Face ID'
+                            : 'Unlock with fingerprint'
+                        : ref.tr('settings.no_biometrics'),
                     style: GoogleFonts.inter(
                       fontSize: 12,
                       color: c.muted,
@@ -108,7 +109,7 @@ class SecurityScreen extends ConsumerWidget {
 
           // ── Sección: Tiempo de sesión ────────────────────────────────
           _SectionHeader(
-            title: 'TIEMPO DE SESION',
+            title: 'SESSION TIMEOUT',
             textSecondary: textSecondary,
           ),
           _Card(
@@ -124,7 +125,7 @@ class SecurityScreen extends ConsumerWidget {
                       .read(sessionProvider.notifier)
                       .setSessionTimeoutEnabled(value),
                   title: Text(
-                    'Cerrar sesión automáticamente',
+                    ref.tr('settings.auto_logout'),
                     style: GoogleFonts.inter(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -132,7 +133,7 @@ class SecurityScreen extends ConsumerWidget {
                     ),
                   ),
                   subtitle: Text(
-                    'Bloquea la app tras periodo de inactividad',
+                    'Lock app after inactivity period',
                     style: GoogleFonts.inter(
                       fontSize: 12,
                       color: c.muted,
@@ -162,7 +163,7 @@ class SecurityScreen extends ConsumerWidget {
                   _TimeoutTile(
                     icon: Icons.touch_app_outlined,
                     iconBg: const Color(0xFF0891B2),
-                    title: 'Inactividad',
+                    title: 'Inactivity',
                     currentMinutes: session.inactivityTimeoutMinutes,
                     isDark: isDark,
                     textPrimary: textPrimary,
@@ -176,7 +177,7 @@ class SecurityScreen extends ConsumerWidget {
                   _TimeoutTile(
                     icon: Icons.phonelink_lock_outlined,
                     iconBg: const Color(0xFF059669),
-                    title: 'Tiempo en segundo plano',
+                    title: 'Background time',
                     currentMinutes: session.backgroundTimeoutMinutes,
                     isDark: isDark,
                     textPrimary: textPrimary,
@@ -209,10 +210,10 @@ class SecurityScreen extends ConsumerWidget {
 
       try {
         confirmed = await ref.read(biometricProvider.notifier).authenticate();
-        if (!confirmed) errorMessage = 'No se pudo verificar tu identidad';
+        if (!confirmed) errorMessage = 'Could not verify identity';
       } on BiometricNotEnrolledException {
         errorMessage =
-            'No tienes huella ni Face ID registrado en el dispositivo';
+            'No biometrics registered on this device';
       }
 
       if (!confirmed) {
@@ -385,4 +386,3 @@ class _TimeoutTile extends StatelessWidget {
     );
   }
 }
-

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/utils/currency_formatter.dart';
 import '../../domain/account_model.dart';
 import '../../../goals/domain/goal_model.dart';
 
@@ -23,9 +23,6 @@ class AccountMiniCard extends StatelessWidget {
     required this.account,
     this.linkedGoal,
   });
-
-  static final _fmt =
-      NumberFormat.currency(locale: 'es', symbol: 'RD\$', decimalDigits: 0);
 
   @override
   Widget build(BuildContext context) {
@@ -84,7 +81,7 @@ class AccountMiniCard extends StatelessWidget {
 
                   // Saldo
                   Text(
-                    _fmt.format(account.balance),
+                    CurrencyFormatter.format(account.balance, currency: account.currency),
                     style: GoogleFonts.inter(
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
@@ -174,4 +171,3 @@ class _ProgressBar extends StatelessWidget {
     );
   }
 }
-

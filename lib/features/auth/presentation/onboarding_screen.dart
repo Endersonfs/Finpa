@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/providers/theme_provider.dart';
 
+import '../../../core/providers/language_provider.dart';
+
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
 
@@ -15,33 +17,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   final _controller = PageController();
   int _currentPage = 0;
 
-  static const _pages = [
-    _OnboardingPage(
-      icon: Icons.credit_card_rounded,
-      iconColor: Color(0xFF2F7155),
-      iconBg: Color(0xFFEEF2FF),
-      title: 'Controla tus finanzas',
-      description:
-          'Registra ingresos y gastos.\nConoce exactamente en qué se va tu dinero.',
-    ),
-    _OnboardingPage(
-      icon: Icons.access_time_rounded,
-      iconColor: Color(0xFF059669),
-      iconBg: Color(0xFFECFDF5),
-      title: 'Presupuesto inteligente',
-      description:
-          'Define límites por categoría y recibe alertas antes de pasarte.',
-    ),
-    _OnboardingPage(
-      icon: Icons.smart_toy_rounded,
-      iconColor: Color(0xFF6BC99D),
-      iconBg: Color(0xFFF3F0FF),
-      title: 'FinPa IA te orienta',
-      description:
-          'Tu asesor financiero con inteligencia artificial, disponible 24/7.',
-    ),
-  ];
-
   @override
   void dispose() {
     _controller.dispose();
@@ -49,7 +24,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   }
 
   Future<void> _next() async {
-    if (_currentPage < _pages.length - 1) {
+    if (_currentPage < 2) {
       _controller.nextPage(
         duration: const Duration(milliseconds: 350),
         curve: Curves.easeInOut,
@@ -67,7 +42,30 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isLast = _currentPage == _pages.length - 1;
+    final isLast = _currentPage == 2;
+    final pages = [
+      _OnboardingPage(
+        icon: Icons.credit_card_rounded,
+        iconColor: const Color(0xFF2F7155),
+        iconBg: const Color(0xFFEEF2FF),
+        title: ref.tr('auth.onboarding_title'),
+        description: ref.tr('auth.onboarding_desc'),
+      ),
+      _OnboardingPage(
+        icon: Icons.access_time_rounded,
+        iconColor: const Color(0xFF059669),
+        iconBg: const Color(0xFFECFDF5),
+        title: ref.tr('budget.title'),
+        description: ref.tr('auth.onboarding_budget_desc'),
+      ),
+      _OnboardingPage(
+        icon: Icons.smart_toy_rounded,
+        iconColor: const Color(0xFF6BC99D),
+        iconBg: const Color(0xFFF3F0FF),
+        title: ref.tr('settings.nav_ai'),
+        description: ref.tr('auth.onboarding_ai_desc'),
+      ),
+    ];
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F6FA),
@@ -82,9 +80,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 child: TextButton(
                   onPressed: _finish,
                   child: Text(
-                    'Omitir',
-                    style: TextStyle(
-                      color: const Color(0xFF6B7280),
+                    'Skip',
+                    style: const TextStyle(
+                      color: Color(0xFF6B7280),
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -97,8 +95,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               child: PageView.builder(
                 controller: _controller,
                 onPageChanged: (i) => setState(() => _currentPage = i),
-                itemCount: _pages.length,
-                itemBuilder: (_, i) => _pages[i],
+                itemCount: pages.length,
+                itemBuilder: (_, i) => pages[i],
               ),
             ),
 
@@ -108,7 +106,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               child: Column(
                 children: [
                   _DotsIndicator(
-                    count: _pages.length,
+                    count: pages.length,
                     current: _currentPage,
                   ),
                   const SizedBox(height: 28),
@@ -126,7 +124,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                         elevation: 0,
                       ),
                       child: Text(
-                        isLast ? 'Empezar' : 'Siguiente',
+                        isLast ? 'Get Started' : ref.tr('common.next'),
                         style: const TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,

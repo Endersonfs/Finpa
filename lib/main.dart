@@ -12,8 +12,9 @@ import 'core/local_storage/hive_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 0. Inicializar locale en español
+  // 0. Inicializar locales
   await initializeDateFormatting('es_ES');
+  await initializeDateFormatting('en_US');
 
   // 1. Variables de entorno
   try {

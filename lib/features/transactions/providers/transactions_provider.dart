@@ -18,7 +18,9 @@ class TransactionNotifier extends StateNotifier<AsyncValue<void>> {
     try {
       await _repo.add(t, accountId: accountId);
       _ref.invalidate(transactionsProvider);
-      if (accountId != null) _ref.invalidate(accountsStreamProvider);
+      if (accountId != null) {
+        _ref.invalidate(accountsStreamProvider);
+      }
       state = const AsyncData(null);
     } catch (e, st) {
       state = AsyncError(e, st);

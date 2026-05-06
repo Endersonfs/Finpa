@@ -3,6 +3,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../data/transaction_repository.dart';
 import '../domain/transaction.dart';
+import '../../../core/providers/currency_provider.dart';
+import '../../accounts/providers/accounts_provider.dart';
+import '../../../core/constants/currencies.dart';
 
 // ── Repository ───────────────────────────────────────────────────────────────
 
@@ -23,26 +26,61 @@ final transactionsProvider =
 
 final monthlySummaryProvider =
     Provider.autoDispose<AsyncValue<Map<String, double>>>((ref) {
-  return ref.watch(transactionsProvider).whenData((txs) {
+  final txsAsync = ref.watch(transactionsProvider);
+  final accountsAsync = ref.watch(accountsStreamProvider);
+  final currencyState = ref.watch(currencyNotifierProvider);
+  final currencyNotifier = ref.read(currencyNotifierProvider.notifier);
+
+  if (txsAsync is AsyncData && accountsAsync is AsyncData) {
+    final txs = txsAsync.value!;
+    final accounts = accountsAsync.value!;
+    
     double income = 0, expense = 0;
     for (final t in txs) {
-      if (t.isIncome) income += t.amount;
-      else expense += t.amount;
+      final account = accounts.where((a) => a.id == t.accountId).firstOrNull;
+      final transactionCurrency = account?.currency ?? AppCurrency.dop;
+      final convertedAmount = currencyNotifier.convert(
+        t.amount, 
+        transactionCurrency, 
+        currencyState.baseCurrency
+      );
+
+      if (t.isIncome) income += convertedAmount;
+      else expense += convertedAmount;
     }
-    return {'income': income, 'expense': expense};
-  });
+    return AsyncData({'income': income, 'expense': expense});
+  }
+  
+  return const AsyncLoading();
 });
 
 // ── Gastos por categoría del mes actual — derivado del stream ────────────────
 
 final categoryExpensesProvider =
     Provider.autoDispose<AsyncValue<Map<String, double>>>((ref) {
-  return ref.watch(transactionsProvider).whenData((txs) {
+  final txsAsync = ref.watch(transactionsProvider);
+  final accountsAsync = ref.watch(accountsStreamProvider);
+  final currencyState = ref.watch(currencyNotifierProvider);
+  final currencyNotifier = ref.read(currencyNotifierProvider.notifier);
+
+  if (txsAsync is AsyncData && accountsAsync is AsyncData) {
+    final txs = txsAsync.value!;
+    final accounts = accountsAsync.value!;
+    
     final result = <String, double>{};
     for (final t in txs.where((t) => t.isExpense)) {
-      result[t.category] = (result[t.category] ?? 0) + t.amount;
-    }
-    return result;
-  });
-});
+      final account = accounts.where((a) => a.id == t.accountId).firstOrNull;
+      final transactionCurrency = account?.currency ?? AppCurrency.dop;
+      final convertedAmount = currencyNotifier.convert(
+        t.amount, 
+        transactionCurrency, 
+        currencyState.baseCurrency
+      );
 
+      result[t.category] = (result[t.category] ?? 0) + convertedAmount;
+    }
+    return AsyncData(result);
+  }
+  
+  return const AsyncLoading();
+});

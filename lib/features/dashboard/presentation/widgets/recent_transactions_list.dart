@@ -1,58 +1,28 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
-import '../../../transactions/domain/transaction.dart';
+import '../../../../core/constants/currencies.dart';
+import '../../../../core/providers/currency_provider.dart';
+import '../../../../core/utils/currency_formatter.dart';
+import '../../../../features/accounts/providers/accounts_provider.dart';
+import '../../../../features/transactions/domain/transaction.dart';
+import '../../../../core/providers/language_provider.dart';
 
-// Emoji + color por categoría
-class _CatDisplay {
-  final String emoji;
-  final Color bg;
-  const _CatDisplay(this.emoji, this.bg);
-}
-
-const _kDisplay = <String, _CatDisplay>{
-  'food':          _CatDisplay('🍔', Color(0xFFFFEEEE)),
-  'transport':     _CatDisplay('🚗', Color(0xFFEEF2FF)),
-  'entertainment': _CatDisplay('🎬', Color(0xFFF3F0FF)),
-  'services':      _CatDisplay('💡', Color(0xFFECFDF5)),
-  'health':        _CatDisplay('💊', Color(0xFFEFF6FF)),
-  'salary':        _CatDisplay('💰', Color(0xFFECFDF5)),
-  'freelance':     _CatDisplay('💻', Color(0xFFEEF2FF)),
-  'shopping':      _CatDisplay('🛍️', Color(0xFFFFF7ED)),
-  'investment':    _CatDisplay('📈', Color(0xFFF0FDF4)),
-  'gift':          _CatDisplay('🎁', Color(0xFFFDF4FF)),
-};
-
-const _kDisplayDark = <String, _CatDisplay>{
-  'food':          _CatDisplay('🍔', Color(0xFF2D1515)),
-  'transport':     _CatDisplay('🚗', Color(0xFF1A2040)),
-  'entertainment': _CatDisplay('🎬', Color(0xFF1E1535)),
-  'services':      _CatDisplay('💡', Color(0xFF0D2820)),
-  'health':        _CatDisplay('💊', Color(0xFF0D1E30)),
-  'salary':        _CatDisplay('💰', Color(0xFF0D2820)),
-  'freelance':     _CatDisplay('💻', Color(0xFF1A2040)),
-  'shopping':      _CatDisplay('🛍️', Color(0xFF2D1D0D)),
-  'investment':    _CatDisplay('📈', Color(0xFF0D2010)),
-  'gift':          _CatDisplay('🎁', Color(0xFF231535)),
-};
-
-class RecentTransactionsList extends StatelessWidget {
+class RecentTransactionsList extends ConsumerWidget {
   final List<Transaction>? transactions;
 
   const RecentTransactionsList({super.key, this.transactions});
 
-  static final _moneyFmt = NumberFormat.currency(
-    locale: 'es',
-    symbol: 'Bs.',
-    decimalDigits: 0,
-  );
-
   static final _timeFmt = DateFormat('HH:mm');
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final currencyState = ref.watch(currencyNotifierProvider);
+    final currencyNotifier = ref.read(currencyNotifierProvider.notifier);
+    final accounts = ref.watch(accountsStreamProvider).valueOrNull ?? [];
 
     if (transactions == null) return _TransactionSkeleton();
 
@@ -61,7 +31,7 @@ class RecentTransactionsList extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 24),
         child: Center(
           child: Text(
-            'Sin transacciones este mes',
+            ref.tr('transactions.no_transactions'),
             style: TextStyle(
               fontSize: 13,
               color: isDark ? const Color(0xFF8892B0) : const Color(0xFF9CA3AF),
@@ -73,12 +43,24 @@ class RecentTransactionsList extends StatelessWidget {
 
     return Column(
       children: [
-        ...transactions!.map((t) => _TransactionTile(
-              transaction: t,
-              isDark: isDark,
-              moneyFmt: _moneyFmt,
-              timeFmt: _timeFmt,
-            )),
+        ...transactions!.map((t) {
+          final account = accounts.where((a) => a.id == t.accountId).firstOrNull;
+          final transactionCurrency = account?.currency ?? AppCurrency.dop;
+          final displayAmount = currencyNotifier.convert(
+            t.amount,
+            transactionCurrency,
+            currencyState.baseCurrency,
+          );
+
+          return _TransactionTile(
+            transaction: t,
+            displayAmount: displayAmount,
+            displayCurrency: currencyState.baseCurrency,
+            isDark: isDark,
+            timeFmt: _timeFmt,
+            ref: ref,
+          );
+        }),
         // Ver todos
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -90,11 +72,11 @@ class RecentTransactionsList extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 12),
               alignment: Alignment.center,
               child: Text(
-                'Ver todos los movimientos →',
-                style: TextStyle(
+                '${ref.tr('dashboard.view_all')} →',
+                style: const TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: const Color(0xFF2F7155),
+                  color: Color(0xFF2F7155),
                 ),
               ),
             ),
@@ -105,18 +87,21 @@ class RecentTransactionsList extends StatelessWidget {
   }
 }
 
-// ── Tile individual ─────────────────────────────
 class _TransactionTile extends StatelessWidget {
   final Transaction transaction;
+  final double displayAmount;
+  final AppCurrency displayCurrency;
   final bool isDark;
-  final NumberFormat moneyFmt;
   final DateFormat timeFmt;
+  final WidgetRef ref;
 
   const _TransactionTile({
     required this.transaction,
+    required this.displayAmount,
+    required this.displayCurrency,
     required this.isDark,
-    required this.moneyFmt,
     required this.timeFmt,
+    required this.ref,
   });
 
   @override
@@ -127,8 +112,8 @@ class _TransactionTile extends StatelessWidget {
         _CatDisplay('📊', isDark ? const Color(0xFF1E2840) : const Color(0xFFF0F2F8));
 
     final amountColor = transaction.isIncome
-        ? const Color(0xFF059669) // light income
-        : const Color(0xFFDC2626); // light expense
+        ? const Color(0xFF059669)
+        : const Color(0xFFDC2626);
 
     final amountColorDark = transaction.isIncome
         ? const Color(0xFF34D399)
@@ -151,7 +136,6 @@ class _TransactionTile extends StatelessWidget {
         ),
         child: Row(
           children: [
-            // Emoji + bg
             Container(
               width: 40,
               height: 40,
@@ -164,14 +148,12 @@ class _TransactionTile extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 12),
-
-            // Nombre + categoría · hora
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    transaction.description ?? transaction.category,
+                    transaction.description ?? ref.tr('categories.${transaction.category}'),
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
@@ -182,7 +164,7 @@ class _TransactionTile extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    '${_categoryLabel(transaction.category)} · ${timeFmt.format(transaction.createdAt)}',
+                    '${ref.tr('categories.${transaction.category}')} · ${timeFmt.format(transaction.createdAt)}',
                     style: TextStyle(
                       fontSize: 11,
                       color: textSecondary,
@@ -191,10 +173,8 @@ class _TransactionTile extends StatelessWidget {
                 ],
               ),
             ),
-
-            // Monto
             Text(
-              '${transaction.isIncome ? '+' : '-'}${moneyFmt.format(transaction.amount)}',
+              '${transaction.isIncome ? '+' : '-'}${CurrencyFormatter.format(displayAmount, currency: displayCurrency)}',
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w700,
@@ -206,85 +186,71 @@ class _TransactionTile extends StatelessWidget {
       ),
     );
   }
-
-  static String _categoryLabel(String id) {
-    const labels = {
-      'food': 'Comida', 'transport': 'Transporte',
-      'entertainment': 'Entretenimiento', 'services': 'Servicios',
-      'health': 'Salud', 'salary': 'Salario',
-      'freelance': 'Freelance', 'shopping': 'Compras',
-      'investment': 'Inversión', 'gift': 'Regalo',
-    };
-    return labels[id] ?? 'Otros';
-  }
 }
 
-// ── Skeleton ────────────────────────────────────
-class _TransactionSkeleton extends StatefulWidget {
-  @override
-  State<_TransactionSkeleton> createState() => _TransactionSkeletonState();
+class _CatDisplay {
+  final String emoji;
+  final Color bg;
+  const _CatDisplay(this.emoji, this.bg);
 }
 
-class _TransactionSkeletonState extends State<_TransactionSkeleton>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _ctrl;
+const _kDisplay = <String, _CatDisplay>{
+  'food':          _CatDisplay('🍔', Color(0xFFFFEEEE)),
+  'transport':     _CatDisplay('🚗', Color(0xFFEEF2FF)),
+  'entertainment': _CatDisplay('🎬', Color(0xFFF3F0FF)),
+  'health':        _CatDisplay('🏥', Color(0xFFEFF6FF)),
+  'services':      _CatDisplay('💡', Color(0xFFECFDF5)),
+  'salary':        _CatDisplay('💰', Color(0xFFECFDF5)),
+  'freelance':     _CatDisplay('💻', Color(0xFFEEF2FF)),
+  'shopping':      _CatDisplay('🛍️', Color(0xFFFFF7ED)),
+  'other':         _CatDisplay('📊', Color(0xFFF0F2F8)),
+};
 
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 900),
-    )..repeat(reverse: true);
-  }
+const _kDisplayDark = <String, _CatDisplay>{
+  'food':          _CatDisplay('🍔', Color(0xFF2D1515)),
+  'transport':     _CatDisplay('🚗', Color(0xFF1A2040)),
+  'entertainment': _CatDisplay('🎬', Color(0xFF1E1535)),
+  'health':        _CatDisplay('🏥', Color(0xFF0D1E30)),
+  'services':      _CatDisplay('💡', Color(0xFF0D2820)),
+  'salary':        _CatDisplay('💰', Color(0xFF0D2820)),
+  'freelance':     _CatDisplay('💻', Color(0xFF1A2040)),
+  'shopping':      _CatDisplay('🛍️', Color(0xFF2D1D0D)),
+  'other':         _CatDisplay('📊', Color(0xFF1E2840)),
+};
 
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
+class _TransactionSkeleton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return AnimatedBuilder(
-      animation: _ctrl,
-      builder: (_, __) {
-        final color = (isDark ? const Color(0xFF1E2840) : const Color(0xFFE2E6F0))
-            .withOpacity(0.5 + _ctrl.value * 0.4);
-        return Column(
-          children: List.generate(
-            5,
-            (_) => Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Row(
-                children: [
-                  Container(
-                    width: 40, height: 40,
-                    decoration: BoxDecoration(
-                      color: color,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(height: 12, width: 120, decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(4))),
-                        const SizedBox(height: 5),
-                        Container(height: 10, width: 80, decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(4))),
-                      ],
-                    ),
-                  ),
-                  Container(height: 12, width: 60, decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(4))),
-                ],
+    final color = isDark ? const Color(0xFF1E2840) : const Color(0xFFE2E6F0);
+
+    return Column(
+      children: List.generate(
+        3,
+        (_) => Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            children: [
+              Container(
+                width: 40, height: 40,
+                decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(10)),
               ),
-            ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(height: 12, width: 120, decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(4))),
+                    const SizedBox(height: 6),
+                    Container(height: 10, width: 80, decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(4))),
+                  ],
+                ),
+              ),
+              Container(height: 12, width: 60, decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(4))),
+            ],
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 }
-

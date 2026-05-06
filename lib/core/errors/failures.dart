@@ -14,19 +14,19 @@ abstract class Failure {
 }
 
 class ServerFailure extends Failure {
-  const ServerFailure([super.message = 'Error de servidor']);
+  const ServerFailure([super.message = 'Server Error']);
 }
 
 class NetworkFailure extends Failure {
-  const NetworkFailure([super.message = 'Sin conexión a internet']);
+  const NetworkFailure([super.message = 'Network Connection Error']);
 }
 
 class CacheFailure extends Failure {
-  const CacheFailure([super.message = 'Error de caché local']);
+  const CacheFailure([super.message = 'Local Cache Error']);
 }
 
 class AuthFailure extends Failure {
-  const AuthFailure([super.message = 'Error de autenticación']);
+  const AuthFailure([super.message = 'Authentication Error']);
 }
 
 class ValidationFailure extends Failure {
@@ -34,6 +34,5 @@ class ValidationFailure extends Failure {
 }
 
 class UnexpectedFailure extends Failure {
-  const UnexpectedFailure([super.message = 'Error inesperado']);
+  const UnexpectedFailure([super.message = 'Unexpected Error']);
 }
-

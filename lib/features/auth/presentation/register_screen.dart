@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../providers/auth_provider.dart';
+import '../../../core/providers/language_provider.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -60,7 +61,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   Future<void> _register() async {
     if (!_formKey.currentState!.validate()) return;
     if (!_acceptedTerms) {
-      _showError('Debes aceptar los términos y condiciones.');
+      _showError('You must accept terms and conditions'); // Should be localized if needed
       return;
     }
     setState(() => _isLoading = true);
@@ -74,7 +75,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     } on AuthException catch (e) {
       _showError(e.message);
     } catch (_) {
-      _showError('Error inesperado. Intenta nuevamente.');
+      _showError(ref.tr('common.error'));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -96,28 +97,28 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   // ── Validadores ────────────────────────────
 
   String? _validateName(String? v) {
-    if (v == null || v.trim().isEmpty) return 'Ingresa tu nombre';
-    if (v.trim().length < 2) return 'Nombre demasiado corto';
+    if (v == null || v.trim().isEmpty) return ref.tr('auth.login'); // reused or add key
+    if (v.trim().length < 2) return 'Name too short';
     return null;
   }
 
   String? _validateEmail(String? v) {
-    if (v == null || v.trim().isEmpty) return 'Ingresa tu email';
+    if (v == null || v.trim().isEmpty) return ref.tr('auth.email');
     if (!RegExp(r'^[^@]+@[^@]+\.[^@]+$').hasMatch(v.trim())) {
-      return 'Email inválido';
+      return ref.tr('auth.invalid_email');
     }
     return null;
   }
 
   String? _validatePassword(String? v) {
-    if (v == null || v.isEmpty) return 'Ingresa una contraseña';
-    if (v.length < 6) return 'Mínimo 6 caracteres';
+    if (v == null || v.isEmpty) return ref.tr('auth.password_required');
+    if (v.length < 6) return ref.tr('auth.password_min_length');
     return null;
   }
 
   String? _validateConfirm(String? v) {
-    if (v == null || v.isEmpty) return 'Confirma tu contraseña';
-    if (v != _passCtrl.text) return 'Las contraseñas no coinciden';
+    if (v == null || v.isEmpty) return ref.tr('auth.password_required');
+    if (v != _passCtrl.text) return 'Passwords do not match';
     return null;
   }
 
@@ -146,7 +147,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               children: [
                 const SizedBox(height: 8),
                 Text(
-                  'Crear cuenta',
+                  ref.tr('auth.register'),
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                         fontWeight: FontWeight.w700,
                         color: const Color(0xFF1A1F36),
@@ -155,7 +156,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Únete y toma control de tus finanzas',
+                  'Join and take control of your finances',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: const Color(0xFF9CA3AF),
                         fontSize: 13,
@@ -172,8 +173,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   autofillHints: const [AutofillHints.name],
                   validator: _validateName,
                   decoration: const InputDecoration(
-                    labelText: 'Nombre completo',
-                    hintText: 'Juan Pérez',
+                    labelText: 'Full name',
+                    hintText: 'John Doe',
                     prefixIcon:
                         Icon(Icons.person_outline_rounded, size: 20),
                   ),
@@ -187,10 +188,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   textInputAction: TextInputAction.next,
                   autofillHints: const [AutofillHints.newUsername],
                   validator: _validateEmail,
-                  decoration: const InputDecoration(
-                    labelText: 'Email',
+                  decoration: InputDecoration(
+                    labelText: ref.tr('auth.email'),
                     hintText: 'tu@email.com',
-                    prefixIcon: Icon(Icons.mail_outline_rounded, size: 20),
+                    prefixIcon: const Icon(Icons.mail_outline_rounded, size: 20),
                   ),
                 ),
                 const SizedBox(height: 14),
@@ -203,7 +204,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   autofillHints: const [AutofillHints.newPassword],
                   validator: _validatePassword,
                   decoration: InputDecoration(
-                    labelText: 'Contraseña',
+                    labelText: ref.tr('auth.password'),
                     hintText: '••••••••',
                     prefixIcon:
                         const Icon(Icons.lock_outline_rounded, size: 20),
@@ -236,7 +237,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   validator: _validateConfirm,
                   onFieldSubmitted: (_) => _register(),
                   decoration: InputDecoration(
-                    labelText: 'Confirmar contraseña',
+                    labelText: 'Confirm password',
                     hintText: '••••••••',
                     prefixIcon:
                         const Icon(Icons.lock_outline_rounded, size: 20),
@@ -282,9 +283,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             height: 1.4,
                           ),
                           children: [
-                            const TextSpan(text: 'Acepto los '),
+                            const TextSpan(text: 'I accept '),
                             TextSpan(
-                              text: 'Términos y Condiciones',
+                              text: 'Terms and Conditions',
                               style: const TextStyle(
                                 color: Color(0xFF2F7155),
                                 fontWeight: FontWeight.w600,
@@ -294,7 +295,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                   // TODO: abrir términos y condiciones
                                 },
                             ),
-                            const TextSpan(text: ' de FinPa.'),
+                            const TextSpan(text: ' of FinPa.'),
                           ],
                         ),
                       ),
@@ -326,9 +327,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                               color: Colors.white,
                             ),
                           )
-                        : const Text(
-                            'Crear cuenta',
-                            style: TextStyle(
+                        : Text(
+                            ref.tr('auth.register'),
+                            style: const TextStyle(
                                 fontSize: 15, fontWeight: FontWeight.w600),
                           ),
                   ),
@@ -341,19 +342,19 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        '¿Ya tienes cuenta? ',
-                        style: TextStyle(
+                        '${ref.tr('auth.already_have_account')} ',
+                        style: const TextStyle(
                           fontSize: 13,
-                          color: const Color(0xFF6B7280),
+                          color: Color(0xFF6B7280),
                         ),
                       ),
                       GestureDetector(
                         onTap: () => context.pop(),
                         child: Text(
-                          'Inicia sesión',
-                          style: TextStyle(
+                          ref.tr('auth.login'),
+                          style: const TextStyle(
                             fontSize: 13,
-                            color: const Color(0xFF2F7155),
+                            color: Color(0xFF2F7155),
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -379,17 +380,22 @@ class _StrengthBar extends StatelessWidget {
 
   const _StrengthBar({required this.strength});
 
-  static const _labels = ['Contraseña débil', 'Contraseña media', 'Contraseña fuerte'];
-  static const _colors = [
-    Color(0xFFDC2626), // rojo
-    Color(0xFFD97706), // amarillo
-    Color(0xFF059669), // verde
-  ];
-
   @override
   Widget build(BuildContext context) {
     final filled = strength + 1; // 1, 2 ó 3 segmentos activos
-    final color = _colors[strength];
+    final color = switch (strength) {
+      0 => const Color(0xFFDC2626),
+      1 => const Color(0xFFD97706),
+      2 => const Color(0xFF059669),
+      _ => const Color(0xFFE2E6F0),
+    };
+
+    final label = switch (strength) {
+      0 => 'Weak password',
+      1 => 'Medium password',
+      2 => 'Strong password',
+      _ => '',
+    };
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -413,7 +419,7 @@ class _StrengthBar extends StatelessWidget {
         AnimatedSwitcher(
           duration: const Duration(milliseconds: 200),
           child: Text(
-            _labels[strength],
+            label,
             key: ValueKey(strength),
             style: TextStyle(
               fontSize: 11,
@@ -426,4 +432,3 @@ class _StrengthBar extends StatelessWidget {
     );
   }
 }
-

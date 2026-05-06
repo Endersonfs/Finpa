@@ -11,7 +11,7 @@ class AccountsRepository {
 
   static const List<Map<String, String>> dominicanBanks = [
     {
-      'name': 'Efectivo',
+      'name': 'Cash',
       'logo': '',
       'emoji': '💵'
     },

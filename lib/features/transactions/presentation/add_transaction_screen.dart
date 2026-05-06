@@ -12,28 +12,9 @@ import '../providers/transactions_provider.dart';
 import '../../accounts/domain/account_model.dart';
 import '../../accounts/providers/accounts_provider.dart';
 
-// ── Categorias ────────────────────────────────────────────────────────────────
-
-const _expenseCategories = <(String, String, String)>[
-  ('food', '🛒', 'Comida'),
-  ('transport', '🚗', 'Transporte'),
-  ('entertainment', '🎬', 'Entretenimiento'),
-  ('health', '🏥', 'Salud'),
-  ('clothing', '👗', 'Ropa'),
-  ('housing', '🏠', 'Hogar'),
-  ('services', '📱', 'Servicios'),
-  ('education', '📚', 'Educacion'),
-  ('other', '➕', 'Otros'),
-];
-
-const _incomeCategories = <(String, String, String)>[
-  ('salary', '💰', 'Salario'),
-  ('freelance', '💻', 'Freelance'),
-  ('business', '🏪', 'Negocio'),
-  ('investment', '📈', 'Inversion'),
-  ('gift', '🎁', 'Regalo'),
-  ('other', '➕', 'Otros'),
-];
+import '../../../core/constants/categories.dart';
+import '../../../core/providers/language_provider.dart';
+import '../../../core/providers/currency_provider.dart';
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 
@@ -49,7 +30,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
   TransactionType _type = TransactionType.expense;
   String _amountText = '';
   String _description = '';
-  String _category = _expenseCategories.first.$1;
+  late String _category;
   DateTime _date = DateTime.now();
   bool _isSaving = false;
   String? _selectedAccountId;
@@ -57,8 +38,14 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
   final _amountCtrl = TextEditingController();
   final _descCtrl = TextEditingController();
 
-  List<(String, String, String)> get _categories =>
-      _type == TransactionType.expense ? _expenseCategories : _incomeCategories;
+  List<FinPaCategory> get _categories =>
+      _type == TransactionType.expense ? FinPaCategories.expenses : FinPaCategories.incomes;
+
+  @override
+  void initState() {
+    super.initState();
+    _category = FinPaCategories.expenses.first.id;
+  }
 
   bool get _canSave {
     if (_amountText.isEmpty) return false;
@@ -99,17 +86,17 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
           await showDialog<void>(
             context: context,
             builder: (dialogContext) => AlertDialog(
-              title: const Text('Saldo insuficiente'),
+              title: Text(ref.tr('common.error')),
               content: Text(
-                'Tu cuenta "${account.name}" solo tiene '
-                'RD\$${account.balance.toStringAsFixed(0)} disponibles. '
-                'No puedes realizar un gasto de '
-                'RD\$${amount.toStringAsFixed(0)}.',
+                '${ref.tr('accounts.title')} "${account.name}" ${ref.tr('accounts.available_balance').toLowerCase()}: '
+                '${account.currency.symbol}${account.balance.toStringAsFixed(0)}. '
+                '${ref.tr('common.error')}: '
+                '${account.currency.symbol}${amount.toStringAsFixed(0)}.',
               ),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.of(dialogContext).pop(),
-                  child: const Text('Entendido'),
+                  child: Text(ref.tr('common.confirm')),
                 ),
               ],
             ),
@@ -178,7 +165,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                 orElse: () => spendable.first)
             .id;
         return [
-          _SectionLabel(label: '¿De qué cuenta?', cs: cs),
+          _SectionLabel(label: ref.tr('transactions.from_account'), cs: cs),
           const SizedBox(height: 8),
           Container(
             padding:
@@ -238,6 +225,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
   Widget build(BuildContext context) {
     final c = Theme.of(context).extension<FinPaColors>()!;
     final cs = Theme.of(context).colorScheme;
+    final currencyState = ref.watch(currencyNotifierProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -246,7 +234,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
           onPressed: () => context.pop(),
         ),
         title: Text(
-          'Nueva transaccion',
+          ref.tr('transactions.add'),
           style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 17),
         ),
       ),
@@ -263,11 +251,12 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
               onChanged: (t) {
                 setState(() {
                   _type = t;
-                  _category = _categories.first.$1;
+                  _category = _categories.first.id;
                 });
               },
               c: c,
               cs: cs,
+              ref: ref,
             ),
             const SizedBox(height: 28),
 
@@ -277,25 +266,26 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
               onChanged: (v) => setState(() => _amountText = v),
               c: c,
               cs: cs,
+              symbol: currencyState.baseCurrency.symbol,
             ),
             const SizedBox(height: 24),
 
             // 3. Descripcion
-            _SectionLabel(label: 'Descripcion', cs: cs),
+            _SectionLabel(label: ref.tr('transactions.description'), cs: cs),
             const SizedBox(height: 8),
             TextField(
               controller: _descCtrl,
               onChanged: (v) => setState(() => _description = v),
               maxLines: 1,
               style: GoogleFonts.inter(fontSize: 14),
-              decoration: const InputDecoration(
-                hintText: 'Descripcion (opcional)',
+              decoration: InputDecoration(
+                hintText: ref.tr('accounts.description'),
               ),
             ),
             const SizedBox(height: 24),
 
             // 4. Categorias
-            _SectionLabel(label: 'Categoria', cs: cs),
+            _SectionLabel(label: ref.tr('transactions.category'), cs: cs),
             const SizedBox(height: 12),
             _CategoryPicker(
               categories: _categories,
@@ -303,17 +293,19 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
               onChanged: (cat) => setState(() => _category = cat),
               c: c,
               cs: cs,
+              ref: ref,
             ),
             const SizedBox(height: 24),
 
             // 5. Fecha
-            _SectionLabel(label: 'Fecha', cs: cs),
+            _SectionLabel(label: ref.tr('transactions.date'), cs: cs),
             const SizedBox(height: 8),
             _DateRow(
               date: _date,
               onTap: _pickDate,
               c: c,
               cs: cs,
+              ref: ref,
             ),
             const SizedBox(height: 24),
 
@@ -335,7 +327,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                         ),
                       )
                     : Text(
-                        'Guardar transaccion',
+                        ref.tr('transactions.add'),
                         style: GoogleFonts.inter(
                           fontWeight: FontWeight.w600,
                           fontSize: 15,
@@ -358,12 +350,14 @@ class _TypeSelector extends StatelessWidget {
   final ValueChanged<TransactionType> onChanged;
   final FinPaColors c;
   final ColorScheme cs;
+  final WidgetRef ref;
 
   const _TypeSelector({
     required this.current,
     required this.onChanged,
     required this.c,
     required this.cs,
+    required this.ref,
   });
 
   @override
@@ -372,7 +366,7 @@ class _TypeSelector extends StatelessWidget {
       children: [
         Expanded(
           child: _TypeButton(
-            label: 'Gasto',
+            label: ref.tr('transactions.expense'),
             active: current == TransactionType.expense,
             onTap: () => onChanged(TransactionType.expense),
             c: c,
@@ -382,7 +376,7 @@ class _TypeSelector extends StatelessWidget {
         const SizedBox(width: 12),
         Expanded(
           child: _TypeButton(
-            label: 'Ingreso',
+            label: ref.tr('transactions.income'),
             active: current == TransactionType.income,
             onTap: () => onChanged(TransactionType.income),
             c: c,
@@ -442,12 +436,14 @@ class _AmountField extends StatelessWidget {
   final ValueChanged<String> onChanged;
   final FinPaColors c;
   final ColorScheme cs;
+  final String symbol;
 
   const _AmountField({
     required this.controller,
     required this.onChanged,
     required this.c,
     required this.cs,
+    required this.symbol,
   });
 
   @override
@@ -456,7 +452,7 @@ class _AmountField extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Text(
-          'RD\$',
+          symbol,
           style: GoogleFonts.inter(
             fontSize: 28,
             fontWeight: FontWeight.w700,
@@ -503,11 +499,12 @@ class _AmountField extends StatelessWidget {
 // ── Category picker ───────────────────────────────────────────────────────────
 
 class _CategoryPicker extends StatelessWidget {
-  final List<(String, String, String)> categories;
+  final List<FinPaCategory> categories;
   final String selected;
   final ValueChanged<String> onChanged;
   final FinPaColors c;
   final ColorScheme cs;
+  final WidgetRef ref;
 
   const _CategoryPicker({
     required this.categories,
@@ -515,6 +512,7 @@ class _CategoryPicker extends StatelessWidget {
     required this.onChanged,
     required this.c,
     required this.cs,
+    required this.ref,
   });
 
   @override
@@ -523,7 +521,9 @@ class _CategoryPicker extends StatelessWidget {
       spacing: 8,
       runSpacing: 8,
       children: categories.map((cat) {
-        final (id, emoji, name) = cat;
+        final id = cat.id;
+        final emoji = cat.emoji;
+        final name = ref.tr('categories.$id');
         final isSelected = selected == id;
         return GestureDetector(
           onTap: () => onChanged(id),
@@ -564,17 +564,20 @@ class _DateRow extends StatelessWidget {
   final VoidCallback onTap;
   final FinPaColors c;
   final ColorScheme cs;
+  final WidgetRef ref;
 
   const _DateRow({
     required this.date,
     required this.onTap,
     required this.c,
     required this.cs,
+    required this.ref,
   });
 
   @override
   Widget build(BuildContext context) {
-    final formatted = DateFormat('d MMMM yyyy', 'es_ES').format(date);
+    final lang = ref.watch(languageNotifierProvider).locale.languageCode;
+    final formatted = DateFormat('d MMMM yyyy', lang == 'es' ? 'es_ES' : 'en_US').format(date);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
@@ -599,7 +602,7 @@ class _DateRow extends StatelessWidget {
           GestureDetector(
             onTap: onTap,
             child: Text(
-              'Cambiar',
+              ref.tr('common.edit'),
               style: GoogleFonts.inter(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,

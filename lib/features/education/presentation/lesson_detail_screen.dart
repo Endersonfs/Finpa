@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../domain/lesson_model.dart';
 import '../domain/module_model.dart';
 import '../providers/education_provider.dart';
+import '../../../core/providers/language_provider.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  Quiz data
@@ -18,38 +21,6 @@ class _Quiz {
 
   const _Quiz(this.question, this.options, this.correctIndex);
 }
-
-const _kQuizzes = {
-  'presupuesto': _Quiz(
-    '¿Qué porcentaje sugiere la regla 50/30/20 para necesidades?',
-    ['30%', '50%', '20%', '70%'],
-    1,
-  ),
-  'ahorro': _Quiz(
-    '¿Cuántos meses de gastos debe cubrir un fondo de emergencia?',
-    ['1-2 meses', '3-6 meses', '12 meses', '2 semanas'],
-    1,
-  ),
-  'deuda': _Quiz(
-    'En la estrategia "Avalancha", ¿qué deuda pagas primero?',
-    ['La más pequeña', 'La más antigua', 'La de mayor interés', 'La del banco'],
-    2,
-  ),
-  'inversion': _Quiz(
-    '¿Qué es el interés compuesto?',
-    [
-      'Interés sobre el capital original',
-      'Interés sobre intereses acumulados',
-      'Una tarifa bancaria',
-      'Un tipo de deuda',
-    ],
-    1,
-  ),
-};
-
-// ─────────────────────────────────────────────────────────────────────────────
-//  LessonDetailScreen
-// ─────────────────────────────────────────────────────────────────────────────
 
 class LessonDetailScreen extends ConsumerStatefulWidget {
   final String id;
@@ -99,9 +70,9 @@ class _LessonDetailScreenState extends ConsumerState<LessonDetailScreen> {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('¡Lección completada! 🎓'),
-          backgroundColor: Color(0xFF059669),
+        SnackBar(
+          content: Text(ref.tr('education.lesson_completed')),
+          backgroundColor: const Color(0xFF059669),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -133,14 +104,14 @@ class _LessonDetailScreenState extends ConsumerState<LessonDetailScreen> {
 
     return modulesAsync.when(
       loading: () => Scaffold(
-        appBar: AppBar(title: const Text('Lección')),
+        appBar: AppBar(title: Text(ref.tr('education.lesson'))),
         body: const Center(child: CircularProgressIndicator()),
       ),
       error: (e, _) => Scaffold(
-        appBar: AppBar(title: const Text('Lección')),
+        appBar: AppBar(title: Text(ref.tr('education.lesson'))),
         body: Center(
           child: Text(
-            'Error al cargar la lección',
+            ref.tr('education.error_loading'),
             style: TextStyle(color: c.muted),
           ),
         ),
@@ -150,10 +121,10 @@ class _LessonDetailScreenState extends ConsumerState<LessonDetailScreen> {
 
         if (_lesson == null || _module == null) {
           return Scaffold(
-            appBar: AppBar(title: const Text('Lección')),
+            appBar: AppBar(title: Text(ref.tr('education.lesson'))),
             body: Center(
               child: Text(
-                'Lección no encontrada',
+                ref.tr('education.not_found'),
                 style: TextStyle(color: c.muted),
               ),
             ),
@@ -164,12 +135,26 @@ class _LessonDetailScreenState extends ConsumerState<LessonDetailScreen> {
         final module = _module!;
         final lessonIndex = _lessonIndex;
         final isLastLesson = lessonIndex == module.totalCount - 1;
-        final quiz = _kQuizzes[lesson.category];
+
+        // Quiz localized
+        _Quiz? quiz;
+        final quizKey = 'education.quizzes.${lesson.category}';
+        final question = ref.tr('$quizKey.question');
+        if (question != '$quizKey.question') {
+           // We have a quiz
+           final List<String> options = [];
+           for(int i=0; i<4; i++) {
+             final opt = ref.tr('$quizKey.options.$i');
+             if (opt != '$quizKey.options.$i') options.add(opt);
+           }
+           final correct = int.tryParse(ref.tr('$quizKey.correct')) ?? 0;
+           quiz = _Quiz(question, options, correct);
+        }
 
         return Scaffold(
           appBar: AppBar(
             title: Text(
-              'Lección ${lessonIndex + 1} de ${module.totalCount}',
+              '${ref.tr('education.lesson')} ${lessonIndex + 1} ${ref.tr('education.lesson_of')} ${module.totalCount}',
             ),
           ),
           body: SingleChildScrollView(
@@ -246,7 +231,7 @@ class _LessonDetailScreenState extends ConsumerState<LessonDetailScreen> {
                 if (quiz != null) ...[
                   const SizedBox(height: 24),
                   Text(
-                    'Pon a prueba lo que aprendiste',
+                    ref.tr('education.quiz_title'),
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.bold,
@@ -267,7 +252,7 @@ class _LessonDetailScreenState extends ConsumerState<LessonDetailScreen> {
                   // Opciones
                   ...List.generate(quiz.options.length, (i) {
                     final isSelected = _selectedAnswer == i;
-                    final isCorrect = quiz.correctIndex == i;
+                    final isCorrect = quiz!.correctIndex == i;
                     final isWrong = _answered && isSelected && !isCorrect;
                     final showCorrect = _answered && isCorrect;
 
@@ -318,7 +303,7 @@ class _LessonDetailScreenState extends ConsumerState<LessonDetailScreen> {
                             children: [
                               Expanded(
                                 child: Text(
-                                  quiz.options[i],
+                                  quiz!.options[i],
                                   style: TextStyle(
                                     fontSize: 13,
                                     color: textPrimary,
@@ -354,9 +339,9 @@ class _LessonDetailScreenState extends ConsumerState<LessonDetailScreen> {
                             children: [
                               const SizedBox(height: 8),
                               if (_selectedAnswer == quiz.correctIndex)
-                                const Text(
-                                  '¡Correcto! 🎉',
-                                  style: TextStyle(
+                                Text(
+                                  ref.tr('education.correct'),
+                                  style: const TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.bold,
                                     color: Color(0xFF059669),
@@ -364,7 +349,7 @@ class _LessonDetailScreenState extends ConsumerState<LessonDetailScreen> {
                                 )
                               else
                                 Text(
-                                  'La respuesta correcta era: "${quiz.options[quiz.correctIndex]}"',
+                                  '${ref.tr('education.correct_answer')}: "${quiz.options[quiz.correctIndex]}"',
                                   style: const TextStyle(
                                     fontSize: 12,
                                     color: Color(0xFFDC2626),
@@ -388,8 +373,8 @@ class _LessonDetailScreenState extends ConsumerState<LessonDetailScreen> {
                                       )
                                     : Text(
                                         isLastLesson
-                                            ? 'Completar módulo'
-                                            : 'Siguiente lección',
+                                            ? ref.tr('education.complete_module')
+                                            : ref.tr('education.next_lesson'),
                                       ),
                               ),
                             ],
@@ -418,8 +403,8 @@ class _LessonDetailScreenState extends ConsumerState<LessonDetailScreen> {
                           )
                         : Text(
                             isLastLesson
-                                ? 'Completar módulo'
-                                : 'Siguiente lección',
+                                ? ref.tr('education.complete_module')
+                                : ref.tr('education.next_lesson'),
                           ),
                   ),
                 ],
@@ -433,4 +418,3 @@ class _LessonDetailScreenState extends ConsumerState<LessonDetailScreen> {
     );
   }
 }
-

@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../theme/app_theme.dart';
+import '../providers/language_provider.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  ErrorState — estado de error con botón reintentar
 // ─────────────────────────────────────────────────────────────────────────────
 
-class ErrorState extends StatelessWidget {
+class ErrorState extends ConsumerWidget {
   final String message;
   final String? details;
   final VoidCallback? onRetry;
@@ -20,7 +22,7 @@ class ErrorState extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final c = Theme.of(context).extension<FinPaColors>()!;
 
     return Center(
@@ -53,7 +55,7 @@ class ErrorState extends StatelessWidget {
               ElevatedButton.icon(
                 onPressed: onRetry,
                 icon: const Icon(Icons.refresh_rounded, size: 18),
-                label: const Text('Reintentar'),
+                label: Text(ref.tr('common.retry')),
               ),
             ],
           ],
@@ -62,4 +64,3 @@ class ErrorState extends StatelessWidget {
     );
   }
 }
-

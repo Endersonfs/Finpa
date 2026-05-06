@@ -10,6 +10,8 @@ import '../providers/education_provider.dart';
 //  EducationScreen
 // ─────────────────────────────────────────────────────────────────────────────
 
+import '../../../core/providers/language_provider.dart';
+
 class EducationScreen extends ConsumerWidget {
   const EducationScreen({super.key});
 
@@ -23,7 +25,7 @@ class EducationScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Educación financiera'),
+        title: Text(ref.tr('education.title')),
       ),
       body: modulesAsync.when(
         loading: () => _EducationSkeleton(isDark: isDark, c: c),
@@ -38,7 +40,7 @@ class EducationScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 12),
               Text(
-                'Error al cargar el contenido',
+                ref.tr('education.error_loading'),
                 style: TextStyle(
                   fontSize: 14,
                   color: textPrimary,
@@ -48,7 +50,7 @@ class EducationScreen extends ConsumerWidget {
               const SizedBox(height: 16),
               TextButton(
                 onPressed: () => ref.invalidate(modulesProvider),
-                child: const Text('Reintentar'),
+                child: Text(ref.tr('common.retry')),
               ),
             ],
           ),
@@ -66,7 +68,7 @@ class EducationScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'No hay contenido disponible',
+                    ref.tr('education.not_found'),
                     style: TextStyle(
                       fontSize: 14,
                       color: c.muted,
@@ -95,13 +97,14 @@ class EducationScreen extends ConsumerWidget {
                   totalCompleted: totalCompleted,
                   totalLessons: totalLessons,
                   globalProgress: globalProgress,
+                  ref: ref,
                 ),
 
                 // ── Título Módulos ────────────────────────────────────────
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 22, 16, 0),
                   child: Text(
-                    'Módulos',
+                    ref.tr('education.modules'),
                     style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.bold,
@@ -113,7 +116,7 @@ class EducationScreen extends ConsumerWidget {
                 // ── Lista de módulos ─────────────────────────────────────
                 const SizedBox(height: 8),
                 ...modules.map(
-                  (module) => _ModuleCard(module: module, isDark: isDark, c: c),
+                  (module) => _ModuleCard(module: module, isDark: isDark, c: c, ref: ref),
                 ),
               ],
             ),
@@ -133,12 +136,14 @@ class _ProgressCard extends StatelessWidget {
   final int totalCompleted;
   final int totalLessons;
   final double globalProgress;
+  final WidgetRef ref;
 
   const _ProgressCard({
     required this.isDark,
     required this.totalCompleted,
     required this.totalLessons,
     required this.globalProgress,
+    required this.ref,
   });
 
   @override
@@ -172,7 +177,7 @@ class _ProgressCard extends StatelessWidget {
                 ),
               ),
               Text(
-                '$totalCompleted de $totalLessons lecciones',
+                '$totalCompleted ${ref.tr('education.lesson_of')} $totalLessons ${ref.tr('education.modules').toLowerCase()}',
                 style: const TextStyle(
                   fontSize: 11,
                   color: Color(0xFF6366F1),
@@ -223,11 +228,13 @@ class _ModuleCard extends StatelessWidget {
   final ModuleModel module;
   final bool isDark;
   final FinPaColors c;
+  final WidgetRef ref;
 
   const _ModuleCard({
     required this.module,
     required this.isDark,
     required this.c,
+    required this.ref,
   });
 
   @override
@@ -289,9 +296,9 @@ class _ModuleCard extends StatelessWidget {
                       ),
                     ),
                     if (module.isCompleted)
-                      _Badge('Completado', const Color(0xFF059669))
+                      _Badge('Completed', const Color(0xFF059669))
                     else if (module.progress > 0)
-                      _Badge('En progreso', const Color(0xFF2F7155))
+                      _Badge('In progress', const Color(0xFF2F7155))
                     else if (!module.isUnlocked)
                       Row(
                         mainAxisSize: MainAxisSize.min,
@@ -303,7 +310,7 @@ class _ModuleCard extends StatelessWidget {
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            'Bloqueado',
+                            'Locked',
                             style: TextStyle(fontSize: 11, color: c.muted),
                           ),
                         ],
@@ -312,7 +319,7 @@ class _ModuleCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '${module.completedCount}/${module.totalCount} lecciones',
+                  '${module.completedCount}/${module.totalCount} ${ref.tr('education.lesson_of')} ${ref.tr('education.modules').toLowerCase()}',
                   style: TextStyle(fontSize: 11, color: c.muted),
                 ),
                 if (module.progress > 0 && !module.isCompleted) ...[
@@ -446,7 +453,7 @@ class _ModuleLessonsScreen extends ConsumerWidget {
               ),
             ),
             subtitle: Text(
-              'Lección ${i + 1} de ${updatedModule.totalCount}',
+              '${ref.tr('education.lesson')} ${i + 1} ${ref.tr('education.lesson_of')} ${updatedModule.totalCount}',
               style: TextStyle(fontSize: 12, color: c.muted),
             ),
             trailing: isCompleted

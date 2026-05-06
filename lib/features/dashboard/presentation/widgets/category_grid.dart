@@ -1,31 +1,33 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/currencies.dart';
 import '../../../../core/utils/currency_formatter.dart';
+import '../../../../core/providers/language_provider.dart';
 
 // Metadata de cada categoría del dashboard
 class _Cat {
-  final String label;
+  final String labelKey;
   final Color color;
-  const _Cat(this.label, this.color);
+  const _Cat(this.labelKey, this.color);
 }
 
 const _kCategories = <String, _Cat>{
-  'food':          _Cat('Comida',          Color(0xFFDC2626)),
-  'transport':     _Cat('Transporte',      Color(0xFF2563EB)),
-  'entertainment': _Cat('Entretenimiento', Color(0xFF7C3AED)),
-  'services':      _Cat('Servicios',       Color(0xFF059669)),
-  'health':        _Cat('Salud',           Color(0xFF0891B2)),
-  'other':         _Cat('Otros',           Color(0xFF8892B0)),
+  'food':          _Cat('categories.food',          Color(0xFFDC2626)),
+  'transport':     _Cat('categories.transport',     Color(0xFF2563EB)),
+  'entertainment': _Cat('categories.entertainment', Color(0xFF7C3AED)),
+  'services':      _Cat('categories.services',      Color(0xFF059669)),
+  'health':        _Cat('categories.health',        Color(0xFF0891B2)),
+  'other':         _Cat('categories.other',         Color(0xFF8892B0)),
 };
 
-class CategoryGrid extends StatelessWidget {
+class CategoryGrid extends ConsumerWidget {
   /// null mientras carga — muestra skeleton
   final Map<String, double>? expenses;
   final AppCurrency? currency;
 
   const CategoryGrid({super.key, this.expenses, this.currency});
 
-  void _showAmountDetail(BuildContext context, String label, double amount) {
+  void _showAmountDetail(BuildContext context, WidgetRef ref, String label, double amount) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -46,9 +48,9 @@ class CategoryGrid extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 4),
-            const Text(
-              'Monto exacto',
-              style: TextStyle(
+            Text(
+              ref.tr('goals.exact_amount'),
+              style: const TextStyle(
                 fontSize: 12,
                 color: Colors.grey,
               ),
@@ -58,7 +60,7 @@ class CategoryGrid extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cerrar'),
+            child: Text(ref.tr('common.close')),
           ),
         ],
       ),
@@ -66,7 +68,7 @@ class CategoryGrid extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     if (expenses == null) return _CategorySkeleton();
 
     // Ordenar por monto desc y tomar hasta 6
@@ -89,13 +91,14 @@ class CategoryGrid extends StatelessWidget {
       itemBuilder: (context, i) {
         final entry = items[i];
         final meta = _kCategories[entry.key] ??
-            const _Cat('Otros', Color(0xFF8892B0));
+            const _Cat('categories.other', Color(0xFF8892B0));
+        final label = ref.tr(meta.labelKey);
         return _CategoryCard(
-          label: meta.label,
+          label: label,
           color: meta.color,
           amount: CurrencyFormatter.formatCompact(entry.value, currency: currency),
           progress: (maxAmount > 0) ? entry.value / maxAmount : 0,
-          onTapAmount: () => _showAmountDetail(context, meta.label, entry.value),
+          onTapAmount: () => _showAmountDetail(context, ref, label, entry.value),
         );
       },
     );
@@ -257,4 +260,3 @@ class _CategorySkeletonState extends State<_CategorySkeleton>
     );
   }
 }
-

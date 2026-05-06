@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/ai_repository.dart';
 import '../domain/message_model.dart';
+import '../../../core/providers/language_provider.dart';
 
 final aiRepositoryProvider =
     Provider<AiRepository>((_) => const AiRepository());
@@ -10,13 +11,14 @@ final aiRepositoryProvider =
 
 class ChatNotifier extends StateNotifier<List<MessageModel>> {
   final AiRepository _repo;
+  final Ref _ref;
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
-  ChatNotifier(this._repo)
+  ChatNotifier(this._repo, this._ref)
       : super([
           MessageModel.assistant(
-            'Hola! Soy FinPa IA, tu asesor financiero personal. ¿En qué te puedo ayudar hoy? 💙',
+            _ref.read(languageNotifierProvider).translate('ai_chat.greeting'),
           ),
         ]);
 
@@ -34,6 +36,8 @@ class ChatNotifier extends StateNotifier<List<MessageModel>> {
     // Force notify para mostrar TypingIndicator
     state = [...state];
 
+    final lang = _ref.read(languageNotifierProvider).locale.languageCode;
+
     try {
       // El historial excluye el último mensaje del usuario —
       // se pasa por separado como userMessage.
@@ -45,6 +49,7 @@ class ChatNotifier extends StateNotifier<List<MessageModel>> {
         balance: balance,
         income: income,
         expenses: expenses,
+        languageCode: lang,
       );
 
       final assistantMsg = MessageModel.assistant(response);
@@ -56,7 +61,9 @@ class ChatNotifier extends StateNotifier<List<MessageModel>> {
       state = newState;
     } catch (_) {
       final errorMsg = MessageModel.assistant(
-        'Lo siento, tuve un problema al procesar tu mensaje. Por favor intenta de nuevo. 🙏',
+        lang == 'es' 
+          ? 'Lo siento, tuve un problema al procesar tu mensaje. Por favor intenta de nuevo. 🙏'
+          : 'Sorry, I had a problem processing your message. Please try again. 🙏',
       );
       state = [...state, errorMsg];
     } finally {
@@ -69,7 +76,7 @@ class ChatNotifier extends StateNotifier<List<MessageModel>> {
   void clearHistory() {
     state = [
       MessageModel.assistant(
-        'Hola! Soy FinPa IA, tu asesor financiero personal. ¿En qué te puedo ayudar hoy? 💙',
+        _ref.read(languageNotifierProvider).translate('ai_chat.greeting'),
       ),
     ];
   }
@@ -77,7 +84,7 @@ class ChatNotifier extends StateNotifier<List<MessageModel>> {
 
 final chatNotifierProvider =
     StateNotifierProvider<ChatNotifier, List<MessageModel>>(
-  (ref) => ChatNotifier(ref.watch(aiRepositoryProvider)),
+  (ref) => ChatNotifier(ref.watch(aiRepositoryProvider), ref),
 );
 
 // Provider separado para exponer el loading state y que los widgets
@@ -86,4 +93,3 @@ final chatLoadingProvider = Provider<bool>((ref) {
   ref.watch(chatNotifierProvider); // Suscribirse a cambios de estado
   return ref.read(chatNotifierProvider.notifier).isLoading;
 });
-

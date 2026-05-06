@@ -12,7 +12,10 @@
     "search": "Buscar",
     "retry": "Reintentar",
     "user": "Usuario",
-    "version": "Versión"
+    "version": "Versión",
+    "soon": "Próximamente",
+    "next": "Siguiente",
+    "back": "Atrás"
   },
   "dashboard": {
     "greeting_morning": "Buenos días",
@@ -26,7 +29,8 @@
     "this_month": "Este mes",
     "recent": "Recientes",
     "view_all": "Ver todos",
-    "add": "Agregar"
+    "add": "Agregar",
+    "by_category": "Por categoría"
   },
   "accounts": {
     "title": "Cuentas",
@@ -51,7 +55,24 @@
     "saved_for_goals": "Guardado para mis metas",
     "error_loading": "Error al cargar cuentas",
     "add_bank_desc": "Agrega tu banco o cartera\npara ver todo en un solo lugar.",
-    "saving": "Ahorrando"
+    "saving": "Ahorrando",
+    "helper_adjust": "Puedes ajustarlo después",
+    "assets": "Activos",
+    "liabilities": "Pasivos",
+    "choose_source": "¿De qué cuenta sale el dinero?",
+    "choose_target": "¿A qué cuenta va el dinero?",
+    "how_much": "¿Cuánto deseas mover?",
+    "balances_after": "Balances tras transferencia",
+    "account_not_found": "Cuenta no encontrada",
+    "current_balance_in": "Saldo actual en",
+    "no_transactions_account": "Sin movimientos en esta cuenta",
+    "types": {
+      "checking": "Corriente",
+      "savings": "Ahorros",
+      "credit": "Tarjeta de crédito",
+      "cash": "Efectivo",
+      "investment": "Inversión"
+    }
   },
   "goals": {
     "title": "Metas de ahorro",
@@ -76,7 +97,9 @@
     "active_goal": "meta activa",
     "my_goals": "Mis metas",
     "deadline": "Fecha límite",
-    "goal_reached": "¡Meta alcanzada! 🎉"
+    "goal_reached": "¡Meta alcanzada! 🎉",
+    "choose_icon": "Elige un ícono",
+    "no_deadline": "Sin fecha límite"
   },
   "settings": {
     "title": "Ajustes",
@@ -94,7 +117,178 @@
     "notifications_desc": "Alertas y recordatorios",
     "security_desc": "Biometría y privacidad",
     "select_language": "Selecciona idioma",
-    "select_currency": "Selecciona moneda principal"
+    "select_currency": "Selecciona moneda principal",
+    "follow_system": "Sigue la configuración del móvil",
+    "limit_alert": "Cuando llegues al 80% de un límite",
+    "daily_reminder": "Para registrar tus gastos del día",
+    "biometric_access": "ACCESO BIOMÉTRICO",
+    "no_biometrics": "Tu dispositivo no soporta biometría",
+    "auto_logout": "Cerrar sesión automáticamente",
+    "logout_confirm_title": "¿Cerrar sesión?",
+    "logout_confirm_desc": "Se cerrará tu sesión en este dispositivo.",
+    "logout": "Cerrar sesión",
+    "free_plan": "Plan gratuito",
+    "share_finpa": "Compartir FinPa",
+    "nav_ai": "FinPa IA"
+  },
+  "notifications": {
+    "budget_alert_title": "Alerta de presupuesto",
+    "budget_alert_desc": "Llevas el 82% de tu presupuesto en Comida este mes.",
+    "goal_reached_title": "¡Meta alcanzada!",
+    "goal_reached_desc": "Completaste tu meta \"Fondo de emergencia\". ¡Felicidades! 🎉",
+    "lesson_available_title": "Nueva lección disponible",
+    "lesson_available_desc": "Aprende sobre interés compuesto en el módulo de Inversión.",
+    "empty": "Aún no tienes notificaciones"
+  },
+  "categories": {
+    "food": "Comida",
+    "transport": "Transporte",
+    "entertainment": "Entretenimiento",
+    "health": "Salud",
+    "clothing": "Ropa",
+    "housing": "Hogar",
+    "services": "Servicios",
+    "education": "Educación",
+    "shopping": "Compras",
+    "salary": "Salario",
+    "freelance": "Freelance",
+    "business": "Negocio",
+    "investment": "Inversión",
+    "gift": "Regalo",
+    "other": "Otros",
+    "other_income": "Otros"
+  },
+  "currencies": {
+    "dop": "Peso Dominicano",
+    "usd": "Dólar Estadounidense",
+    "eur": "Euro"
+  },
+  "transactions": {
+    "title": "Transacciones",
+    "add": "Agregar transacción",
+    "details": "Detalle de Transacción",
+    "description": "Descripción",
+    "category": "Categoría",
+    "date": "Fecha",
+    "account": "Cuenta",
+    "from_account": "¿De qué cuenta?",
+    "amount": "Monto",
+    "type": "Tipo",
+    "income": "Ingreso",
+    "expense": "Gasto",
+    "transfer": "Transferencia",
+    "no_transactions": "Aún no tienes transacciones",
+    "recent": "Transacciones Recientes"
+  },
+  "reports": {
+    "title": "Reportes",
+    "month": "Mes",
+    "year": "Año",
+    "last_6_months": "Últimos 6 meses",
+    "expense_distribution": "Distribución de gastos"
+  },
+  "auth": {
+    "login": "Iniciar sesión",
+    "register": "Registrarse",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "forgot_password": "¿Olvidaste tu contraseña?",
+    "login_to_continue": "Inicia sesión para continuar",
+    "invalid_email": "Email inválido",
+    "password_required": "Ingresa tu contraseña",
+    "password_min_length": "Mínimo 6 caracteres",
+    "dont_have_account": "¿No tienes cuenta?",
+    "already_have_account": "¿Ya tienes cuenta?",
+    "session_expired": "Tu sesión expiró. Ingresa con tu correo y contraseña.",
+    "reset_password_desc": "Ingresa tu email y te enviaremos un enlace para restablecer tu contraseña.",
+    "back_to_login": "Volver al inicio de sesión",
+    "session_locked": "Sesión bloqueada",
+    "enter_password": "Ingresa tu contraseña",
+    "login_with_password": "Ingresar con contraseña",
+    "onboarding_title": "Toma el control de tus finanzas",
+    "onboarding_desc": "Registra ingresos y gastos.\nConoce exactamente en qué se va tu dinero.",
+    "onboarding_budget_desc": "Define límites por categoría y recibe alertas antes de pasarte.",
+    "onboarding_ai_desc": "Tu asesor financiero con inteligencia artificial, disponible 24/7."
+  },
+  "education": {
+    "title": "Educación financiera",
+    "modules": "Módulos",
+    "modules_list": {
+      "budget": "Presupuesto",
+      "saving": "Ahorro",
+      "debt": "Deudas",
+      "investment": "Inversión"
+    },
+    "lesson": "Lección",
+    "lesson_of": "de",
+    "quiz_title": "Pon a prueba lo que aprendiste",
+    "correct": "¡Correcto! 🎉",
+    "correct_answer": "La respuesta correcta era",
+    "quizzes": {
+      "presupuesto": {
+        "question": "¿Qué porcentaje sugiere la regla 50/30/20 para necesidades?",
+        "options": {
+          "0": "30%",
+          "1": "50%",
+          "2": "20%",
+          "3": "70%"
+        },
+        "correct": "1"
+      },
+      "ahorro": {
+        "question": "¿Cuántos meses de gastos debe cubrir un fondo de emergencia?",
+        "options": {
+          "0": "1-2 meses",
+          "1": "3-6 meses",
+          "2": "12 meses",
+          "3": "2 semanas"
+        },
+        "correct": "1"
+      },
+      "deuda": {
+        "question": "En la estrategia 'Avalancha', ¿qué deuda pagas primero?",
+        "options": {
+          "0": "La más pequeña",
+          "1": "La más antigua",
+          "2": "La de mayor interés",
+          "3": "La del banco"
+        },
+        "correct": "2"
+      },
+      "inversion": {
+        "question": "¿Qué es el interés compuesto?",
+        "options": {
+          "0": "Interés sobre el capital original",
+          "1": "Interés sobre intereses acumulados",
+          "2": "Una tarifa bancaria",
+          "3": "Un tipo de deuda"
+        },
+        "correct": "1"
+      }
+    },
+    "complete_module": "Completar módulo",
+    "next_lesson": "Siguiente lección",
+    "lesson_completed": "¡Lección completada! 🎓",
+    "error_loading": "Error al cargar la lección",
+    "not_found": "Lección no encontrada",
+    "module_inversion": "Inversión",
+    "lesson_interest_comp": "Interés compuesto"
+  },
+  "ai_chat": {
+    "greeting": "¡Hola! Soy FinPa IA, tu asesor financiero personal. ¿En qué te puedo ayudar hoy? 💙",
+    "online": "En línea",
+    "delete_history": "¿Borrar el historial de conversación?",
+    "hint_budget": "¿Cómo está mi presupuesto?",
+    "hint_goals": "¿Cómo van mis metas?",
+    "input_placeholder": "Pregúntale a FinPa IA..."
+  },
+  "budget": {
+    "title": "Presupuesto",
+    "add": "Agregar presupuesto",
+    "limit": "Límite",
+    "monthly_limit": "LÍMITE MENSUAL",
+    "category": "Categoría",
+    "delete_confirm": "¿Deseas eliminar este presupuesto? Esta acción no se puede deshacer."
   },
   "months": {
     "jan": "Enero", "feb": "Febrero", "mar": "Marzo", "apr": "Abril",

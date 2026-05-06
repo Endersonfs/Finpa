@@ -3,12 +3,12 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../domain/lesson_model.dart';
 import '../domain/module_model.dart';
 
-// Metadata estática de cada categoría
+// Metadata estática de cada categoría — ahora con llaves de traducción
 const _kModuleMeta = {
-  'presupuesto': ('💰', 'Presupuesto'),
-  'ahorro': ('🏦', 'Ahorro'),
-  'deuda': ('📉', 'Deudas'),
-  'inversion': ('📈', 'Inversión'),
+  'presupuesto': ('💰', 'education.modules_list.budget'),
+  'ahorro': ('🏦', 'education.modules_list.saving'),
+  'deuda': ('📉', 'education.modules_list.debt'),
+  'inversion': ('📈', 'education.modules_list.investment'),
 };
 
 class EducationRepository {
@@ -63,7 +63,7 @@ class EducationRepository {
 
       modules.add(ModuleModel(
         id: cat,
-        title: meta.$2,
+        title: meta.$2, // Esto ahora es una llave de traducción
         category: cat,
         iconEmoji: meta.$1,
         lessons: catLessons,
@@ -86,4 +86,3 @@ class EducationRepository {
     });
   }
 }
-

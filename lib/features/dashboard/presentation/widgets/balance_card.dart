@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/providers/language_provider.dart';
 import '../../../../core/constants/currencies.dart';
-import '../../../../core/utils/currency_formatter.dart';
+import '../../../../core/widgets/compact_amount_text.dart';
 
 class BalanceCard extends ConsumerWidget {
   final double? income;
@@ -20,8 +20,6 @@ class BalanceCard extends ConsumerWidget {
     this.currency,
   });
 
-  String _format(double? v, AppCurrency? curr) => v == null ? '—' : CurrencyFormatter.format(v, currency: curr);
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final balance = available ??
@@ -37,7 +35,6 @@ class BalanceCard extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ── Etiqueta ─────────────────────────
           Text(
             ref.tr('dashboard.you_can_spend'),
             style: TextStyle(
@@ -49,11 +46,11 @@ class BalanceCard extends ConsumerWidget {
           ),
           const SizedBox(height: 8),
 
-          // ── Monto principal ──────────────────
           balance == null
-              ? _Skeleton(width: 160, height: 32)
-              : Text(
-                  _format(balance, currency),
+              ? const _Skeleton(width: 160, height: 32)
+              : CompactAmountText(
+                  amount: balance,
+                  currency: currency,
                   style: const TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.w700,
@@ -63,32 +60,52 @@ class BalanceCard extends ConsumerWidget {
                 ),
           if (saved != null && saved! > 0) ...[
             const SizedBox(height: 4),
-            Text(
-              '+ ${_format(saved!, currency)} ${ref.tr('dashboard.saved_in_goals')}',
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w500,
-                color: Colors.white.withOpacity(0.75),
-              ),
+            Row(
+              children: [
+                Text(
+                  '+ ',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.white.withOpacity(0.75),
+                  ),
+                ),
+                CompactAmountText(
+                  amount: saved!,
+                  currency: currency,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.white.withOpacity(0.75),
+                  ),
+                ),
+                Text(
+                  ' ${ref.tr('dashboard.saved_in_goals')}',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.white.withOpacity(0.75),
+                  ),
+                ),
+              ],
             ),
           ],
           const SizedBox(height: 16),
 
-          // ── Chips ingresos / gastos ───────────
           Row(
             children: [
               _Chip(
                 label: ref.tr('dashboard.income'),
-                value: _format(income, currency),
+                amount: income,
+                currency: currency,
                 valueColor: const Color(0xFF6EE7B7),
-                loading: income == null,
               ),
               const SizedBox(width: 10),
               _Chip(
                 label: ref.tr('dashboard.expense'),
-                value: _format(expense, currency),
+                amount: expense,
+                currency: currency,
                 valueColor: const Color(0xFFFCA5A5),
-                loading: expense == null,
               ),
             ],
           ),
@@ -98,18 +115,17 @@ class BalanceCard extends ConsumerWidget {
   }
 }
 
-// ── Chip individual ─────────────────────────────
 class _Chip extends StatelessWidget {
   final String label;
-  final String value;
+  final double? amount;
+  final AppCurrency? currency;
   final Color valueColor;
-  final bool loading;
 
   const _Chip({
     required this.label,
-    required this.value,
+    this.amount,
+    this.currency,
     required this.valueColor,
-    required this.loading,
   });
 
   @override
@@ -121,8 +137,8 @@ class _Chip extends StatelessWidget {
           color: Colors.white.withOpacity(0.12),
           borderRadius: BorderRadius.circular(10),
         ),
-        child: loading
-            ? _Skeleton(width: 60, height: 14)
+        child: amount == null
+            ? const _Skeleton(width: 60, height: 14)
             : Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -135,8 +151,9 @@ class _Chip extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 3),
-                  Text(
-                    value,
+                  CompactAmountText(
+                    amount: amount!,
+                    currency: currency,
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
@@ -150,49 +167,31 @@ class _Chip extends StatelessWidget {
   }
 }
 
-// ── Skeleton placeholder ────────────────────────
 class _Skeleton extends StatefulWidget {
   final double width;
   final double height;
-
   const _Skeleton({required this.width, required this.height});
-
   @override
   State<_Skeleton> createState() => _SkeletonState();
 }
 
-class _SkeletonState extends State<_Skeleton>
-    with SingleTickerProviderStateMixin {
+class _SkeletonState extends State<_Skeleton> with SingleTickerProviderStateMixin {
   late final AnimationController _ctrl;
-
   @override
   void initState() {
     super.initState();
-    _ctrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 900),
-    )..repeat(reverse: true);
+    _ctrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 900))..repeat(reverse: true);
   }
-
   @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
+  void dispose() { _ctrl.dispose(); super.dispose(); }
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: _ctrl,
       builder: (_, __) => Container(
-        width: widget.width,
-        height: widget.height,
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.12 + _ctrl.value * 0.12),
-          borderRadius: BorderRadius.circular(6),
-        ),
+        width: widget.width, height: widget.height,
+        decoration: BoxDecoration(color: Colors.white.withOpacity(0.12 + _ctrl.value * 0.12), borderRadius: BorderRadius.circular(6)),
       ),
     );
   }
 }
-

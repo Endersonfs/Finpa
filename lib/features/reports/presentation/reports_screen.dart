@@ -4,16 +4,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/constants/currencies.dart';
+import '../../../core/providers/currency_provider.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/utils/currency_formatter.dart';
+import '../../../core/widgets/compact_amount_text.dart';
 import '../providers/reports_provider.dart';
+import '../../../core/providers/language_provider.dart';
 
-// ─── Constantes de categoría ───────────────────────────────────────────────
-
-const _months = [
-  'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
-  'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic',
-];
-
+const _monthKeys = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
 const _catColors = {
   'food': Color(0xFFDC2626),
   'transport': Color(0xFF2563EB),
@@ -23,27 +22,8 @@ const _catColors = {
   'salary': Color(0xFF059669),
   'freelance': Color(0xFF2563EB),
   'shopping': Color(0xFFF59E0B),
-  'other': Color(0xFF8892B0),
+  'other': Color(0xFF8892B0)
 };
-
-const _catLabels = {
-  'food': 'Comida',
-  'transport': 'Transporte',
-  'entertainment': 'Entretenimiento',
-  'health': 'Salud',
-  'services': 'Servicios',
-  'salary': 'Salario',
-  'freelance': 'Freelance',
-  'shopping': 'Compras',
-  'investment': 'Inversión',
-  'gift': 'Regalos',
-  'education': 'Educación',
-  'housing': 'Vivienda',
-  'clothing': 'Ropa',
-  'business': 'Negocio',
-  'other': 'Otros',
-};
-
 const _catEmojis = {
   'food': '🍔',
   'transport': '🚗',
@@ -59,20 +39,11 @@ const _catEmojis = {
   'housing': '🏠',
   'clothing': '👗',
   'business': '🏪',
-  'other': '📊',
+  'other': '📊'
 };
-
-// ─── Formateador de moneda ─────────────────────────────────────────────────
-
-final _fmt = NumberFormat.currency(locale: 'es', symbol: 'RD\$', decimalDigits: 0);
-
-String _fmtAmount(double v) => _fmt.format(v);
-
-// ─── ReportsScreen ─────────────────────────────────────────────────────────
 
 class ReportsScreen extends ConsumerStatefulWidget {
   const ReportsScreen({super.key});
-
   @override
   ConsumerState<ReportsScreen> createState() => _ReportsScreenState();
 }
@@ -89,51 +60,32 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
     final theme = Theme.of(context);
     final c = theme.extension<FinPaColors>()!;
     final isDark = theme.brightness == Brightness.dark;
-    final textPrimary = theme.colorScheme.onSurface;
-    final surface = theme.colorScheme.surface;
-    final muted = c.muted;
-
-    final reportsAsync = ref.watch(
-      reportsProvider((month: _selectedMonth, year: _selectedYear)),
-    );
+    final reportsAsync = ref.watch(reportsProvider((month: _selectedMonth, year: _selectedYear)));
+    final currencyState = ref.watch(currencyNotifierProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Reportes'),
-      ),
+      appBar: AppBar(title: Text(ref.tr('reports.title'))),
       body: CustomScrollView(
         slivers: [
           SliverPadding(
             padding: const EdgeInsets.only(bottom: 32),
             sliver: SliverList.list(
               children: [
-                // ── Selector de período ──────────────────────────────────
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
                   child: SegmentedButton<String>(
-                    segments: const [
-                      ButtonSegment(value: 'Mes', label: Text('Mes')),
-                      ButtonSegment(value: 'Año', label: Text('Año')),
+                    segments: [
+                      ButtonSegment(value: 'Mes', label: Text(ref.tr('reports.month'))),
+                      ButtonSegment(value: 'Año', label: Text(ref.tr('reports.year')))
                     ],
                     selected: {_period},
-                    onSelectionChanged: (s) =>
-                        setState(() => _period = s.first),
+                    onSelectionChanged: (s) => setState(() => _period = s.first),
                     style: ButtonStyle(
-                      backgroundColor: WidgetStateProperty.resolveWith(
-                        (states) => states.contains(WidgetState.selected)
-                            ? const Color(0xFF2F7155)
-                            : Colors.transparent,
-                      ),
-                      foregroundColor: WidgetStateProperty.resolveWith(
-                        (states) => states.contains(WidgetState.selected)
-                            ? Colors.white
-                            : muted,
-                      ),
+                      backgroundColor: WidgetStateProperty.resolveWith((states) => states.contains(WidgetState.selected) ? const Color(0xFF2F7155) : Colors.transparent),
+                      foregroundColor: WidgetStateProperty.resolveWith((states) => states.contains(WidgetState.selected) ? Colors.white : c.muted),
                     ),
                   ),
                 ),
-
-                // ── Selector de mes (solo si período = 'Mes') ────────────
                 if (_period == 'Mes') ...[
                   const SizedBox(height: 12),
                   SizedBox(
@@ -146,31 +98,17 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                       itemBuilder: (context, index) {
                         final isSelected = (index + 1) == _selectedMonth;
                         return GestureDetector(
-                          onTap: () =>
-                              setState(() => _selectedMonth = index + 1),
+                          onTap: () => setState(() => _selectedMonth = index + 1),
                           child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 8,
-                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                             decoration: BoxDecoration(
-                              color: isSelected
-                                  ? const Color(0xFF2F7155)
-                                  : surface,
+                              color: isSelected ? const Color(0xFF2F7155) : theme.colorScheme.surface,
                               borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: isSelected
-                                    ? const Color(0xFF2F7155)
-                                    : c.border,
-                              ),
+                              border: Border.all(color: isSelected ? const Color(0xFF2F7155) : c.border),
                             ),
                             child: Text(
-                              _months[index],
-                              style: GoogleFonts.inter(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w500,
-                                color: isSelected ? Colors.white : muted,
-                              ),
+                              ref.tr('months.${_monthKeys[index]}'),
+                              style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w500, color: isSelected ? Colors.white : c.muted),
                             ),
                           ),
                         );
@@ -178,32 +116,15 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                     ),
                   ),
                 ],
-
-                // ── Contenido (loading / error / data) ───────────────────
                 reportsAsync.when(
-                  loading: () => const Padding(
-                    padding: EdgeInsets.only(top: 80),
-                    child: Center(
-                      child: CircularProgressIndicator(
-                        color: Color(0xFF2F7155),
-                      ),
-                    ),
-                  ),
-                  error: (e, _) => Padding(
-                    padding: const EdgeInsets.only(top: 80),
-                    child: Center(
-                      child: Text(
-                        'Error al cargar datos',
-                        style: GoogleFonts.inter(color: c.expense),
-                      ),
-                    ),
-                  ),
+                  loading: () => const Padding(padding: EdgeInsets.only(top: 80), child: Center(child: CircularProgressIndicator(color: Color(0xFF2F7155)))),
+                  error: (e, _) => Padding(padding: const EdgeInsets.only(top: 80), child: Center(child: Text(ref.tr('common.error'), style: GoogleFonts.inter(color: c.expense)))),
                   data: (data) => _ReportsContent(
                     data: data,
                     isDark: isDark,
-                    textPrimary: textPrimary,
-                    surface: surface,
-                    muted: muted,
+                    textPrimary: theme.colorScheme.onSurface,
+                    surface: theme.colorScheme.surface,
+                    muted: c.muted,
                     border: c.border,
                     cardBg: c.cardBg,
                     selectedMonth: _selectedMonth,
@@ -212,6 +133,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                     touchedPieIndex: _touchedPieIndex,
                     onBarTouch: (i) => setState(() => _touchedBarIndex = i),
                     onPieTouch: (i) => setState(() => _touchedPieIndex = i),
+                    baseCurrency: currencyState.baseCurrency,
                   ),
                 ),
               ],
@@ -222,17 +144,13 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
     );
   }
 
-  // Cuántos meses mostrar: si es el año actual, solo hasta el mes actual.
   int _availableMonths() {
     final now = DateTime.now();
-    if (_selectedYear == now.year) return now.month;
-    return 12;
+    return _selectedYear == now.year ? now.month : 12;
   }
 }
 
-// ─── Widget de contenido de reportes ──────────────────────────────────────
-
-class _ReportsContent extends StatelessWidget {
+class _ReportsContent extends ConsumerWidget {
   const _ReportsContent({
     required this.data,
     required this.isDark,
@@ -247,69 +165,41 @@ class _ReportsContent extends StatelessWidget {
     required this.touchedPieIndex,
     required this.onBarTouch,
     required this.onPieTouch,
+    required this.baseCurrency,
   });
 
   final ReportData data;
   final bool isDark;
-  final Color textPrimary;
-  final Color surface;
-  final Color muted;
-  final Color border;
-  final Color cardBg;
-  final int selectedMonth;
-  final int selectedYear;
-  final int touchedBarIndex;
-  final int touchedPieIndex;
-  final ValueChanged<int> onBarTouch;
-  final ValueChanged<int> onPieTouch;
+  final Color textPrimary, surface, muted, border, cardBg;
+  final int selectedMonth, selectedYear, touchedBarIndex, touchedPieIndex;
+  final ValueChanged<int> onBarTouch, onPieTouch;
+  final AppCurrency baseCurrency;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final currencyNotifier = ref.read(currencyNotifierProvider.notifier);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildBarCard(context),
-        _buildDonutCard(context),
-        _buildLineCard(context),
-        _buildTopExpensesCard(context),
+        _buildBarCard(context, currencyNotifier, ref),
+        _buildDonutCard(context, currencyNotifier, ref),
+        _buildLineCard(context, currencyNotifier, ref),
+        _buildTopExpensesCard(context, currencyNotifier, ref),
       ],
     );
   }
 
-  // ─── Card 1: Barras — Gastos por mes ──────────────────────────────────────
-
-  Widget _buildBarCard(BuildContext context) {
-    final maxExpense = data.last6Months
-        .map((e) => e.expense)
-        .fold(0.0, (a, b) => a > b ? a : b);
-
-    final gridLineColor =
-        isDark ? const Color(0xFF1E2840) : const Color(0xFFE2E6F0);
-
+  Widget _buildBarCard(BuildContext context, CurrencyNotifier currencyNotifier, WidgetRef ref) {
+    final maxExpense = data.last6Months.map((e) => e.expense).fold(0.0, (a, b) => a > b ? a : b);
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: surface,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: border),
-      ),
+      decoration: BoxDecoration(color: surface, borderRadius: BorderRadius.circular(18), border: Border.all(color: border)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Gastos por mes',
-            style: GoogleFonts.inter(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-              color: textPrimary,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            'Últimos 6 meses',
-            style: GoogleFonts.inter(fontSize: 10, color: muted),
-          ),
+          Text(ref.tr('reports.expense_distribution'), style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700, color: textPrimary)),
+          Text(ref.tr('reports.last_6_months'), style: GoogleFonts.inter(fontSize: 10, color: muted)),
           const SizedBox(height: 20),
           SizedBox(
             height: 180,
@@ -318,21 +208,12 @@ class _ReportsContent extends StatelessWidget {
                 alignment: BarChartAlignment.spaceAround,
                 maxY: maxExpense > 0 ? maxExpense * 1.2 : 100,
                 barTouchData: BarTouchData(
-                  touchCallback: (event, response) {
-                    onBarTouch(
-                      response?.spot?.touchedBarGroupIndex ?? -1,
-                    );
-                  },
+                  touchCallback: (event, response) => onBarTouch(response?.spot?.touchedBarGroupIndex ?? -1),
                   touchTooltipData: BarTouchTooltipData(
                     getTooltipColor: (_) => const Color(0xFF2F7155),
-                    getTooltipItem: (group, groupIndex, rod, rodIndex) =>
-                        BarTooltipItem(
-                      'RD\$${NumberFormat.compactCurrency(locale: 'es', symbol: '', decimalDigits: 0).format(rod.toY)}',
-                      GoogleFonts.inter(
-                        color: Colors.white,
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    getTooltipItem: (group, groupIndex, rod, rodIndex) => BarTooltipItem(
+                      CurrencyFormatter.formatCompact(rod.toY, currency: baseCurrency),
+                      GoogleFonts.inter(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
                     ),
                   ),
                 ),
@@ -344,62 +225,39 @@ class _ReportsContent extends StatelessWidget {
                       reservedSize: 22,
                       getTitlesWidget: (value, meta) {
                         final idx = value.toInt();
-                        if (idx < 0 || idx >= data.last6Months.length) {
-                          return const SizedBox.shrink();
-                        }
-                        final m = data.last6Months[idx].month;
+                        if (idx < 0 || idx >= data.last6Months.length) return const SizedBox.shrink();
                         return Padding(
                           padding: const EdgeInsets.only(top: 4),
                           child: Text(
-                            _months[m - 1],
-                            style: GoogleFonts.inter(
-                              fontSize: 10,
-                              color: muted,
-                            ),
+                            ref.tr('months.${_monthKeys[data.last6Months[idx].month - 1]}'),
+                            style: GoogleFonts.inter(fontSize: 10, color: muted),
                           ),
                         );
                       },
                     ),
                   ),
-                  leftTitles: const AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
-                  ),
-                  topTitles: const AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
-                  ),
-                  rightTitles: const AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
-                  ),
+                  leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
                 ),
                 gridData: FlGridData(
                   show: true,
                   drawVerticalLine: false,
-                  getDrawingHorizontalLine: (value) => FlLine(
-                    color: gridLineColor,
-                    strokeWidth: 1,
-                    dashArray: [4, 4],
-                  ),
+                  getDrawingHorizontalLine: (value) => FlLine(color: isDark ? const Color(0xFF1E2840) : const Color(0xFFE2E6F0), strokeWidth: 1, dashArray: [4, 4]),
                 ),
                 borderData: FlBorderData(show: false),
                 barGroups: data.last6Months.asMap().entries.map((entry) {
-                  final isSelected = entry.key == touchedBarIndex ||
-                      (entry.value.month == selectedMonth &&
-                          entry.value.year == selectedYear);
+                  final converted = entry.value.expense;
+                  final isSelected = entry.key == touchedBarIndex || (entry.value.month == selectedMonth && entry.value.year == selectedYear);
                   return BarChartGroupData(
                     x: entry.key,
                     barRods: [
                       BarChartRodData(
-                        toY: entry.value.expense,
-                        color: isSelected
-                            ? const Color(0xFF2F7155)
-                            : (isDark
-                                ? const Color(0xFF1E2840)
-                                : const Color(0xFFE2E6F0)),
+                        toY: converted,
+                        color: isSelected ? const Color(0xFF2F7155) : (isDark ? const Color(0xFF1E2840) : const Color(0xFFE2E6F0)),
                         width: 22,
-                        borderRadius: const BorderRadius.vertical(
-                          top: Radius.circular(4),
-                        ),
-                      ),
+                        borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+                      )
                     ],
                   );
                 }).toList(),
@@ -411,62 +269,33 @@ class _ReportsContent extends StatelessWidget {
     );
   }
 
-  // ─── Card 2: Donut — Distribución por categoría ───────────────────────────
-
-  Widget _buildDonutCard(BuildContext context) {
+  Widget _buildDonutCard(BuildContext context, CurrencyNotifier currencyNotifier, WidgetRef ref) {
     final categoryExpenses = data.categoryExpenses;
-    final totalExpense =
-        categoryExpenses.values.fold(0.0, (a, b) => a + b);
-
-    final entries = categoryExpenses.entries.toList()
-      ..sort((a, b) => b.value.compareTo(a.value));
-
-    final pieSections = entries.asMap().entries.map((entry) {
-      final i = entry.key;
-      final cat = entry.value.key;
-      final amount = entry.value.value;
-      final isTouched = i == touchedPieIndex;
-
-      return PieChartSectionData(
-        value: amount,
-        color: _catColors[cat] ?? const Color(0xFF8892B0),
-        radius: isTouched ? 38 : 32,
-        showTitle: false,
-      );
-    }).toList();
+    final totalExpense = categoryExpenses.values.fold(0.0, (a, b) => a + b);
+    final entries = categoryExpenses.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
+    final pieSections = entries
+        .asMap()
+        .entries
+        .map((entry) => PieChartSectionData(
+              value: entry.value.value,
+              color: _catColors[entry.value.key] ?? const Color(0xFF8892B0),
+              radius: entry.key == touchedPieIndex ? 38 : 32,
+              showTitle: false,
+            ))
+        .toList();
 
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: surface,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: border),
-      ),
+      decoration: BoxDecoration(color: surface, borderRadius: BorderRadius.circular(18), border: Border.all(color: border)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Distribución de gastos',
-            style: GoogleFonts.inter(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-              color: textPrimary,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            'Este mes',
-            style: GoogleFonts.inter(fontSize: 10, color: muted),
-          ),
+          Text(ref.tr('reports.expense_distribution'), style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700, color: textPrimary)),
+          Text(ref.tr('dashboard.this_month'), style: GoogleFonts.inter(fontSize: 10, color: muted)),
           const SizedBox(height: 16),
           if (categoryExpenses.isEmpty)
-            Center(
-              child: Text(
-                'Sin datos',
-                style: GoogleFonts.inter(color: muted),
-              ),
-            )
+            Center(child: Text(ref.tr('transactions.no_transactions'), style: GoogleFonts.inter(color: muted)))
           else
             Row(
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -481,50 +310,26 @@ class _ReportsContent extends StatelessWidget {
                         PieChartData(
                           centerSpaceRadius: 40,
                           sectionsSpace: 2,
-                          pieTouchData: PieTouchData(
-                            touchCallback: (event, response) {
-                              onPieTouch(
-                                response?.touchedSection
-                                        ?.touchedSectionIndex ??
-                                    -1,
-                              );
-                            },
-                          ),
+                          pieTouchData: PieTouchData(touchCallback: (event, response) => onPieTouch(response?.touchedSection?.touchedSectionIndex ?? -1)),
                           sections: pieSections,
                         ),
                       ),
                       Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text(
-                            'Total',
-                            style: GoogleFonts.inter(
-                              fontSize: 11,
-                              color: muted,
-                            ),
-                          ),
-                          Text(
-                            'RD\$${NumberFormat.compactCurrency(locale: 'es', symbol: '', decimalDigits: 0).format(totalExpense)}',
-                            style: GoogleFonts.inter(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                              color: textPrimary,
-                            ),
-                          ),
+                          Text('Total', style: GoogleFonts.inter(fontSize: 11, color: muted)),
+                          CompactAmountText(
+                            amount: totalExpense,
+                            currency: baseCurrency,
+                            style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w700, color: textPrimary),
+                          )
                         ],
                       ),
                     ],
                   ),
                 ),
                 const SizedBox(width: 20),
-                Expanded(
-                  child: _PieLegend(
-                    entries: entries,
-                    totalExpense: totalExpense,
-                    textPrimary: textPrimary,
-                    muted: muted,
-                  ),
-                ),
+                Expanded(child: _PieLegend(entries: entries, totalExpense: totalExpense, textPrimary: textPrimary, muted: muted, baseCurrency: baseCurrency, ref: ref)),
               ],
             ),
         ],
@@ -532,184 +337,34 @@ class _ReportsContent extends StatelessWidget {
     );
   }
 
-  // ─── Card 3: Barras agrupadas — Ingreso vs Gasto ─────────────────────────
-
-  Widget _buildLineCard(BuildContext context) {
-    const incomeColor = Color(0xFF059669);
-    const expenseColor = Color(0xFFDC2626);
-
-    final totalIncome =
-        data.last6Months.fold(0.0, (sum, e) => sum + e.income);
-    final totalExpense =
-        data.last6Months.fold(0.0, (sum, e) => sum + e.expense);
+  Widget _buildLineCard(BuildContext context, CurrencyNotifier currencyNotifier, WidgetRef ref) {
+    const incomeColor = Color(0xFF059669), expenseColor = Color(0xFFDC2626);
+    final totalIncome = data.last6Months.fold(0.0, (sum, e) => sum + e.income);
+    final totalExpense = data.last6Months.fold(0.0, (sum, e) => sum + e.expense);
     final balance = totalIncome - totalExpense;
-    final balancePositive = balance >= 0;
-
-    final allValues = data.last6Months
-        .expand((e) => [e.income, e.expense])
-        .toList();
-    final maxValue = allValues.fold(0.0, (a, b) => a > b ? a : b);
-
-    final gridLineColor =
-        isDark ? const Color(0xFF1E2840) : const Color(0xFFE2E6F0);
-    final tooltipBg =
-        isDark ? const Color(0xFF141928) : Colors.white;
-
-    final compact = NumberFormat.compact(locale: 'es');
+    final maxValue = data.last6Months.expand((e) => [e.income, e.expense]).fold(0.0, (a, b) => a > b ? a : b);
+    final compact = NumberFormat.compact(locale: baseCurrency.locale);
 
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: surface,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: border),
-      ),
+      decoration: BoxDecoration(color: surface, borderRadius: BorderRadius.circular(18), border: Border.all(color: border)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ── Título ──────────────────────────────────────────────────────
-          Text(
-            'Ingreso vs Gasto',
-            style: GoogleFonts.inter(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-              color: textPrimary,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            'Últimos 6 meses',
-            style: GoogleFonts.inter(fontSize: 10, color: muted),
-          ),
+          Text('${ref.tr('transactions.income')} vs ${ref.tr('transactions.expense')}', style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700, color: textPrimary)),
+          Text(ref.tr('reports.last_6_months'), style: GoogleFonts.inter(fontSize: 10, color: muted)),
           const SizedBox(height: 14),
-
-          // ── Resumen (badges) ─────────────────────────────────────────────
           Row(
             children: [
-              // Badge ingresos
-              Expanded(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: incomeColor.withValues(alpha: 0x15),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(
-                      color: incomeColor.withValues(alpha: 0x40),
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Ingresos',
-                        style: GoogleFonts.inter(
-                          fontSize: 10,
-                          color: textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        _fmtAmount(totalIncome),
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: incomeColor,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+              _Badge(label: ref.tr('dashboard.income'), amount: totalIncome, color: incomeColor, textPrimary: textPrimary, currency: baseCurrency),
               const SizedBox(width: 8),
-              // Badge gastos
-              Expanded(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: expenseColor.withValues(alpha: 0x15),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(
-                      color: expenseColor.withValues(alpha: 0x40),
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Gastos',
-                        style: GoogleFonts.inter(
-                          fontSize: 10,
-                          color: textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        _fmtAmount(totalExpense),
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: expenseColor,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+              _Badge(label: ref.tr('dashboard.expense'), amount: totalExpense, color: expenseColor, textPrimary: textPrimary, currency: baseCurrency),
               const SizedBox(width: 8),
-              // Badge balance
-              Expanded(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: (balancePositive ? incomeColor : expenseColor)
-                        .withValues(alpha: 0x15),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(
-                      color: (balancePositive ? incomeColor : expenseColor)
-                          .withValues(alpha: 0x40),
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Balance',
-                        style: GoogleFonts.inter(
-                          fontSize: 10,
-                          color: textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        '${balancePositive ? '+' : ''}${_fmtAmount(balance)}',
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: balancePositive ? incomeColor : expenseColor,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+              _Badge(label: 'Balance', amount: balance, color: balance >= 0 ? incomeColor : expenseColor, textPrimary: textPrimary, currency: baseCurrency, showPlus: balance >= 0),
             ],
           ),
           const SizedBox(height: 20),
-
-          // ── Gráfico de barras agrupadas ──────────────────────────────────
           SizedBox(
             height: 200,
             child: BarChart(
@@ -718,36 +373,22 @@ class _ReportsContent extends StatelessWidget {
                 maxY: maxValue > 0 ? maxValue * 1.25 : 100,
                 groupsSpace: 12,
                 barTouchData: BarTouchData(
-                  touchCallback: (event, response) {
-                    onBarTouch(
-                      response?.spot?.touchedBarGroupIndex ?? -1,
-                    );
-                  },
+                  touchCallback: (event, response) => onBarTouch(response?.spot?.touchedBarGroupIndex ?? -1),
                   touchTooltipData: BarTouchTooltipData(
-                    getTooltipColor: (_) => tooltipBg,
+                    getTooltipColor: (_) => isDark ? const Color(0xFF141928) : Colors.white,
                     tooltipBorder: BorderSide(color: border),
                     getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                      final monthData = data.last6Months[groupIndex];
-                      final monthName = _months[monthData.month - 1];
-                      final isIncome = rodIndex == 0;
+                      final mData = data.last6Months[groupIndex];
+                      final isInc = rodIndex == 0;
+                      final val = isInc ? mData.income : mData.expense;
                       return BarTooltipItem(
-                        '$monthName\n',
-                        GoogleFonts.inter(
-                          fontSize: 10,
-                          color: muted,
-                          fontWeight: FontWeight.w500,
-                        ),
+                        '${ref.tr('months.${_monthKeys[mData.month - 1]}')}\n',
+                        GoogleFonts.inter(fontSize: 10, color: muted, fontWeight: FontWeight.w500),
                         children: [
                           TextSpan(
-                            text: isIncome
-                                ? _fmtAmount(monthData.income)
-                                : _fmtAmount(monthData.expense),
-                            style: GoogleFonts.inter(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                              color: isIncome ? incomeColor : expenseColor,
-                            ),
-                          ),
+                            text: CurrencyFormatter.formatCompact(val, currency: baseCurrency),
+                            style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w700, color: isInc ? incomeColor : expenseColor),
+                          )
                         ],
                       );
                     },
@@ -761,18 +402,12 @@ class _ReportsContent extends StatelessWidget {
                       reservedSize: 22,
                       getTitlesWidget: (value, meta) {
                         final idx = value.toInt();
-                        if (idx < 0 || idx >= data.last6Months.length) {
-                          return const SizedBox.shrink();
-                        }
-                        final m = data.last6Months[idx].month;
+                        if (idx < 0 || idx >= data.last6Months.length) return const SizedBox.shrink();
                         return Padding(
                           padding: const EdgeInsets.only(top: 4),
                           child: Text(
-                            _months[m - 1],
-                            style: GoogleFonts.inter(
-                              fontSize: 10,
-                              color: muted,
-                            ),
+                            ref.tr('months.${_monthKeys[data.last6Months[idx].month - 1]}'),
+                            style: GoogleFonts.inter(fontSize: 10, color: muted),
                           ),
                         );
                       },
@@ -782,64 +417,30 @@ class _ReportsContent extends StatelessWidget {
                     sideTitles: SideTitles(
                       showTitles: true,
                       reservedSize: 42,
-                      getTitlesWidget: (value, meta) {
-                        if (value == 0) return const SizedBox.shrink();
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 4),
-                          child: Text(
-                            compact.format(value),
-                            style: GoogleFonts.inter(
-                              fontSize: 10,
-                              color: muted,
-                            ),
-                          ),
-                        );
-                      },
+                      getTitlesWidget: (v, m) => v == 0 ? const SizedBox.shrink() : Padding(padding: const EdgeInsets.only(right: 4), child: Text(compact.format(v), style: GoogleFonts.inter(fontSize: 10, color: muted))),
                     ),
                   ),
-                  topTitles: const AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
-                  ),
-                  rightTitles: const AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
-                  ),
+                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
                 ),
                 gridData: FlGridData(
                   show: true,
                   drawVerticalLine: false,
-                  getDrawingHorizontalLine: (_) => FlLine(
-                    color: gridLineColor,
-                    strokeWidth: 1,
-                    dashArray: [4, 4],
-                  ),
+                  getDrawingHorizontalLine: (_) => FlLine(color: isDark ? const Color(0xFF1E2840) : const Color(0xFFE2E6F0), strokeWidth: 1, dashArray: [4, 4]),
                 ),
                 borderData: FlBorderData(show: false),
-                barGroups: data.last6Months.asMap().entries.map((entry) {
-                  return BarChartGroupData(
-                    x: entry.key,
-                    barsSpace: 4,
-                    barRods: [
-                      // Barra verde — ingresos
-                      BarChartRodData(
-                        toY: entry.value.income,
-                        color: incomeColor,
-                        width: 10,
-                        borderRadius: const BorderRadius.vertical(
-                          top: Radius.circular(4),
-                        ),
-                      ),
-                      // Barra roja — gastos
-                      BarChartRodData(
-                        toY: entry.value.expense,
-                        color: expenseColor,
-                        width: 10,
-                        borderRadius: const BorderRadius.vertical(
-                          top: Radius.circular(4),
-                        ),
-                      ),
-                    ],
-                  );
-                }).toList(),
+                barGroups: data.last6Months
+                    .asMap()
+                    .entries
+                    .map((e) => BarChartGroupData(
+                          x: e.key,
+                          barsSpace: 4,
+                          barRods: [
+                            BarChartRodData(toY: e.value.income, color: incomeColor, width: 10, borderRadius: const BorderRadius.vertical(top: Radius.circular(4))),
+                            BarChartRodData(toY: e.value.expense, color: expenseColor, width: 10, borderRadius: const BorderRadius.vertical(top: Radius.circular(4))),
+                          ],
+                        ))
+                    .toList(),
               ),
             ),
           ),
@@ -848,123 +449,98 @@ class _ReportsContent extends StatelessWidget {
     );
   }
 
-  // ─── Card 4: Top 5 gastos del mes ─────────────────────────────────────────
-
-  Widget _buildTopExpensesCard(BuildContext context) {
+  Widget _buildTopExpensesCard(BuildContext context, CurrencyNotifier currencyNotifier, WidgetRef ref) {
     final categoryExpenses = data.categoryExpenses;
-    final totalExpense =
-        categoryExpenses.values.fold(0.0, (a, b) => a + b);
-
-    final sorted = categoryExpenses.entries.toList()
-      ..sort((a, b) => b.value.compareTo(a.value));
-
+    final totalExpense = categoryExpenses.values.fold(0.0, (a, b) => a + b);
+    final sorted = categoryExpenses.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
     final top5 = sorted.take(5).toList();
 
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: surface,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: border),
-      ),
+      decoration: BoxDecoration(color: surface, borderRadius: BorderRadius.circular(18), border: Border.all(color: border)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Top gastos del mes',
-            style: GoogleFonts.inter(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-              color: textPrimary,
-            ),
-          ),
+          Text(ref.tr('reports.expense_distribution'), style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700, color: textPrimary)),
           const SizedBox(height: 16),
           if (top5.isEmpty)
-            Center(
-              child: Text(
-                'Sin datos',
-                style: GoogleFonts.inter(color: muted),
-              ),
-            )
+            Center(child: Text(ref.tr('transactions.no_transactions'), style: GoogleFonts.inter(color: muted)))
           else
-            ...top5.map(
-              (entry) => _TopCategoryRow(
-                emoji: _catEmojis[entry.key] ?? '📊',
-                label: _catLabels[entry.key] ?? entry.key,
-                amount: entry.value,
-                percentage:
-                    totalExpense > 0 ? entry.value / totalExpense : 0,
-                color: _catColors[entry.key] ?? const Color(0xFF8892B0),
-                textPrimary: textPrimary,
-                muted: muted,
-                cardBg: cardBg,
-              ),
-            ),
+            ...top5.map((e) => _TopCategoryRow(
+                  emoji: _catEmojis[e.key] ?? '📊',
+                  label: ref.tr('categories.${e.key}'),
+                  amount: e.value,
+                  percentage: totalExpense > 0 ? e.value / totalExpense : 0,
+                  color: _catColors[e.key] ?? const Color(0xFF8892B0),
+                  textPrimary: textPrimary,
+                  muted: muted,
+                  cardBg: cardBg,
+                  currency: baseCurrency,
+                )),
         ],
       ),
     );
   }
 }
 
-// ─── _PieLegend ────────────────────────────────────────────────────────────
+class _Badge extends StatelessWidget {
+  final String label;
+  final double amount;
+  final Color color, textPrimary;
+  final AppCurrency currency;
+  final bool showPlus;
+  const _Badge({required this.label, required this.amount, required this.color, required this.textPrimary, required this.currency, this.showPlus = false});
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        decoration: BoxDecoration(color: color.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(10), border: Border.all(color: color.withValues(alpha: 0.25))),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(label, style: GoogleFonts.inter(fontSize: 10, color: textPrimary)),
+            const SizedBox(height: 2),
+            Row(children: [
+              if (showPlus) Text('+', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w700, color: color)),
+              Expanded(
+                child: CompactAmountText(
+                  amount: amount,
+                  currency: currency,
+                  style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w700, color: color),
+                ),
+              )
+            ]),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
 class _PieLegend extends StatelessWidget {
-  const _PieLegend({
-    required this.entries,
-    required this.totalExpense,
-    required this.textPrimary,
-    required this.muted,
-  });
-
+  const _PieLegend({required this.entries, required this.totalExpense, required this.textPrimary, required this.muted, required this.baseCurrency, required this.ref});
   final List<MapEntry<String, double>> entries;
   final double totalExpense;
-  final Color textPrimary;
-  final Color muted;
-
+  final Color textPrimary, muted;
+  final AppCurrency baseCurrency;
+  final WidgetRef ref;
   @override
   Widget build(BuildContext context) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: entries.take(6).map((entry) {
-        final cat = entry.key;
-        final amount = entry.value;
-        final pct = totalExpense > 0 ? amount / totalExpense : 0.0;
-        final catColor = _catColors[cat] ?? const Color(0xFF8892B0);
-        final catLabel = _catLabels[cat] ?? cat;
-
+      children: entries.take(6).map((e) {
+        final pct = totalExpense > 0 ? e.value / totalExpense : 0.0;
         return Padding(
           padding: const EdgeInsets.only(bottom: 6),
           child: Row(
             children: [
-              Container(
-                width: 8,
-                height: 8,
-                decoration: BoxDecoration(
-                  color: catColor,
-                  shape: BoxShape.circle,
-                ),
-              ),
+              Container(width: 8, height: 8, decoration: BoxDecoration(color: _catColors[e.key] ?? const Color(0xFF8892B0), shape: BoxShape.circle)),
               const SizedBox(width: 6),
-              Expanded(
-                child: Text(
-                  catLabel,
-                  style: GoogleFonts.inter(
-                    fontSize: 11,
-                    color: muted,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              Text(
-                '${(pct * 100).round()}%',
-                style: GoogleFonts.inter(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                  color: textPrimary,
-                ),
-              ),
+              Expanded(child: Text(ref.tr('categories.${e.key}'), style: GoogleFonts.inter(fontSize: 11, color: muted), overflow: TextOverflow.ellipsis)),
+              Text('${(pct * 100).round()}%', style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w700, color: textPrimary)),
             ],
           ),
         );
@@ -973,33 +549,14 @@ class _PieLegend extends StatelessWidget {
   }
 }
 
-// ─── _TopCategoryRow ───────────────────────────────────────────────────────
-
 class _TopCategoryRow extends StatelessWidget {
-  const _TopCategoryRow({
-    required this.emoji,
-    required this.label,
-    required this.amount,
-    required this.percentage,
-    required this.color,
-    required this.textPrimary,
-    required this.muted,
-    required this.cardBg,
-  });
-
-  final String emoji;
-  final String label;
-  final double amount;
-  final double percentage;
-  final Color color;
-  final Color textPrimary;
-  final Color muted;
-  final Color cardBg;
-
+  const _TopCategoryRow({required this.emoji, required this.label, required this.amount, required this.percentage, required this.color, required this.textPrimary, required this.muted, required this.cardBg, required this.currency});
+  final String emoji, label;
+  final double amount, percentage;
+  final Color color, textPrimary, muted, cardBg;
+  final AppCurrency currency;
   @override
   Widget build(BuildContext context) {
-    final pct = percentage.clamp(0.0, 1.0);
-
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
       child: Row(
@@ -1012,53 +569,18 @@ class _TopCategoryRow extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Text(
-                      label,
-                      style: GoogleFonts.inter(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: textPrimary,
-                      ),
-                    ),
+                    Text(label, style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w700, color: textPrimary)),
                     const Spacer(),
-                    Text(
-                      _fmtAmount(amount),
-                      style: GoogleFonts.inter(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: textPrimary,
-                      ),
-                    ),
+                    CompactAmountText(amount: amount, currency: currency, style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w700, color: textPrimary)),
                     const SizedBox(width: 6),
-                    Text(
-                      '${(percentage * 100).round()}%',
-                      style: GoogleFonts.inter(
-                        fontSize: 10,
-                        color: muted,
-                      ),
-                    ),
+                    Text('${(percentage * 100).round()}%', style: GoogleFonts.inter(fontSize: 10, color: muted)),
                   ],
                 ),
                 const SizedBox(height: 4),
                 Stack(
                   children: [
-                    Container(
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: cardBg,
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                    FractionallySizedBox(
-                      widthFactor: pct,
-                      child: Container(
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: color,
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                    ),
+                    Container(height: 4, decoration: BoxDecoration(color: cardBg, borderRadius: BorderRadius.circular(2))),
+                    FractionallySizedBox(widthFactor: percentage.clamp(0.0, 1.0), child: Container(height: 4, decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(2)))),
                   ],
                 ),
               ],
@@ -1069,4 +591,3 @@ class _TopCategoryRow extends StatelessWidget {
     );
   }
 }
-

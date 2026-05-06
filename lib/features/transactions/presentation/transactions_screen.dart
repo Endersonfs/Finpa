@@ -4,9 +4,14 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../core/constants/currencies.dart';
+import '../../../core/providers/currency_provider.dart';
+import '../../../core/utils/currency_formatter.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../accounts/providers/accounts_provider.dart';
 import '../domain/transaction.dart';
 import '../providers/transaction_provider.dart';
+import '../../../core/providers/language_provider.dart';
 
 // ── Constantes de categoría ───────────────────────────────────────────────────
 
@@ -57,16 +62,6 @@ const _kBgDark = <String, Color>{
 const _kFallbackBgLight = Color(0xFFF0F2F8);
 const _kFallbackBgDark = Color(0xFF1A2040);
 
-// ── Formato de moneda ─────────────────────────────────────────────────────────
-
-final _currencyFmt = NumberFormat.currency(
-  locale: 'es',
-  symbol: 'RD\$',
-  decimalDigits: 0,
-);
-
-// ── Screen ────────────────────────────────────────────────────────────────────
-
 class TransactionsScreen extends ConsumerStatefulWidget {
   const TransactionsScreen({super.key});
 
@@ -86,20 +81,21 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     super.dispose();
   }
 
-  String _dateHeader(DateTime date) {
+  String _dateHeader(DateTime date, WidgetRef ref) {
     final today = DateTime.now();
     if (date.year == today.year &&
         date.month == today.month &&
         date.day == today.day) {
-      return 'Hoy';
+      return 'Today';
     }
     final yesterday = today.subtract(const Duration(days: 1));
     if (date.year == yesterday.year &&
         date.month == yesterday.month &&
         date.day == yesterday.day) {
-      return 'Ayer';
+      return 'Yesterday';
     }
-    return DateFormat('d MMM', 'es').format(date);
+    final lang = ref.watch(languageNotifierProvider).locale.languageCode;
+    return DateFormat('d MMM', lang == 'es' ? 'es' : 'en').format(date);
   }
 
   List<Transaction> _applyFilters(List<Transaction> all) {
@@ -115,8 +111,6 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
               t.category.toLowerCase().contains(q))
           .toList();
     }
-    // Orden pila: primero por fecha de transacción desc,
-    // luego por cuándo se registró desc (última ingresada arriba).
     list.sort((a, b) {
       final byDate = b.date.compareTo(a.date);
       if (byDate != 0) return byDate;
@@ -125,11 +119,10 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     return list;
   }
 
-  // Agrupa la lista en un mapa ordenado: dateKey → List<Transaction>
-  Map<String, List<Transaction>> _groupByDate(List<Transaction> list) {
+  Map<String, List<Transaction>> _groupByDate(List<Transaction> list, WidgetRef ref) {
     final map = <String, List<Transaction>>{};
     for (final t in list) {
-      final key = _dateHeader(t.date);
+      final key = _dateHeader(t.date, ref);
       (map[key] ??= []).add(t);
     }
     return map;
@@ -140,18 +133,20 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     final c = Theme.of(context).extension<FinPaColors>()!;
     final cs = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final currencyState = ref.watch(currencyNotifierProvider);
 
     return Scaffold(
-      appBar: _buildAppBar(c, cs, isDark),
+      appBar: _buildAppBar(c, cs, isDark, ref),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (_showSearch) _SearchBar(controller: _searchCtrl, onChanged: (v) => setState(() => _search = v)),
+          if (_showSearch) _SearchBar(controller: _searchCtrl, onChanged: (v) => setState(() => _search = v), ref: ref),
           _FilterChips(
             current: _filter,
             onChanged: (v) => setState(() => _filter = v),
             c: c,
             cs: cs,
+            ref: ref,
           ),
           _SummaryCards(c: c, cs: cs),
           const SizedBox(height: 8),
@@ -159,10 +154,11 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
             filter: _filter,
             search: _search,
             applyFilters: _applyFilters,
-            groupByDate: _groupByDate,
+            groupByDate: (list) => _groupByDate(list, ref),
             c: c,
             cs: cs,
             isDark: isDark,
+            baseCurrency: currencyState.baseCurrency,
           )),
         ],
       ),
@@ -172,17 +168,17 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
         foregroundColor: Colors.white,
         icon: const Icon(Icons.add),
         label: Text(
-          'Agregar',
+          ref.tr('common.add'),
           style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14),
         ),
       ),
     );
   }
 
-  AppBar _buildAppBar(FinPaColors c, ColorScheme cs, bool isDark) {
+  AppBar _buildAppBar(FinPaColors c, ColorScheme cs, bool isDark, WidgetRef ref) {
     return AppBar(
       title: Text(
-        'Movimientos',
+        ref.tr('transactions.title'),
         style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 17),
       ),
       actions: [
@@ -200,60 +196,16 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
             });
           },
         ),
-        IconButton(
-          icon: const Icon(Icons.tune_rounded),
-          onPressed: () => _showFilterSheet(context, c, cs),
-        ),
       ],
-    );
-  }
-
-  void _showFilterSheet(BuildContext context, FinPaColors c, ColorScheme cs) {
-    showModalBottomSheet(
-      context: context,
-      builder: (_) => Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 36,
-              height: 4,
-              decoration: BoxDecoration(
-                color: c.muted,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              'Filtros avanzados',
-              style: GoogleFonts.inter(
-                fontWeight: FontWeight.w700,
-                fontSize: 16,
-                color: cs.onSurface,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'El filtro por rango de fechas estara disponible proximamente.',
-              style: GoogleFonts.inter(color: c.muted, fontSize: 14),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-          ],
-        ),
-      ),
     );
   }
 }
 
-// ── Search bar ────────────────────────────────────────────────────────────────
-
 class _SearchBar extends StatelessWidget {
   final TextEditingController controller;
   final ValueChanged<String> onChanged;
-
-  const _SearchBar({required this.controller, required this.onChanged});
+  final WidgetRef ref;
+  const _SearchBar({required this.controller, required this.onChanged, required this.ref});
 
   @override
   Widget build(BuildContext context) {
@@ -266,7 +218,7 @@ class _SearchBar extends StatelessWidget {
         autofocus: true,
         style: GoogleFonts.inter(fontSize: 14),
         decoration: InputDecoration(
-          hintText: 'Buscar transacciones...',
+          hintText: ref.tr('common.search'),
           prefixIcon: Icon(Icons.search, color: c.muted, size: 20),
           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         ),
@@ -275,19 +227,19 @@ class _SearchBar extends StatelessWidget {
   }
 }
 
-// ── Filter chips ──────────────────────────────────────────────────────────────
-
 class _FilterChips extends StatelessWidget {
   final TransactionType? current;
   final ValueChanged<TransactionType?> onChanged;
   final FinPaColors c;
   final ColorScheme cs;
+  final WidgetRef ref;
 
   const _FilterChips({
     required this.current,
     required this.onChanged,
     required this.c,
     required this.cs,
+    required this.ref,
   });
 
   @override
@@ -298,29 +250,11 @@ class _FilterChips extends StatelessWidget {
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         children: [
-          _Chip(
-            label: 'Todo',
-            active: current == null,
-            onTap: () => onChanged(null),
-            c: c,
-            cs: cs,
-          ),
+          _Chip(label: 'All', active: current == null, onTap: () => onChanged(null), c: c, cs: cs),
           const SizedBox(width: 8),
-          _Chip(
-            label: 'Ingresos',
-            active: current == TransactionType.income,
-            onTap: () => onChanged(TransactionType.income),
-            c: c,
-            cs: cs,
-          ),
+          _Chip(label: ref.tr('transactions.income'), active: current == TransactionType.income, onTap: () => onChanged(TransactionType.income), c: c, cs: cs),
           const SizedBox(width: 8),
-          _Chip(
-            label: 'Gastos',
-            active: current == TransactionType.expense,
-            onTap: () => onChanged(TransactionType.expense),
-            c: c,
-            cs: cs,
-          ),
+          _Chip(label: ref.tr('transactions.expense'), active: current == TransactionType.expense, onTap: () => onChanged(TransactionType.expense), c: c, cs: cs),
         ],
       ),
     );
@@ -333,14 +267,7 @@ class _Chip extends StatelessWidget {
   final VoidCallback onTap;
   final FinPaColors c;
   final ColorScheme cs;
-
-  const _Chip({
-    required this.label,
-    required this.active,
-    required this.onTap,
-    required this.c,
-    required this.cs,
-  });
+  const _Chip({required this.label, required this.active, required this.onTap, required this.c, required this.cs});
 
   @override
   Widget build(BuildContext context) {
@@ -353,9 +280,7 @@ class _Chip extends StatelessWidget {
         decoration: BoxDecoration(
           color: active ? const Color(0xFF2F7155) : cs.surface,
           borderRadius: BorderRadius.circular(20),
-          border: active
-              ? null
-              : Border.all(color: c.border),
+          border: active ? null : Border.all(color: c.border),
         ),
         alignment: Alignment.center,
         child: Text(
@@ -371,17 +296,15 @@ class _Chip extends StatelessWidget {
   }
 }
 
-// ── Summary cards ─────────────────────────────────────────────────────────────
-
 class _SummaryCards extends ConsumerWidget {
   final FinPaColors c;
   final ColorScheme cs;
-
   const _SummaryCards({required this.c, required this.cs});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final summaryAsync = ref.watch(monthlySummaryProvider);
+    final currencyState = ref.watch(currencyNotifierProvider);
     final data = summaryAsync.valueOrNull;
 
     return Padding(
@@ -390,23 +313,25 @@ class _SummaryCards extends ConsumerWidget {
         children: [
           Expanded(
             child: _SummaryCard(
-              label: 'Ingresos',
+              label: ref.tr('transactions.income'),
               amount: data?['income'],
               icon: Icons.arrow_upward_rounded,
               color: c.income,
               c: c,
               cs: cs,
+              currency: currencyState.baseCurrency,
             ),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: _SummaryCard(
-              label: 'Gastos',
+              label: ref.tr('transactions.expense'),
               amount: data?['expense'],
               icon: Icons.arrow_downward_rounded,
               color: c.expense,
               c: c,
               cs: cs,
+              currency: currencyState.baseCurrency,
             ),
           ),
         ],
@@ -422,36 +347,20 @@ class _SummaryCard extends StatelessWidget {
   final Color color;
   final FinPaColors c;
   final ColorScheme cs;
+  final AppCurrency currency;
 
-  const _SummaryCard({
-    required this.label,
-    required this.amount,
-    required this.icon,
-    required this.color,
-    required this.c,
-    required this.cs,
-  });
+  const _SummaryCard({required this.label, required this.amount, required this.icon, required this.color, required this.c, required this.cs, required this.currency});
 
   @override
   Widget build(BuildContext context) {
-    final isLoading = amount == null;
-
     return Container(
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: c.border),
-      ),
+      decoration: BoxDecoration(color: cs.surface, borderRadius: BorderRadius.circular(12), border: Border.all(color: c.border)),
       child: Row(
         children: [
           Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              color: color.withAlpha(26),
-              borderRadius: BorderRadius.circular(8),
-            ),
+            width: 32, height: 32,
+            decoration: BoxDecoration(color: color.withAlpha(26), borderRadius: BorderRadius.circular(8)),
             child: Icon(icon, color: color, size: 16),
           ),
           const SizedBox(width: 8),
@@ -459,25 +368,14 @@ class _SummaryCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  label,
-                  style: GoogleFonts.inter(
-                    fontSize: 11,
-                    color: c.muted,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
+                Text(label, style: GoogleFonts.inter(fontSize: 11, color: c.muted, fontWeight: FontWeight.w500)),
                 const SizedBox(height: 2),
-                if (isLoading)
+                if (amount == null)
                   _SkeletonBox(width: 60, height: 12, radius: 4)
                 else
                   Text(
-                    _currencyFmt.format(amount),
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: color,
-                    ),
+                    CurrencyFormatter.format(amount!, currency: currency),
+                    style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w700, color: color),
                     overflow: TextOverflow.ellipsis,
                   ),
               ],
@@ -489,8 +387,6 @@ class _SummaryCard extends StatelessWidget {
   }
 }
 
-// ── Transaction list ──────────────────────────────────────────────────────────
-
 class _TransactionList extends ConsumerWidget {
   final TransactionType? filter;
   final String search;
@@ -499,29 +395,22 @@ class _TransactionList extends ConsumerWidget {
   final FinPaColors c;
   final ColorScheme cs;
   final bool isDark;
+  final AppCurrency baseCurrency;
 
-  const _TransactionList({
-    required this.filter,
-    required this.search,
-    required this.applyFilters,
-    required this.groupByDate,
-    required this.c,
-    required this.cs,
-    required this.isDark,
-  });
+  const _TransactionList({required this.filter, required this.search, required this.applyFilters, required this.groupByDate, required this.c, required this.cs, required this.isDark, required this.baseCurrency});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final txAsync = ref.watch(transactionsProvider);
+    final accounts = ref.watch(accountsStreamProvider).valueOrNull ?? [];
+    final currencyNotifier = ref.read(currencyNotifierProvider.notifier);
 
     return txAsync.when(
       loading: () => _LoadingList(c: c, cs: cs),
-      error: (e, _) => _ErrorState(error: e.toString(), onRetry: () => ref.invalidate(transactionsProvider)),
+      error: (e, _) => Center(child: Text(e.toString())),
       data: (all) {
         final filtered = applyFilters(all);
-        if (filtered.isEmpty) {
-          return _EmptyState(c: c, cs: cs);
-        }
+        if (filtered.isEmpty) return Center(child: Text(ref.tr('transactions.no_transactions')));
         final groups = groupByDate(filtered);
         final keys = groups.keys.toList();
 
@@ -529,22 +418,23 @@ class _TransactionList extends ConsumerWidget {
           padding: const EdgeInsets.only(bottom: 100),
           itemCount: keys.fold<int>(0, (sum, k) => sum + 1 + (groups[k]?.length ?? 0)),
           itemBuilder: (context, index) {
-            // Flatten groups into a single list of headers + items
             int cursor = 0;
             for (final key in keys) {
               final items = groups[key]!;
-              if (index == cursor) {
-                // Header
-                return _DateHeader(label: key, c: c, cs: cs);
-              }
+              if (index == cursor) return _DateHeader(label: key, c: c, cs: cs);
               cursor++;
               if (index < cursor + items.length) {
                 final tx = items[index - cursor];
+                final account = accounts.where((a) => a.id == tx.accountId).firstOrNull;
+                final transactionCurrency = account?.currency ?? AppCurrency.dop;
+                final displayAmount = currencyNotifier.convert(tx.amount, transactionCurrency, baseCurrency);
+
                 return _TransactionTile(
                   transaction: tx,
-                  c: c,
-                  cs: cs,
-                  isDark: isDark,
+                  displayAmount: displayAmount,
+                  displayCurrency: baseCurrency,
+                  c: c, cs: cs, isDark: isDark,
+                  ref: ref,
                 );
               }
               cursor += items.length;
@@ -557,46 +447,31 @@ class _TransactionList extends ConsumerWidget {
   }
 }
 
-// ── Date header ───────────────────────────────────────────────────────────────
-
 class _DateHeader extends StatelessWidget {
   final String label;
   final FinPaColors c;
   final ColorScheme cs;
-
   const _DateHeader({required this.label, required this.c, required this.cs});
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 6),
-      child: Text(
-        label,
-        style: GoogleFonts.inter(
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-          color: c.muted,
-          letterSpacing: 0.3,
-        ),
-      ),
+      child: Text(label, style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: c.muted)),
     );
   }
 }
 
-// ── Transaction tile ──────────────────────────────────────────────────────────
-
 class _TransactionTile extends StatelessWidget {
   final Transaction transaction;
+  final double displayAmount;
+  final AppCurrency displayCurrency;
   final FinPaColors c;
   final ColorScheme cs;
   final bool isDark;
+  final WidgetRef ref;
 
-  const _TransactionTile({
-    required this.transaction,
-    required this.c,
-    required this.cs,
-    required this.isDark,
-  });
+  const _TransactionTile({required this.transaction, required this.displayAmount, required this.displayCurrency, required this.c, required this.cs, required this.isDark, required this.ref});
 
   @override
   Widget build(BuildContext context) {
@@ -607,300 +482,88 @@ class _TransactionTile extends StatelessWidget {
     final amountColor = t.isIncome ? c.income : c.expense;
     final prefix = t.isIncome ? '+' : '-';
     final timeStr = DateFormat('HH:mm').format(t.date);
-    final label = t.description?.isNotEmpty == true
-        ? t.description!
-        : _categoryLabel(t.category);
 
     return GestureDetector(
       onTap: () => context.push('/transactions/${t.id}'),
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 3, horizontal: 16),
         padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: cs.surface,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: c.border),
-        ),
+        decoration: BoxDecoration(color: cs.surface, borderRadius: BorderRadius.circular(10), border: Border.all(color: c.border)),
         child: Row(
           children: [
-            // Emoji box
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: emojiBoxBg,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              alignment: Alignment.center,
-              child: Text(emoji, style: const TextStyle(fontSize: 18)),
-            ),
+            Container(width: 40, height: 40, decoration: BoxDecoration(color: emojiBoxBg, borderRadius: BorderRadius.circular(10)), alignment: Alignment.center, child: Text(emoji, style: const TextStyle(fontSize: 18))),
             const SizedBox(width: 12),
-            // Description & category·time
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    label,
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: cs.onSurface,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                  Text(t.description?.isNotEmpty == true ? t.description! : ref.tr('categories.${t.category}'), style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: cs.onSurface), overflow: TextOverflow.ellipsis),
                   const SizedBox(height: 2),
-                  Text(
-                    '${_categoryLabel(t.category)} · $timeStr',
-                    style: GoogleFonts.inter(
-                      fontSize: 11,
-                      color: c.muted,
-                    ),
-                  ),
+                  Text('${ref.tr('categories.${t.category}')} · $timeStr', style: GoogleFonts.inter(fontSize: 11, color: c.muted)),
                 ],
               ),
             ),
-            // Amount
             Text(
-              '$prefix${_currencyFmt.format(t.amount)}',
-              style: GoogleFonts.inter(
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-                color: amountColor,
-              ),
+              '$prefix${CurrencyFormatter.format(displayAmount, currency: displayCurrency)}',
+              style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w700, color: amountColor),
             ),
           ],
         ),
       ),
     );
   }
-
-  String _categoryLabel(String cat) {
-    const labels = <String, String>{
-      'food': 'Comida',
-      'transport': 'Transporte',
-      'entertainment': 'Entretenimiento',
-      'services': 'Servicios',
-      'health': 'Salud',
-      'salary': 'Salario',
-      'freelance': 'Freelance',
-      'shopping': 'Compras',
-      'investment': 'Inversion',
-      'gift': 'Regalo',
-      'education': 'Educacion',
-      'housing': 'Hogar',
-      'clothing': 'Ropa',
-      'business': 'Negocio',
-      'other': 'Otros',
-    };
-    return labels[cat] ?? cat;
-  }
 }
-
-// ── Skeleton list (loading) ───────────────────────────────────────────────────
 
 class _LoadingList extends StatelessWidget {
   final FinPaColors c;
   final ColorScheme cs;
-
   const _LoadingList({required this.c, required this.cs});
 
   @override
   Widget build(BuildContext context) {
-    return ListView.builder(
-      padding: const EdgeInsets.only(top: 8),
-      itemCount: 5,
-      itemBuilder: (context, i) => _TileSkeleton(c: c, cs: cs),
-    );
+    return ListView.builder(padding: const EdgeInsets.only(top: 8), itemCount: 5, itemBuilder: (context, i) => _TileSkeleton(c: c, cs: cs));
   }
 }
 
 class _TileSkeleton extends StatefulWidget {
   final FinPaColors c;
   final ColorScheme cs;
-
   const _TileSkeleton({required this.c, required this.cs});
 
   @override
   State<_TileSkeleton> createState() => _TileSkeletonState();
 }
 
-class _TileSkeletonState extends State<_TileSkeleton>
-    with SingleTickerProviderStateMixin {
+class _TileSkeletonState extends State<_TileSkeleton> with SingleTickerProviderStateMixin {
   late final AnimationController _ctrl;
   late final Animation<double> _anim;
 
   @override
   void initState() {
     super.initState();
-    _ctrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 900),
-    )..repeat(reverse: true);
-    _anim = Tween<double>(begin: 0.4, end: 1.0).animate(
-      CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut),
-    );
+    _ctrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 900))..repeat(reverse: true);
+    _anim = Tween<double>(begin: 0.4, end: 1.0).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut));
   }
 
   @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
+  void dispose() { _ctrl.dispose(); super.dispose(); }
 
   @override
   Widget build(BuildContext context) {
-    final c = widget.c;
-    final cs = widget.cs;
     return AnimatedBuilder(
       animation: _anim,
-      builder: (context, child) => Opacity(
-        opacity: _anim.value,
-        child: Container(
-          margin: const EdgeInsets.symmetric(vertical: 3, horizontal: 16),
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: cs.surface,
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: c.border),
-          ),
-          child: Row(
-            children: [
-              _SkeletonBox(width: 40, height: 40, radius: 10),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _SkeletonBox(width: 120, height: 12, radius: 4),
-                    const SizedBox(height: 6),
-                    _SkeletonBox(width: 80, height: 10, radius: 4),
-                  ],
-                ),
-              ),
-              _SkeletonBox(width: 64, height: 12, radius: 4),
-            ],
-          ),
-        ),
-      ),
+      builder: (context, child) => Opacity(opacity: _anim.value, child: Container(margin: const EdgeInsets.symmetric(vertical: 3, horizontal: 16), padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: widget.cs.surface, borderRadius: BorderRadius.circular(10), border: Border.all(color: widget.c.border)), child: Row(children: [_SkeletonBox(width: 40, height: 40, radius: 10), const SizedBox(width: 12), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [_SkeletonBox(width: 120, height: 12, radius: 4), const SizedBox(height: 6), _SkeletonBox(width: 80, height: 10, radius: 4)])), _SkeletonBox(width: 64, height: 12, radius: 4)]))),
     );
   }
 }
 
-// ── Skeleton box ──────────────────────────────────────────────────────────────
-
 class _SkeletonBox extends StatelessWidget {
-  final double width;
-  final double height;
-  final double radius;
-
-  const _SkeletonBox({
-    required this.width,
-    required this.height,
-    required this.radius,
-  });
+  final double width, height, radius;
+  const _SkeletonBox({required this.width, required this.height, required this.radius});
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      width: width,
-      height: height,
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E2840) : const Color(0xFFE2E6F0),
-        borderRadius: BorderRadius.circular(radius),
-      ),
-    );
+    return Container(width: width, height: height, decoration: BoxDecoration(color: isDark ? const Color(0xFF1E2840) : const Color(0xFFE2E6F0), borderRadius: BorderRadius.circular(radius)));
   }
 }
-
-// ── Error state ───────────────────────────────────────────────────────────────
-
-class _ErrorState extends StatelessWidget {
-  final String error;
-  final VoidCallback onRetry;
-
-  const _ErrorState({required this.error, required this.onRetry});
-
-  @override
-  Widget build(BuildContext context) {
-    final c = Theme.of(context).extension<FinPaColors>()!;
-    final cs = Theme.of(context).colorScheme;
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.error_outline_rounded, size: 48, color: c.expense),
-            const SizedBox(height: 16),
-            Text(
-              'No se pudieron cargar las transacciones',
-              textAlign: TextAlign.center,
-              style: GoogleFonts.inter(
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-                color: cs.onSurface,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              error,
-              textAlign: TextAlign.center,
-              style: GoogleFonts.inter(fontSize: 12, color: c.muted),
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 20),
-            OutlinedButton.icon(
-              onPressed: onRetry,
-              icon: const Icon(Icons.refresh_rounded),
-              label: const Text('Reintentar'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ── Empty state ───────────────────────────────────────────────────────────────
-
-class _EmptyState extends StatelessWidget {
-  final FinPaColors c;
-  final ColorScheme cs;
-
-  const _EmptyState({required this.c, required this.cs});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            Icons.receipt_long_outlined,
-            size: 56,
-            color: c.muted,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Sin transacciones',
-            style: GoogleFonts.inter(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: cs.onSurface,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            'Agrega tu primera transaccion con el boton +',
-            style: GoogleFonts.inter(fontSize: 13, color: c.muted),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
-}
-

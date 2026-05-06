@@ -21,10 +21,18 @@ enum AppCurrency {
     }
   }
 
+  String get labelKey {
+    switch (this) {
+      case AppCurrency.dop: return 'currencies.dop';
+      case AppCurrency.usd: return 'currencies.usd';
+      case AppCurrency.eur: return 'currencies.eur';
+    }
+  }
+
   String get label {
     switch (this) {
-      case AppCurrency.dop: return 'Peso Dominicano';
-      case AppCurrency.usd: return 'Dólar Estadounidense';
+      case AppCurrency.dop: return 'Dominican Peso';
+      case AppCurrency.usd: return 'US Dollar';
       case AppCurrency.eur: return 'Euro';
     }
   }

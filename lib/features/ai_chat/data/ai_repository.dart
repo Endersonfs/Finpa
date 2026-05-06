@@ -9,7 +9,7 @@ class AiRepository {
   const AiRepository();
 
   static const _apiUrl = 'https://api.anthropic.com/v1/messages';
-  static const _model = 'claude-sonnet-4-20250514';
+  static const _model = 'claude-3-5-sonnet-20240620';
 
   String get _apiKey => dotenv.env['ANTHROPIC_API_KEY'] ?? '';
 
@@ -18,17 +18,37 @@ class AiRepository {
     double? income,
     double? expenses,
     String languageCode = 'es',
+    String currencySymbol = 'RD\$',
   }) {
     final isEn = languageCode == 'en';
     final langName = isEn ? 'English' : 'Spanish (Dominican style)';
     
+    if (isEn) {
+      return '''You are FinPa AI, the personal financial advisor of the FinPa app.
+You are friendly, empathetic, and an expert in personal finance for the Dominican Republic.
+
+USER DATA (current month):
+- Balance: $currencySymbol${balance?.toStringAsFixed(0) ?? 'N/A'}
+- Income: $currencySymbol${income?.toStringAsFixed(0) ?? 'N/A'}
+- Expenses: $currencySymbol${expenses?.toStringAsFixed(0) ?? 'N/A'}
+
+INSTRUCTIONS:
+- ALWAYS respond in $langName.
+- Maximum 120 words per response.
+- Give concrete and actionable advice.
+- Use user data when relevant.
+- If you detect a bad financial habit, be empathetic but direct.
+- Never recommend specific financial products by name.
+- End with a follow-up question when appropriate.''';
+    }
+
     return '''Eres FinPa IA, el asesor financiero personal de la app FinPa.
 Eres amigable, empático y experto en finanzas personales para la República Dominicana.
 
 DATOS DEL USUARIO (mes actual):
-- Balance: RD\$${balance?.toStringAsFixed(0) ?? 'N/D'}
-- Ingresos: RD\$${income?.toStringAsFixed(0) ?? 'N/D'}
-- Gastos: RD\$${expenses?.toStringAsFixed(0) ?? 'N/D'}
+- Balance: $currencySymbol${balance?.toStringAsFixed(0) ?? 'N/D'}
+- Ingresos: $currencySymbol${income?.toStringAsFixed(0) ?? 'N/D'}
+- Gastos: $currencySymbol${expenses?.toStringAsFixed(0) ?? 'N/D'}
 
 INSTRUCCIONES:
 - Responde SIEMPRE en $langName.
@@ -48,6 +68,7 @@ INSTRUCCIONES:
     double? income,
     double? expenses,
     String languageCode = 'es',
+    String currencySymbol = 'RD\$',
   }) async {
     if (_apiKey.isEmpty) {
       await Future.delayed(const Duration(milliseconds: 800));
@@ -77,6 +98,7 @@ INSTRUCCIONES:
           income: income,
           expenses: expenses,
           languageCode: languageCode,
+          currencySymbol: currencySymbol,
         ),
         'messages': messages,
       }),
@@ -101,6 +123,7 @@ INSTRUCCIONES:
     double? expenses,
     List<String>? topCategories,
     String languageCode = 'es',
+    String currencySymbol = 'RD\$',
   }) async {
     if (_apiKey.isEmpty) {
       await Future.delayed(const Duration(milliseconds: 700));
@@ -132,7 +155,7 @@ INSTRUCCIONES:
           {
             'role': 'user',
             'content':
-                'Give me a tip based on: balance RD\$${balance?.toStringAsFixed(0) ?? "N/A"}, income RD\$${income?.toStringAsFixed(0) ?? "N/A"}, expenses RD\$${expenses?.toStringAsFixed(0) ?? "N/A"}.',
+                'Give me a tip based on: balance $currencySymbol${balance?.toStringAsFixed(0) ?? "N/A"}, income $currencySymbol${income?.toStringAsFixed(0) ?? "N/A"}, expenses $currencySymbol${expenses?.toStringAsFixed(0) ?? "N/A"}.',
           }
         ],
       }),
@@ -144,40 +167,25 @@ INSTRUCCIONES:
     return (data['content'] as List<dynamic>)[0]['text'] as String;
   }
 
-  // ── Fallbacks locales (sin API key) ───────────────────────────────────────
+  String _localFallback(String userMessage, String languageCode) {
+    return languageCode == 'en'
+      ? 'I understand your query. To give you the best advice, I need you to activate the integration with FinPa AI by configuring your API key in the .env file. Do you have any specific questions about your finances?'
+      : 'Entiendo tu consulta. Para darte el mejor consejo, necesito que actives la integración con FinPa IA configurando tu API key en el archivo .env. ¿Tienes alguna pregunta específica sobre tus finanzas?';
+  }
 
   static const _fallbackTipsEs = [
-    'Registra todos tus gastos diariamente para tener control total de tus finanzas.',
-    'Destina al menos el 20% de tus ingresos al ahorro antes de gastar.',
-    'Revisa tus suscripciones activas — podrías estar pagando por servicios que no usas.',
-    'La regla 50/30/20: 50% necesidades, 30% deseos, 20% ahorro.',
-    'Construye un fondo de emergencia de 3-6 meses de gastos básicos.',
+    'Ahorra al menos el 10% de tus ingresos cada mes para construir un fondo de emergencia.',
+    'Revisa tus suscripciones activas; podrías estar pagando por servicios que ya no utilizas.',
+    'Evita las compras impulsivas esperando 24 horas antes de adquirir algo que no sea de primera necesidad.',
+    'Prioriza el pago de las deudas con las tasas de interés más altas para ahorrar dinero a largo plazo.',
+    'Usa FinPa para registrar cada pequeño gasto; la suma de los "gastos hormiga" te sorprenderá.',
   ];
 
   static const _fallbackTipsEn = [
-    'Track all your expenses daily to have total control of your finances.',
-    'Allocate at least 20% of your income to savings before spending.',
-    'Check your active subscriptions — you could be paying for services you don\'t use.',
-    'The 50/30/20 rule: 50% needs, 30% wants, 20% savings.',
-    'Build an emergency fund of 3-6 months of basic expenses.',
+    'Save at least 10% of your income each month to build an emergency fund.',
+    'Review your active subscriptions; you might be paying for services you no longer use.',
+    'Avoid impulsive purchases by waiting 24 hours before buying non-essential items.',
+    'Prioritize paying off debts with the highest interest rates to save money in the long run.',
+    'Use FinPa to track every small expense; the total of "ghost expenses" will surprise you.',
   ];
-
-  static String _localFallback(String message, String languageCode) {
-    final msg = message.toLowerCase();
-    final isEn = languageCode == 'en';
-    
-    if (msg.contains('presupuesto') || msg.contains('budget') || msg.contains('gastos') || msg.contains('expenses')) {
-      return isEn 
-        ? 'Tracking your expenses is the first step to improve your finances. I recommend checking the Budget section to see how you are doing this month. Is there a specific category that concerns you?'
-        : 'Llevar un registro de tus gastos es el primer paso para mejorar tus finanzas. Te recomiendo revisar la sección de Presupuesto para ver cómo vas este mes. ¿Hay alguna categoría específica que te preocupe?';
-    }
-    if (msg.contains('ahorro') || msg.contains('savings') || msg.contains('meta') || msg.contains('goal')) {
-      return isEn
-        ? 'Saving is the most important financial habit. Even small amounts can make a big difference in the long run. Do you have a specific savings goal?'
-        : 'El ahorro es el hábito financiero más importante. Incluso pequeñas cantidades pueden hacer una gran diferencia a largo plazo. ¿Tienes alguna meta de ahorro específica?';
-    }
-    return isEn
-      ? 'I understand your query. To give you the best advice, I need you to activate the FinPa IA integration by configuring your API key in the .env file. Do you have any specific questions about your finances?'
-      : 'Entiendo tu consulta. Para darte el mejor consejo, necesito que actives la integración con FinPa IA configurando tu API key en el archivo .env. ¿Tienes alguna pregunta específica sobre tus finanzas?';
-  }
 }

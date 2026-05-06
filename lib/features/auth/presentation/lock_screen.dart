@@ -7,6 +7,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/theme/app_theme.dart';
 import '../providers/biometric_provider.dart';
 import '../providers/session_provider.dart';
+import '../../../core/providers/language_provider.dart';
 
 class LockScreen extends ConsumerStatefulWidget {
   const LockScreen({super.key});
@@ -44,7 +45,7 @@ class _LockScreenState extends ConsumerState<LockScreen> {
         context.go('/dashboard');
       } else {
         setState(() =>
-            _errorMessage = 'No se pudo verificar tu identidad. Intenta de nuevo.');
+            _errorMessage = 'Could not verify identity. Try again.');
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -57,7 +58,7 @@ class _LockScreenState extends ConsumerState<LockScreen> {
     final email =
         Supabase.instance.client.auth.currentUser?.email ?? '';
     if (email.isEmpty || _passCtrl.text.isEmpty) {
-      setState(() => _errorMessage = 'Ingresa tu contraseña');
+      setState(() => _errorMessage = ref.tr('auth.password_required'));
       return;
     }
     setState(() {
@@ -79,7 +80,7 @@ class _LockScreenState extends ConsumerState<LockScreen> {
     } catch (_) {
       if (mounted) {
         setState(
-            () => _errorMessage = 'Error inesperado. Intenta nuevamente.');
+            () => _errorMessage = ref.tr('common.error'));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -163,7 +164,7 @@ class _LockScreenState extends ConsumerState<LockScreen> {
               ),
               const SizedBox(height: 6),
               Text(
-                'Sesión bloqueada',
+                ref.tr('auth.session_locked'),
                 style: GoogleFonts.inter(
                   fontSize: 13,
                   color: c.muted,
@@ -256,7 +257,7 @@ class _LockScreenState extends ConsumerState<LockScreen> {
                       color: textPrimary,
                     ),
                     decoration: InputDecoration(
-                      hintText: 'Contraseña',
+                      hintText: ref.tr('auth.password'),
                       hintStyle: GoogleFonts.inter(
                         fontSize: 14,
                         color: c.muted,
@@ -310,7 +311,7 @@ class _LockScreenState extends ConsumerState<LockScreen> {
                             ),
                           )
                         : Text(
-                            'Continuar',
+                            ref.tr('common.confirm'),
                             style: GoogleFonts.inter(
                               fontSize: 15,
                               fontWeight: FontWeight.w600,
@@ -332,7 +333,7 @@ class _LockScreenState extends ConsumerState<LockScreen> {
                         : _authenticateWithBiometrics,
                     icon: Icon(biometricIcon, size: 22),
                     label: Text(
-                      'Usar huella / Face ID',
+                      'Use Biometrics',
                       style: GoogleFonts.inter(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
@@ -373,7 +374,7 @@ class _LockScreenState extends ConsumerState<LockScreen> {
                           : const Color(0xFF2F7155),
                     ),
                     label: Text(
-                      'Ingresar con contraseña',
+                      ref.tr('auth.login_with_password'),
                       style: GoogleFonts.inter(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
@@ -397,7 +398,7 @@ class _LockScreenState extends ConsumerState<LockScreen> {
               TextButton(
                 onPressed: _isLoading ? null : _signOut,
                 child: Text(
-                  'Cerrar sesión',
+                  ref.tr('settings.logout'),
                   style: GoogleFonts.inter(
                     fontSize: 13,
                     color: c.expense,
@@ -413,4 +414,3 @@ class _LockScreenState extends ConsumerState<LockScreen> {
     );
   }
 }
-

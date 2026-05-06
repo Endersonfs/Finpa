@@ -186,7 +186,7 @@ class SettingsScreen extends ConsumerWidget {
               contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
               leading: Text(currency.flag, style: const TextStyle(fontSize: 24)),
               title: Text(
-                currency.label,
+                ref.tr(currency.labelKey),
                 style: GoogleFonts.inter(fontWeight: FontWeight.w600),
               ),
               trailing: currency == current
@@ -198,7 +198,7 @@ class SettingsScreen extends ConsumerWidget {
                 
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('${ref.tr('settings.main_currency')}: ${currency.label}'),
+                    content: Text('${ref.tr('settings.main_currency')}: ${ref.tr(currency.labelKey)}'),
                     behavior: SnackBarBehavior.floating,
                   ),
                 );

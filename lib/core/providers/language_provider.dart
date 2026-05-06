@@ -54,10 +54,8 @@ class LanguageNotifier extends _$LanguageNotifier {
     final prefs = ref.watch(sharedPrefsProvider);
     final savedLang = prefs.getString(_prefKey) ?? 'es';
     
-    // Inicializamos con un mapa vacío, las traducciones se cargarán en el constructor
-    // o mediante un método asíncrono. En build de Riverpod debe ser síncrono.
-    // Usaremos un truco: cargar las traducciones base (es) por defecto si es posible
-    // o disparar la carga asíncrona.
+    // Disparar la carga asíncrona inmediatamente
+    Future.microtask(() => loadTranslations());
     
     return LanguageState(
       locale: Locale(savedLang),
@@ -67,10 +65,14 @@ class LanguageNotifier extends _$LanguageNotifier {
   }
 
   Future<void> loadTranslations() async {
-    final lang = state.locale.languageCode;
-    final String response = await rootBundle.loadString('assets/translations/$lang.json');
-    final data = await json.decode(response);
-    state = state.copyWith(translations: data, isLoading: false);
+    try {
+      final lang = state.locale.languageCode;
+      final String response = await rootBundle.loadString('assets/translations/$lang.json');
+      final data = await json.decode(response);
+      state = state.copyWith(translations: data, isLoading: false);
+    } catch (e) {
+      state = state.copyWith(isLoading: false);
+    }
   }
 
   Future<void> setLocale(String languageCode) async {

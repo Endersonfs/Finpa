@@ -6,6 +6,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../providers/auth_provider.dart';
 import '../providers/biometric_provider.dart';
 
+import '../../../core/providers/language_provider.dart';
+
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
@@ -41,7 +43,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     } on AuthException catch (e) {
       _showError(e.message);
     } catch (_) {
-      _showError('Error inesperado. Intenta nuevamente.');
+      _showError(ref.tr('common.error'));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -59,7 +61,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           context.go('/dashboard');
         } else {
           _showError(
-              'Tu sesión expiró. Ingresa con tu correo y contraseña.');
+              ref.tr('auth.session_expired'));
         }
       }
     } finally {
@@ -97,16 +99,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   // ── Validadores ────────────────────────────
 
   String? _validateEmail(String? v) {
-    if (v == null || v.trim().isEmpty) return 'Ingresa tu email';
+    if (v == null || v.trim().isEmpty) return ref.tr('auth.email');
     if (!RegExp(r'^[^@]+@[^@]+\.[^@]+$').hasMatch(v.trim())) {
-      return 'Email inválido';
+      return ref.tr('auth.invalid_email');
     }
     return null;
   }
 
   String? _validatePassword(String? v) {
-    if (v == null || v.isEmpty) return 'Ingresa tu contraseña';
-    if (v.length < 6) return 'Mínimo 6 caracteres';
+    if (v == null || v.isEmpty) return ref.tr('auth.password_required');
+    if (v.length < 6) return ref.tr('auth.password_min_length');
     return null;
   }
 
@@ -132,7 +134,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 const SizedBox(height: 20),
 
                 Text(
-                  'Bienvenido',
+                  'Welcome',
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
@@ -141,7 +143,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Inicia sesión para continuar',
+                  ref.tr('auth.login_to_continue'),
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         fontSize: 12,
                         color: const Color(0xFF9CA3AF),
@@ -156,10 +158,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   textInputAction: TextInputAction.next,
                   autofillHints: const [AutofillHints.email],
                   validator: _validateEmail,
-                  decoration: const InputDecoration(
-                    labelText: 'Email',
+                  decoration: InputDecoration(
+                    labelText: ref.tr('auth.email'),
                     hintText: 'tu@email.com',
-                    prefixIcon: Icon(Icons.mail_outline_rounded, size: 20),
+                    prefixIcon: const Icon(Icons.mail_outline_rounded, size: 20),
                   ),
                 ),
                 const SizedBox(height: 14),
@@ -173,7 +175,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   validator: _validatePassword,
                   onFieldSubmitted: (_) => _signIn(),
                   decoration: InputDecoration(
-                    labelText: 'Contraseña',
+                    labelText: ref.tr('auth.password'),
                     hintText: '••••••••',
                     prefixIcon:
                         const Icon(Icons.lock_outline_rounded, size: 20),
@@ -203,10 +205,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
                     child: Text(
-                      '¿Olvidaste tu contraseña?',
-                      style: TextStyle(
+                      ref.tr('auth.forgot_password'),
+                      style: const TextStyle(
                         fontSize: 13,
-                        color: const Color(0xFF2F7155),
+                        color: Color(0xFF2F7155),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -229,8 +231,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
                       label: Text(
                         biometric.hasFaceId
-                            ? 'Entrar con Face ID'
-                            : 'Entrar con huella',
+                            ? 'Login with Face ID'
+                            : 'Login with fingerprint',
                         style: const TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
@@ -272,9 +274,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               color: Colors.white,
                             ),
                           )
-                        : const Text(
-                            'Iniciar sesión',
-                            style: TextStyle(
+                        : Text(
+                            ref.tr('auth.login'),
+                            style: const TextStyle(
                                 fontSize: 15, fontWeight: FontWeight.w600),
                           ),
                   ),
@@ -288,10 +290,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 12),
                       child: Text(
-                        'o continúa con',
-                        style: TextStyle(
+                        'or continue with',
+                        style: const TextStyle(
                           fontSize: 12,
-                          color: const Color(0xFF9CA3AF),
+                          color: Color(0xFF9CA3AF),
                         ),
                       ),
                     ),
@@ -321,7 +323,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         _GoogleIcon(),
                         const SizedBox(width: 10),
                         const Text(
-                          'Continuar con Google',
+                          'Continue with Google',
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
@@ -338,19 +340,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      '¿No tienes cuenta? ',
-                      style: TextStyle(
+                      '${ref.tr('auth.dont_have_account')} ',
+                      style: const TextStyle(
                         fontSize: 13,
-                        color: const Color(0xFF6B7280),
+                        color: Color(0xFF6B7280),
                       ),
                     ),
                     GestureDetector(
                       onTap: () => context.push('/auth/register'),
                       child: Text(
-                        'Regístrate',
-                        style: TextStyle(
+                        ref.tr('auth.register'),
+                        style: const TextStyle(
                           fontSize: 13,
-                          color: const Color(0xFF2F7155),
+                          color: Color(0xFF2F7155),
                           fontWeight: FontWeight.w600,
                         ),
                       ),

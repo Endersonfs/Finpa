@@ -13,13 +13,24 @@ enum AccountType {
 }
 
 extension AccountTypeX on AccountType {
+  String get labelKey {
+    switch (this) {
+      case AccountType.general: return 'accounts.types.checking';
+      case AccountType.bank: return 'accounts.types.checking';
+      case AccountType.savings: return 'accounts.types.savings';
+      case AccountType.credit: return 'accounts.types.credit';
+      case AccountType.cash: return 'accounts.types.cash';
+    }
+  }
+
   String get label {
+    // Legacy support or fallback
     switch (this) {
       case AccountType.general: return 'General';
-      case AccountType.bank: return 'Cuenta bancaria';
-      case AccountType.savings: return 'Ahorro';
-      case AccountType.credit: return 'Tarjeta de crédito';
-      case AccountType.cash: return 'Efectivo';
+      case AccountType.bank: return 'Bank account';
+      case AccountType.savings: return 'Saving';
+      case AccountType.credit: return 'Credit card';
+      case AccountType.cash: return 'Cash';
     }
   }
 
@@ -164,6 +175,8 @@ class FinancialSummary {
   });
 
   const FinancialSummary.zeros() : available = 0, saved = 0, owed = 0;
+
+  double get netWorth => available + saved - owed;
 
   factory FinancialSummary.fromJson(Map<String, dynamic> json) {
     return FinancialSummary(

@@ -10,20 +10,10 @@ import '../../ai_chat/data/ai_repository.dart';
 import '../domain/budget_model.dart';
 import '../providers/budget_provider.dart';
 
-// ── Mapas de categoría ────────────────────────────────────────────────────────
+import '../../../core/providers/language_provider.dart';
+import '../../../core/providers/currency_provider.dart';
 
-const _kLabel = {
-  'food': 'Comida',
-  'transport': 'Transporte',
-  'entertainment': 'Entretenimiento',
-  'services': 'Servicios',
-  'health': 'Salud',
-  'clothing': 'Ropa',
-  'housing': 'Hogar',
-  'education': 'Educación',
-  'shopping': 'Compras',
-  'other': 'Otros',
-};
+// ── Mapas de categoría ────────────────────────────────────────────────────────
 
 const _kEmoji = {
   'food': '🍔',
@@ -103,10 +93,11 @@ class _AddBudgetScreenState extends ConsumerState<AddBudgetScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final c = Theme.of(context).extension<FinPaColors>()!;
     final cs = Theme.of(context).colorScheme;
+    final currencyState = ref.watch(currencyNotifierProvider);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Nuevo presupuesto'),
+        title: Text(ref.tr('budget.add')),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
           onPressed: () => context.pop(),
@@ -121,7 +112,7 @@ class _AddBudgetScreenState extends ConsumerState<AddBudgetScreen> {
 
             // ── 1. Selector de categoría ─────────────────────────────────
             Text(
-              'Categoría',
+              ref.tr('budget.category'),
               style: GoogleFonts.inter(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
@@ -147,20 +138,20 @@ class _AddBudgetScreenState extends ConsumerState<AddBudgetScreen> {
                   onChanged: (v) {
                     if (v != null) setState(() => _category = v);
                   },
-                  items: _kLabel.entries.map((e) {
+                  items: _kEmoji.keys.map((key) {
                     return DropdownMenuItem<String>(
-                      value: e.key,
+                      value: key,
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 8),
                         child: Row(
                           children: [
                             Text(
-                              _kEmoji[e.key] ?? '📊',
+                              _kEmoji[key] ?? '📊',
                               style: const TextStyle(fontSize: 20),
                             ),
                             const SizedBox(width: 10),
                             Text(
-                              e.value,
+                              ref.tr('categories.$key'),
                               style: GoogleFonts.inter(
                                 fontSize: 14,
                                 color: cs.onSurface,
@@ -182,7 +173,7 @@ class _AddBudgetScreenState extends ConsumerState<AddBudgetScreen> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Text(
-                  'LÍMITE MENSUAL',
+                  ref.tr('budget.monthly_limit'),
                   style: GoogleFonts.inter(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
@@ -196,7 +187,7 @@ class _AddBudgetScreenState extends ConsumerState<AddBudgetScreen> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Text(
-                      'RD\$',
+                      currencyState.baseCurrency.symbol,
                       style: GoogleFonts.inter(
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
@@ -340,15 +331,15 @@ class _AddBudgetScreenState extends ConsumerState<AddBudgetScreen> {
             // ── 5. Toggle alerta 80% ─────────────────────────────────────
             Row(
               children: [
-                Icon(
+                const Icon(
                   Icons.notifications_outlined,
                   size: 18,
-                  color: const Color(0xFF2F7155),
+                  color: Color(0xFF2F7155),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    'Alertarme al llegar al 80%',
+                    ref.tr('settings.limit_alert'),
                     style: GoogleFonts.inter(
                       fontSize: 14,
                       color: cs.onSurface,
@@ -391,7 +382,7 @@ class _AddBudgetScreenState extends ConsumerState<AddBudgetScreen> {
                         ),
                       )
                     : Text(
-                        'Crear presupuesto',
+                        ref.tr('budget.add'),
                         style: GoogleFonts.inter(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
@@ -460,4 +451,3 @@ class _AiBannerSkeletonState extends State<_AiBannerSkeleton>
     );
   }
 }
-

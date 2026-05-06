@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/providers/currency_provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/providers/theme_provider.dart';
 import '../../auth/providers/biometric_provider.dart';
@@ -11,6 +12,8 @@ import '../../auth/providers/session_provider.dart';
 import '../../transactions/providers/transaction_provider.dart';
 import '../../goals/providers/goals_provider.dart';
 import '../../education/providers/education_provider.dart';
+
+import '../../../core/providers/language_provider.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -25,9 +28,10 @@ class ProfileScreen extends ConsumerWidget {
     final textPrimary = theme.colorScheme.onSurface;
     final textSecondary = theme.colorScheme.onSurfaceVariant;
     final themeMode = ref.watch(themeProvider);
+    final currencyState = ref.watch(currencyNotifierProvider);
 
     final user = Supabase.instance.client.auth.currentUser;
-    final fullName = user?.userMetadata?['full_name'] as String? ?? 'Usuario';
+    final fullName = user?.userMetadata?['full_name'] as String? ?? ref.tr('common.user');
     final email = user?.email ?? '';
     final initials = _getInitials(fullName);
 
@@ -45,10 +49,12 @@ class ProfileScreen extends ConsumerWidget {
     final totalLessons = modules.fold<int>(0, (sum, m) => sum + m.totalCount);
 
     final themeLabel = switch (themeMode) {
-      ThemeMode.light => 'Claro',
-      ThemeMode.dark => 'Oscuro',
-      ThemeMode.system => 'Sistema',
+      ThemeMode.light => 'Light',
+      ThemeMode.dark => 'Dark',
+      ThemeMode.system => ref.tr('settings.follow_system'),
     };
+
+    final currencyLabel = '${currencyState.baseCurrency.symbol} · ${currencyState.baseCurrency.code}';
 
     return Scaffold(
       backgroundColor: scaffoldBg,
@@ -61,7 +67,7 @@ class ProfileScreen extends ConsumerWidget {
             elevation: 0,
             scrolledUnderElevation: 0,
             title: Text(
-              'Mi perfil',
+              ref.tr('settings.profile'),
               style: GoogleFonts.inter(
                 fontSize: 17,
                 fontWeight: FontWeight.w700,
@@ -142,7 +148,7 @@ class ProfileScreen extends ConsumerWidget {
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
-                          'Plan gratuito',
+                          ref.tr('settings.free_plan'),
                           style: GoogleFonts.inter(
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
@@ -161,7 +167,7 @@ class ProfileScreen extends ConsumerWidget {
                 child: Row(
                   children: [
                     _StatCard(
-                      label: 'Transacciones',
+                      label: ref.tr('transactions.title'),
                       value: txnCount.toString(),
                       surface: surface,
                       border: c.border,
@@ -170,7 +176,7 @@ class ProfileScreen extends ConsumerWidget {
                     ),
                     const SizedBox(width: 8),
                     _StatCard(
-                      label: 'Metas activas',
+                      label: ref.tr('goals.active_goals'),
                       value: activeGoals.toString(),
                       surface: surface,
                       border: c.border,
@@ -179,7 +185,7 @@ class ProfileScreen extends ConsumerWidget {
                     ),
                     const SizedBox(width: 8),
                     _StatCard(
-                      label: 'Lecciones',
+                      label: ref.tr('education.modules'),
                       value: '$completedLessons/$totalLessons',
                       surface: surface,
                       border: c.border,
@@ -192,24 +198,24 @@ class ProfileScreen extends ConsumerWidget {
 
               // ── Sección "Mi cuenta" ───────────────────────────────────
               _SectionTitle(
-                title: 'MI CUENTA',
+                title: ref.tr('settings.profile').toUpperCase(),
                 textSecondary: textSecondary,
               ),
               _ProfileTile(
                 icon: Icons.person_outline_rounded,
-                label: 'Información personal',
+                label: ref.tr('settings.manage_profile'),
                 iconBg: const Color(0xFF2F7155),
                 surface: surface,
                 border: c.border,
                 textPrimary: textPrimary,
                 muted: c.muted,
                 onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Próximamente')),
+                  SnackBar(content: Text(ref.tr('common.soon'))),
                 ),
               ),
               _ProfileTile(
                 icon: Icons.account_balance_wallet_outlined,
-                label: 'Mis cuentas',
+                label: ref.tr('accounts.title'),
                 iconBg: const Color(0xFF059669),
                 surface: surface,
                 border: c.border,
@@ -219,7 +225,7 @@ class ProfileScreen extends ConsumerWidget {
               ),
               _ProfileTile(
                 icon: Icons.language_rounded,
-                label: 'Moneda y región',
+                label: ref.tr('settings.main_currency'),
                 iconBg: const Color(0xFF059669),
                 surface: surface,
                 border: c.border,
@@ -229,7 +235,7 @@ class ProfileScreen extends ConsumerWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      'RD\$ · DOM',
+                      currencyLabel,
                       style: GoogleFonts.inter(
                         fontSize: 11,
                         color: c.muted,
@@ -239,11 +245,11 @@ class ProfileScreen extends ConsumerWidget {
                     Icon(Icons.chevron_right_rounded, color: c.muted, size: 20),
                   ],
                 ),
-                onTap: () {},
+                onTap: () => context.push('/currency-selector'),
               ),
               _ProfileTile(
                 icon: Icons.notifications_outlined,
-                label: 'Notificaciones',
+                label: ref.tr('settings.notifications'),
                 iconBg: const Color(0xFF7C3AED),
                 surface: surface,
                 border: c.border,
@@ -253,7 +259,7 @@ class ProfileScreen extends ConsumerWidget {
               ),
               _ProfileTile(
                 icon: Icons.bar_chart_rounded,
-                label: 'Reportes',
+                label: ref.tr('reports.title'),
                 iconBg: const Color(0xFF0891B2),
                 surface: surface,
                 border: c.border,
@@ -264,12 +270,12 @@ class ProfileScreen extends ConsumerWidget {
 
               // ── Sección "Preferencias" ────────────────────────────────
               _SectionTitle(
-                title: 'PREFERENCIAS',
+                title: ref.tr('settings.preferences').toUpperCase(),
                 textSecondary: textSecondary,
               ),
               _ProfileTile(
                 icon: Icons.palette_outlined,
-                label: 'Apariencia',
+                label: ref.tr('settings.appearance'),
                 iconBg: const Color(0xFFD97706),
                 surface: surface,
                 border: c.border,
@@ -293,7 +299,7 @@ class ProfileScreen extends ConsumerWidget {
               ),
               _ProfileTile(
                 icon: Icons.lock_outline_rounded,
-                label: 'Seguridad',
+                label: ref.tr('settings.security'),
                 iconBg: const Color(0xFFDC2626),
                 surface: surface,
                 border: c.border,
@@ -303,7 +309,7 @@ class ProfileScreen extends ConsumerWidget {
               ),
               _ProfileTile(
                 icon: Icons.share_outlined,
-                label: 'Compartir FinPa',
+                label: ref.tr('settings.share_finpa'),
                 iconBg: const Color(0xFF6366F1),
                 surface: surface,
                 border: c.border,
@@ -339,7 +345,7 @@ class ProfileScreen extends ConsumerWidget {
                         ),
                         const SizedBox(width: 12),
                         Text(
-                          'Cerrar sesión',
+                          ref.tr('settings.logout'),
                           style: GoogleFonts.inter(
                             fontSize: 13,
                             fontWeight: FontWeight.w700,
@@ -388,18 +394,18 @@ class ProfileScreen extends ConsumerWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('¿Cerrar sesión?'),
-        content: const Text('Se cerrará tu sesión en este dispositivo.'),
+        title: Text(ref.tr('settings.logout_confirm_title')),
+        content: Text(ref.tr('settings.logout_confirm_desc')),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
+            child: Text(ref.tr('common.cancel')),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text(
-              'Cerrar sesión',
-              style: TextStyle(color: Color(0xFFDC2626)),
+            child: Text(
+              ref.tr('settings.logout'),
+              style: const TextStyle(color: Color(0xFFDC2626)),
             ),
           ),
         ],

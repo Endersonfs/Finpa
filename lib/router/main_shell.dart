@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../features/auth/providers/session_provider.dart';
+import '../core/providers/language_provider.dart';
 
 class MainShell extends ConsumerStatefulWidget {
   final StatefulNavigationShell navigationShell;
@@ -17,14 +18,7 @@ class MainShell extends ConsumerStatefulWidget {
 
 class _MainShellState extends ConsumerState<MainShell>
     with WidgetsBindingObserver {
-  static const _tabs = [
-    _TabItem(icon: Icons.home_outlined,        activeIcon: Icons.home_rounded,          label: 'Inicio'),
-    _TabItem(icon: Icons.receipt_long_outlined, activeIcon: Icons.receipt_long_rounded,  label: 'Movim.'),
-    _TabItem(icon: Icons.pie_chart_outline,     activeIcon: Icons.pie_chart_rounded,     label: 'Presup.'),
-    _TabItem(icon: Icons.flag_outlined,         activeIcon: Icons.flag_rounded,          label: 'Metas'),
-    _TabItem(icon: Icons.smart_toy_outlined,    activeIcon: Icons.smart_toy_rounded,     label: 'FinPa IA'),
-  ];
-
+  
   DateTime? _backgroundedAt;
   Timer? _inactivityTimer;
 
@@ -126,6 +120,15 @@ class _MainShellState extends ConsumerState<MainShell>
         ? const Color(0xFF2F7155).withValues(alpha: 0.20)
         : const Color(0xFF2F7155).withValues(alpha: 0.12);
 
+    // Let's refine tabs label better
+    final localizedTabs = [
+      _TabItem(icon: Icons.home_outlined, activeIcon: Icons.home_rounded, label: isDark ? 'Dashboard' : 'Home'), // Fixed labels
+      _TabItem(icon: Icons.receipt_long_outlined, activeIcon: Icons.receipt_long_rounded, label: ref.tr('transactions.title')),
+      _TabItem(icon: Icons.pie_chart_outline, activeIcon: Icons.pie_chart_rounded, label: ref.tr('budget.title')),
+      _TabItem(icon: Icons.flag_outlined, activeIcon: Icons.flag_rounded, label: ref.tr('goals.title')),
+      _TabItem(icon: Icons.smart_toy_outlined, activeIcon: Icons.smart_toy_rounded, label: ref.tr('settings.nav_ai')),
+    ];
+
     return GestureDetector(
       behavior: HitTestBehavior.translucent,
       onTap: _onUserInteraction,
@@ -165,7 +168,7 @@ class _MainShellState extends ConsumerState<MainShell>
               selectedIndex: widget.navigationShell.currentIndex,
               onDestinationSelected: _onTap,
               labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-              destinations: _tabs
+              destinations: localizedTabs
                   .map((t) => NavigationDestination(
                         icon: Icon(t.icon),
                         selectedIcon: Icon(t.activeIcon),
@@ -191,4 +194,3 @@ class _TabItem {
     required this.label,
   });
 }
-

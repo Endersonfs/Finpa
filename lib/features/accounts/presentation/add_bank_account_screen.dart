@@ -9,6 +9,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../data/accounts_repository.dart';
 import '../domain/account_model.dart';
 import '../providers/accounts_provider.dart';
+import '../../../../core/providers/language_provider.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  AddBankAccountScreen
@@ -65,7 +66,7 @@ class _AddBankAccountScreenState extends ConsumerState<AddBankAccountScreen> {
     final balance =
         double.tryParse(_balanceCtrl.text.replaceAll(',', '.')) ?? 0.0;
 
-    final isCash = _selectedBank == 'Efectivo';
+    final isCash = _selectedBank == 'Cash';
 
     final notifier = ref.read(accountNotifierProvider.notifier);
     await notifier.addBankAccount(
@@ -85,7 +86,7 @@ class _AddBankAccountScreenState extends ConsumerState<AddBankAccountScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Cuenta añadida ✓',
+              '${ref.tr('accounts.title')} ✓', // Generic enough or add account_added
               style: GoogleFonts.inter(fontWeight: FontWeight.w600),
             ),
             backgroundColor: const Color(0xFF059669),
@@ -104,7 +105,7 @@ class _AddBankAccountScreenState extends ConsumerState<AddBankAccountScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          'Elige tu banco primero',
+          ref.tr('accounts.select_bank'),
           style: GoogleFonts.inter(fontWeight: FontWeight.w500),
         ),
         behavior: SnackBarBehavior.floating,
@@ -136,7 +137,7 @@ class _AddBankAccountScreenState extends ConsumerState<AddBankAccountScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Añadir cuenta bancaria',
+          ref.tr('accounts.add_bank'),
           style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 17),
         ),
       ),
@@ -146,7 +147,7 @@ class _AddBankAccountScreenState extends ConsumerState<AddBankAccountScreen> {
           padding: const EdgeInsets.fromLTRB(16, 20, 16, 100),
           children: [
             Text(
-              '¿En qué banco?',
+              ref.tr('accounts.select_bank'),
               style: GoogleFonts.inter(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
@@ -162,7 +163,7 @@ class _AddBankAccountScreenState extends ConsumerState<AddBankAccountScreen> {
             ),
             const SizedBox(height: 24),
             Text(
-              'Nombre de la cuenta',
+              ref.tr('accounts.account_name'),
               style: GoogleFonts.inter(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
@@ -173,7 +174,7 @@ class _AddBankAccountScreenState extends ConsumerState<AddBankAccountScreen> {
             TextFormField(
               controller: _nameCtrl,
               decoration: _inputDecoration(
-                hint: 'Ej: Mi cuenta Popular',
+                hint: ref.tr('accounts.account_name'),
                 c: c,
                 cs: cs,
               ),
@@ -181,7 +182,7 @@ class _AddBankAccountScreenState extends ConsumerState<AddBankAccountScreen> {
               textCapitalization: TextCapitalization.sentences,
               validator: (v) {
                 if (v == null || v.trim().isEmpty) {
-                  return 'Escribe un nombre para identificar la cuenta';
+                  return ref.tr('accounts.account_name');
                 }
                 return null;
               },
@@ -190,7 +191,7 @@ class _AddBankAccountScreenState extends ConsumerState<AddBankAccountScreen> {
             
             // Selector de moneda
             Text(
-              'Moneda de la cuenta',
+              ref.tr('accounts.currency'),
               style: GoogleFonts.inter(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
@@ -200,17 +201,17 @@ class _AddBankAccountScreenState extends ConsumerState<AddBankAccountScreen> {
             const SizedBox(height: 8),
             DropdownButtonFormField<AppCurrency>(
               value: _selectedCurrency,
-              decoration: _inputDecoration(hint: 'Selecciona moneda', c: c, cs: cs),
+              decoration: _inputDecoration(hint: ref.tr('settings.select_currency'), c: c, cs: cs),
               items: AppCurrency.values.map((curr) => DropdownMenuItem(
                 value: curr,
-                child: Text('${curr.flag} ${curr.label} (${curr.code})'),
+                child: Text('${curr.flag} ${ref.tr(curr.labelKey)} (${curr.code})'),
               )).toList(),
               onChanged: (v) => setState(() => _selectedCurrency = v),
             ),
             const SizedBox(height: 20),
 
             Text(
-              'Saldo actual',
+              ref.tr('accounts.initial_balance'),
               style: GoogleFonts.inter(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
@@ -223,7 +224,7 @@ class _AddBankAccountScreenState extends ConsumerState<AddBankAccountScreen> {
               decoration: _inputDecoration(
                 hint: '0',
                 prefix: '${_selectedCurrency?.symbol ?? 'RD\$'} ',
-                helper: 'Puedes ajustarlo después',
+                helper: ref.tr('accounts.helper_adjust'),
                 c: c,
                 cs: cs,
               ),
@@ -252,7 +253,7 @@ class _AddBankAccountScreenState extends ConsumerState<AddBankAccountScreen> {
                           strokeWidth: 2, color: Colors.white),
                     )
                   : Text(
-                      'Añadir cuenta',
+                      ref.tr('common.add'),
                       style: GoogleFonts.inter(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
@@ -387,4 +388,3 @@ class _BankGrid extends StatelessWidget {
     );
   }
 }
-

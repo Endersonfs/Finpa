@@ -1,5 +1,4 @@
 import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,31 +8,17 @@ import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/theme/app_theme.dart';
-import '../domain/goal_model.dart';
 import '../providers/goals_provider.dart';
+import '../../../core/providers/language_provider.dart';
+import '../../../core/providers/currency_provider.dart';
+import '../../../core/utils/currency_formatter.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  Constants
 // ─────────────────────────────────────────────────────────────────────────────
 const _emojis = [
-  '✈️',
-  '💻',
-  '🏠',
-  '🚗',
-  '💍',
-  '📚',
-  '🎓',
-  '⚕️',
-  '🎮',
-  '🌴',
-  '🐾',
-  '➕',
+  '✈️', '💻', '🏠', '🚗', '💍', '📚', '🎓', '⚕️', '🎮', '🌴', '🐾', '➕',
 ];
-
-final _fmt =
-    NumberFormat.currency(locale: 'es', symbol: 'RD\$', decimalDigits: 0);
-
-String _f(double v) => _fmt.format(v);
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  AddGoalScreen
@@ -81,6 +66,8 @@ class _AddGoalScreenState extends ConsumerState<AddGoalScreen> {
   Future<void> _save() async {
     final target =
         double.parse(_amountText.replaceAll(',', '.'));
+    final currencyState = ref.read(currencyNotifierProvider);
+    
     final goal = SavingGoal(
       id: '',
       userId: Supabase.instance.client.auth.currentUser!.id,
@@ -90,6 +77,7 @@ class _AddGoalScreenState extends ConsumerState<AddGoalScreen> {
       currentAmount: 0,
       deadline: _deadline,
       createdAt: DateTime.now(),
+      currencyCode: currencyState.baseCurrency.code,
     );
     setState(() => _isSaving = true);
     try {
@@ -117,6 +105,7 @@ class _AddGoalScreenState extends ConsumerState<AddGoalScreen> {
         isDark ? const Color(0xFFE8EEFF) : const Color(0xFF1A1F36);
     final textSecondary =
         isDark ? const Color(0xFF8892B0) : const Color(0xFF6B7280);
+    final currencyState = ref.watch(currencyNotifierProvider);
 
     final targetValue =
         double.tryParse(_amountText.replaceAll(',', '.'));
@@ -136,7 +125,7 @@ class _AddGoalScreenState extends ConsumerState<AddGoalScreen> {
     return Scaffold(
       appBar: AppBar(
         leading: const BackButton(),
-        title: const Text('Nueva meta'),
+        title: Text(ref.tr('goals.add_goal')),
       ),
       body: SingleChildScrollView(
         padding:
@@ -148,7 +137,7 @@ class _AddGoalScreenState extends ConsumerState<AddGoalScreen> {
 
             // ── Emoji grid ────────────────────────────────────────────────
             Text(
-              'Elige un ícono',
+              ref.tr('goals.choose_icon'),
               style: GoogleFonts.inter(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
@@ -193,7 +182,7 @@ class _AddGoalScreenState extends ConsumerState<AddGoalScreen> {
 
             // ── Title field ───────────────────────────────────────────────
             Text(
-              'Nombre de la meta',
+              ref.tr('goals.my_goals'),
               style: GoogleFonts.inter(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
@@ -209,7 +198,7 @@ class _AddGoalScreenState extends ConsumerState<AddGoalScreen> {
                 color: textPrimary,
               ),
               decoration: InputDecoration(
-                hintText: 'Ej: Viaje a Europa, iPhone nuevo',
+                hintText: 'e.g. Dream Trip, New Laptop',
                 hintStyle:
                     GoogleFonts.inter(fontSize: 14, color: c.muted),
               ),
@@ -222,7 +211,7 @@ class _AddGoalScreenState extends ConsumerState<AddGoalScreen> {
               child: Column(
                 children: [
                   Text(
-                    'META DE AHORRO',
+                    ref.tr('goals.goal_target').toUpperCase(),
                     style: GoogleFonts.inter(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
@@ -236,7 +225,7 @@ class _AddGoalScreenState extends ConsumerState<AddGoalScreen> {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Text(
-                        'RD\$',
+                        currencyState.baseCurrency.symbol,
                         style: GoogleFonts.inter(
                           fontSize: 18,
                           fontWeight: FontWeight.w700,
@@ -300,15 +289,15 @@ class _AddGoalScreenState extends ConsumerState<AddGoalScreen> {
               ),
               child: Row(
                 children: [
-                  Icon(Icons.event_rounded,
+                  const Icon(Icons.event_rounded,
                       size: 18,
-                      color: const Color(0xFF2F7155)),
+                      color: Color(0xFF2F7155)),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
                       _deadline == null
-                          ? 'Sin fecha límite'
-                          : 'Hasta ${DateFormat('dd/MM/yyyy').format(_deadline!)}',
+                          ? ref.tr('goals.no_deadline')
+                          : '${ref.tr('common.next')} ${DateFormat('dd/MM/yyyy').format(_deadline!)}',
                       style: GoogleFonts.inter(
                         fontSize: 13,
                         color: _deadline == null
@@ -317,31 +306,9 @@ class _AddGoalScreenState extends ConsumerState<AddGoalScreen> {
                       ),
                     ),
                   ),
-                  TextButton(
-                    onPressed:
-                        _deadline == null ? _pickDate : () {
-                          setState(() => _deadline = null);
-                        },
-                    style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 4),
-                      minimumSize: Size.zero,
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
-                    child: Text(
-                      _deadline == null ? 'Cambiar' : 'Quitar',
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF2F7155),
-                      ),
-                    ),
-                  ),
-                  if (_deadline == null)
-                    const SizedBox.shrink()
-                  else
+                  if (_deadline != null)
                     TextButton(
-                      onPressed: _pickDate,
+                      onPressed: () => setState(() => _deadline = null),
                       style: TextButton.styleFrom(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 8, vertical: 4),
@@ -349,14 +316,31 @@ class _AddGoalScreenState extends ConsumerState<AddGoalScreen> {
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       ),
                       child: Text(
-                        'Cambiar',
-                        style: GoogleFonts.inter(
+                        ref.tr('common.delete'),
+                        style: const TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
-                          color: const Color(0xFF2F7155),
+                          color: Color(0xFFDC2626),
                         ),
                       ),
                     ),
+                  TextButton(
+                    onPressed: _pickDate,
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    child: Text(
+                      ref.tr('common.edit'),
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF2F7155),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -394,14 +378,14 @@ class _AddGoalScreenState extends ConsumerState<AddGoalScreen> {
                               text: TextSpan(
                                 children: [
                                   TextSpan(
-                                    text: 'Ahorra ',
+                                    text: '${ref.tr('goals.save_monthly')} ',
                                     style: GoogleFonts.inter(
                                       fontSize: 11,
                                       color: c.income,
                                     ),
                                   ),
                                   TextSpan(
-                                    text: '${_f(monthly)}/mes',
+                                    text: '${CurrencyFormatter.format(monthly, currency: currencyState.baseCurrency)}/mo',
                                     style: GoogleFonts.inter(
                                       fontSize: 11,
                                       fontWeight: FontWeight.w700,
@@ -410,7 +394,7 @@ class _AddGoalScreenState extends ConsumerState<AddGoalScreen> {
                                   ),
                                   TextSpan(
                                     text:
-                                        ' para alcanzar esta meta en $months ${months == 1 ? 'mes' : 'meses'}',
+                                        ' to reach this goal in $months ${months == 1 ? 'month' : 'months'}',
                                     style: GoogleFonts.inter(
                                       fontSize: 11,
                                       color: c.income,
@@ -451,7 +435,7 @@ class _AddGoalScreenState extends ConsumerState<AddGoalScreen> {
                       ),
                     )
                   : Text(
-                      'Crear meta',
+                      ref.tr('goals.add_goal'),
                       style: GoogleFonts.inter(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
@@ -466,4 +450,3 @@ class _AddGoalScreenState extends ConsumerState<AddGoalScreen> {
     );
   }
 }
-

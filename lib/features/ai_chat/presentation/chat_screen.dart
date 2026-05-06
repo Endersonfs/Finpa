@@ -7,6 +7,8 @@ import '../../transactions/providers/transaction_provider.dart';
 import '../domain/message_model.dart';
 import '../providers/chat_provider.dart';
 
+import '../../../core/providers/language_provider.dart';
+
 class ChatScreen extends ConsumerStatefulWidget {
   const ChatScreen({super.key});
 
@@ -124,9 +126,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       ),
                     ),
                     const SizedBox(width: 4),
-                    const Text(
-                      'En línea',
-                      style: TextStyle(
+                    Text(
+                      ref.tr('ai_chat.online'),
+                      style: const TextStyle(
                         fontSize: 11,
                         color: Color(0xFF059669),
                       ),
@@ -143,14 +145,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             onPressed: () => showDialog<void>(
               context: context,
               builder: (_) => AlertDialog(
-                title: const Text('Limpiar chat'),
-                content: const Text(
-                  '¿Borrar el historial de conversación?',
+                title: Text(ref.tr('common.delete')),
+                content: Text(
+                  ref.tr('ai_chat.delete_history'),
                 ),
                 actions: [
                   TextButton(
                     onPressed: () => Navigator.pop(context),
-                    child: const Text('Cancelar'),
+                    child: Text(ref.tr('common.cancel')),
                   ),
                   TextButton(
                     onPressed: () {
@@ -160,9 +162,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       setState(() => _showQuickReplies = true);
                       Navigator.pop(context);
                     },
-                    child: const Text(
-                      'Limpiar',
-                      style: TextStyle(color: Color(0xFFDC2626)),
+                    child: Text(
+                      ref.tr('common.delete'),
+                      style: const TextStyle(color: Color(0xFFDC2626)),
                     ),
                   ),
                 ],
@@ -200,6 +202,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                         msgIndex == 0 &&
                         _showQuickReplies)
                       _QuickReplies(
+                        ref: ref,
                         onTap: (text) {
                           setState(() => _showQuickReplies = false);
                           _send(text, summary);
@@ -215,6 +218,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             controller: _textCtrl,
             isLoading: isLoading,
             isDark: isDark,
+            ref: ref,
             onSend: () {
               final text = _textCtrl.text;
               _textCtrl.clear();
@@ -394,27 +398,27 @@ class _TypingIndicatorState extends State<_TypingIndicator>
 // ── _QuickReplies ─────────────────────────────────────────────────────────────
 
 class _QuickReplies extends StatelessWidget {
+  final WidgetRef ref;
   final void Function(String) onTap;
 
-  const _QuickReplies({required this.onTap});
-
-  static const _chips = [
-    '¿Cómo está mi presupuesto?',
-    'Dame consejos de ahorro',
-    'Analiza mis gastos',
-    '¿Cómo van mis metas?',
-  ];
+  const _QuickReplies({required this.ref, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final chips = [
+      ref.tr('ai_chat.hint_budget'),
+      'Dame consejos de ahorro',
+      'Analiza mis gastos',
+      ref.tr('ai_chat.hint_goals'),
+    ];
 
     return Padding(
       padding: const EdgeInsets.only(top: 4, bottom: 4),
       child: Wrap(
         spacing: 6,
         runSpacing: 6,
-        children: _chips.map((chip) {
+        children: chips.map((chip) {
           return GestureDetector(
             onTap: () => onTap(chip),
             child: Container(
@@ -455,12 +459,14 @@ class _InputArea extends StatelessWidget {
   final TextEditingController controller;
   final bool isLoading;
   final bool isDark;
+  final WidgetRef ref;
   final VoidCallback onSend;
 
   const _InputArea({
     required this.controller,
     required this.isLoading,
     required this.isDark,
+    required this.ref,
     required this.onSend,
   });
 
@@ -489,7 +495,7 @@ class _InputArea extends StatelessWidget {
               textInputAction: TextInputAction.newline,
               style: const TextStyle(fontSize: 13),
               decoration: InputDecoration(
-                hintText: 'Pregúntale a FinPa IA...',
+                hintText: ref.tr('ai_chat.input_placeholder'),
                 hintStyle: TextStyle(
                   fontSize: 13,
                   color: isDark

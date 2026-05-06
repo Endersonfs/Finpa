@@ -19,11 +19,13 @@ import '../features/transactions/presentation/add_transaction_screen.dart';
 import '../features/transactions/presentation/transaction_detail_screen.dart';
 import '../features/budget/presentation/budget_screen.dart';
 import '../features/budget/presentation/add_budget_screen.dart';
+import '../features/budget/presentation/budget_detail_screen.dart';
 import '../features/goals/presentation/goals_screen.dart';
 import '../features/goals/presentation/add_goal_screen.dart';
 import '../features/goals/presentation/goal_detail_screen.dart';
 import '../features/ai_chat/presentation/chat_screen.dart';
 import '../features/accounts/presentation/accounts_screen.dart';
+import '../features/accounts/presentation/account_detail_screen.dart';
 import '../features/accounts/presentation/add_bank_account_screen.dart';
 import '../features/accounts/presentation/transfer_screen.dart';
 
@@ -36,8 +38,10 @@ import '../features/settings/presentation/settings_screen.dart';
 import '../features/settings/presentation/appearance_screen.dart';
 import '../features/settings/presentation/notifications_screen.dart';
 import '../features/settings/presentation/security_screen.dart';
+import '../features/settings/presentation/currency_selector_screen.dart';
 import '../features/auth/presentation/lock_screen.dart';
 import '../features/auth/providers/session_provider.dart';
+import '../core/providers/language_provider.dart';
 
 import '../core/providers/theme_provider.dart';
 import 'main_shell.dart';
@@ -184,7 +188,6 @@ final routerProvider = Provider<GoRouter>((ref) {
             ],
           ),
 
-          // Tab 2 — Presupuesto
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -194,6 +197,12 @@ final routerProvider = Provider<GoRouter>((ref) {
                   GoRoute(
                     path: 'add',
                     builder: (_, __) => const AddBudgetScreen(),
+                  ),
+                  GoRoute(
+                    path: ':id',
+                    builder: (_, state) => BudgetDetailScreen(
+                      id: state.pathParameters['id']!,
+                    ),
                   ),
                 ],
               ),
@@ -248,6 +257,12 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: 'transfer',
             builder: (_, __) => const TransferScreen(),
           ),
+          GoRoute(
+            path: ':id',
+            builder: (_, state) => AccountDetailScreen(
+              id: state.pathParameters['id']!,
+            ),
+          ),
         ],
       ),
       GoRoute(
@@ -289,19 +304,31 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (_, __) => const SecurityScreen(),
       ),
       GoRoute(
+        path: '/currency-selector',
+        builder: (_, __) => const CurrencySelectorScreen(),
+      ),
+      GoRoute(
         path: '/lock',
         builder: (_, __) => const LockScreen(),
       ),
     ],
 
-    errorBuilder: (context, state) => Scaffold(
-      body: Center(
-        child: Text(
-          'Ruta no encontrada\n${state.uri}',
-          textAlign: TextAlign.center,
+    errorBuilder: (context, state) {
+      final container = ProviderScope.containerOf(context, listen: false);
+      final langState = container.read(languageNotifierProvider);
+      final message = langState.locale.languageCode == 'es' 
+          ? 'Ruta no encontrada' 
+          : 'Page not found';
+
+      return Scaffold(
+        body: Center(
+          child: Text(
+            '$message\n${state.uri}',
+            textAlign: TextAlign.center,
+          ),
         ),
-      ),
-    ),
+      );
+    },
   );
 
   // Limpiar recursos cuando el provider se destruya

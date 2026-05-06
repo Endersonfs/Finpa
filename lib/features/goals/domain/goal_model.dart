@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import '../../../core/constants/currencies.dart';
 
 part 'goal_model.g.dart';
 
@@ -15,6 +16,7 @@ class SavingGoal extends HiveObject {
   @HiveField(7) final DateTime createdAt;
   @HiveField(8) bool isSynced;
   @HiveField(9) bool isDeleted;
+  @HiveField(10) final String currencyCode;
 
   SavingGoal({
     required this.id,
@@ -27,6 +29,7 @@ class SavingGoal extends HiveObject {
     required this.createdAt,
     this.isSynced = true,
     this.isDeleted = false,
+    this.currencyCode = 'DOP',
   });
 
   SavingGoal copyWith({
@@ -40,6 +43,7 @@ class SavingGoal extends HiveObject {
     DateTime? createdAt,
     bool? isSynced,
     bool? isDeleted,
+    String? currencyCode,
   }) {
     return SavingGoal(
       id: id ?? this.id,
@@ -52,6 +56,15 @@ class SavingGoal extends HiveObject {
       createdAt: createdAt ?? this.createdAt,
       isSynced: isSynced ?? this.isSynced,
       isDeleted: isDeleted ?? this.isDeleted,
+      currencyCode: currencyCode ?? this.currencyCode,
+    );
+  }
+
+  // Helper para obtener AppCurrency
+  AppCurrency get currency {
+    return AppCurrency.values.firstWhere(
+      (c) => c.code == currencyCode,
+      orElse: () => AppCurrency.dop,
     );
   }
 
@@ -80,7 +93,7 @@ class SavingGoal extends HiveObject {
 
   Color get progressColor {
     if (progress > 0.66) return const Color(0xFF059669);
-    if (progress > 0.33) return const Color(0xFF2F7155); // Adjusted to brand green
+    if (progress > 0.33) return const Color(0xFF2F7155); 
     return const Color(0xFFD97706);
   }
 
@@ -96,6 +109,7 @@ class SavingGoal extends HiveObject {
           ? DateTime.parse(json['deadline'] as String)
           : null,
       createdAt: DateTime.parse(json['created_at'] as String),
+      currencyCode: json['currency_code'] as String? ?? 'DOP',
     );
   }
 
@@ -109,6 +123,7 @@ class SavingGoal extends HiveObject {
       'current_amount': currentAmount,
       'deadline': deadline?.toIso8601String().split('T').first,
       'created_at': createdAt.toIso8601String(),
+      'currency_code': currencyCode,
     };
   }
 
