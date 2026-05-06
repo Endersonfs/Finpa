@@ -4,7 +4,7 @@ Cuando el usuario diga "ejecuta crear_pr", "crea un PR", "nuevo branch" o "tarea
 
 ## Nomenclatura del branch
 
-Formato: `dev-eflorian{TIPO}-{DD}{MM}{YYYY}{HH}{MM}{SS}`
+Formato: `dev-eflorian-{TIPO}-{DD}{MM}{YYYY}{HH}{MM}{SS}`
 
 | Parte | Descripción |
 |-------|-------------|
@@ -31,7 +31,7 @@ Ejemplo: `dev-eflorianFT-06052026091156`
    date +%d%m%Y%H%M%S
    ```
    Usar solo los **2 primeros dígitos** del resultado para los segundos (SS).
-3. Construir el nombre: `dev-eflorian{TIPO}-{DDMMYYYYHHmm}{SS}`
+3. Construir el nombre: `dev-eflorian-{TIPO}-{DDMMYYYYHHmm}{SS}`
 4. Crear el branch y moverse a él:
    ```bash
    git checkout -b {nombre}

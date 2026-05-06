@@ -30,6 +30,7 @@ docs/
   07_tareas/
     tasks.md                  → (ver /tasks.md en raíz del proyecto)
     guia_ejecucion.md         → Cómo ejecutar las mejoras pendientes
+    workflow_crear_pr.md      → Nomenclatura de branches, pasos y checklist para abrir PRs
 ```
 
 ## Cómo usar esta documentación

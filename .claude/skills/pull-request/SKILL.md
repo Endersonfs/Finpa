@@ -23,27 +23,43 @@ git log --oneline -5
 
 ### Step 2 — Create or use a feature branch
 
-Never commit directly to `main` or `develop`:
+Never commit directly to `main` or `develop`.
 
-```bash
-# If on main/develop, create a feature branch first
-git checkout -b {type}/{short-description}
-# Examples:
-# feat/add-transactions-screen
-# fix/dashboard-skeleton-height
-# refactor/provider-cleanup
-# chore/update-dependencies
+**Nomenclatura obligatoria del proyecto Finpa:**
+
+```
+dev-eflorian-{TIPO}-{DD}{MM}{YYYY}{HH}{MM}{SS}
 ```
 
-Branch naming convention:
+| Parte | Descripción | Ejemplo |
+|-------|-------------|---------|
+| `TIPO` | `FT` feature · `BG` bugfix · `HT` hotfix | `FT` |
+| `DD` | Día con 2 dígitos | `06` |
+| `MM` | Mes con 2 dígitos | `05` |
+| `YYYY` | Año con 4 dígitos | `2026` |
+| `HH` | Hora con 2 dígitos | `09` |
+| `MM` | Minuto con 2 dígitos | `11` |
+| `SS` | Primeros 2 dígitos de los segundos | `56` |
 
-| Prefix | Use for |
-|---|---|
-| `feat/` | New feature or screen |
-| `fix/` | Bug fix |
-| `refactor/` | Code improvement, no new feature |
-| `chore/` | Dependencies, config, tooling |
-| `test/` | Adding or fixing tests |
+Ejemplo: `dev-eflorian-FT-06052026091156`
+
+Antes de crear el branch, obtener el timestamp exacto:
+
+```powershell
+# PowerShell
+Get-Date -Format 'ddMMyyyyHHmmss'
+```
+
+```bash
+# Bash
+date +%d%m%Y%H%M%S
+```
+
+Usar los primeros 2 dígitos del resultado como SS. Luego crear el branch:
+
+```bash
+git checkout -b dev-eflorian-{TIPO}-{DDMMYYYYHHmm}{SS}
+```
 
 ### Step 3 — Stage and commit
 
@@ -125,7 +141,7 @@ chore(agents): add qa-engineer and pull-request skills
 - [ ] `flutter build web` compila correctamente
 - [ ] No hay archivos `.env` o secretos en el commit
 - [ ] No hay archivos generados (`*.g.dart`, `build/`)
-- [ ] El branch name sigue la convención `{type}/{description}`
+- [ ] El branch name sigue la convención `dev-eflorian-{FT|BG|HT}-DDMMYYYYHHMM{SS}`
 - [ ] El commit message sigue el formato convencional
 
 ## If the Repo Has No Remote Yet
